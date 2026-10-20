@@ -1,8 +1,11 @@
-const express = require ('express');
-const app = express();
+require('dotenv').config();
+const app = require('./src/app');
+const connectDB = require('./src/db');
 
-app.get ('/health', (req,res) => {
-   res.send('ok')
-});
+async function start() {
+    await connectDB(process.env.MONGO_URL)
+    app.listen(4000, () => console.log('server on 4000')) // starting server
 
-app.listen(4000, () => console.log('server on 4000'))
+}
+
+start();
