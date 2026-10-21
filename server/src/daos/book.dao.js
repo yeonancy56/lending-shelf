@@ -6,4 +6,4 @@ function create(data)       { return Book.create(data); }
 function update(id, data)   { return Book.findByIdAndUpdate(id, data, { returnDocument: 'after' }); }
 function remove(id)         { return Book.findByIdAndDelete(id); }
 
-module.exports = { findAll, findById, create, update, remove};
+module.exports = { findAll, findById, create, update, remove}
