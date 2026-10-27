@@ -9,6 +9,9 @@ app.use('/books', bookRoutes);
 const friendRoutes = require('./routes/friend.routes');
 app.use('/friends', friendRoutes);
 
+const loanRoutes = require('./routes/loan.routes');
+app.use('/loans', loanRoutes);
+
 app.get ('/health', (req,res) => {       // health route 
    res.send('ok')
 });
