@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'; //useState = memory, what should the page remember, useEffect = do something at a certain time
 import { getBooks, addBook, getFriends, addFriend, getLoans, lendBook, returnLoan} from './api';
 
-function App() {
+function App() { //these are memory boxes 
   const[books, setBooks] = useState([]);
   const[title, setTitle] = useState('');
   const[author, setAuthor] = useState('');
@@ -12,23 +12,23 @@ function App() {
   const[friendId, setFriendId] = useState('');
   const[error, setError] = useState('');
 
-  async function loadBooks() {
+  async function loadBooks() { //load function, fill a list from the server
     setBooks(await getBooks());
   }
   
-  async function handleAddBook(e) {
-    e.preventDefault();
-    await addBook({ title: title, author: author });
-    setTitle('');
-    setAuthor('');
-    loadBooks();
+  async function handleAddBook(e) { // this function runs when you click a button on the page
+    e.preventDefault(); //Dont refresh the page
+    await addBook({ title: title, author: author });// take what you tyoed (ex title = "matilda") and send it to the server
+    setTitle(''); //clear the text box
+    setAuthor(''); //clear the text box
+    loadBooks(); // get the fresh list from the server, and Matilda will appear 
   }
 
   async function loadFriends() {
     setFriends(await getFriends());
   }
  
-  async function handleAddFriend(e) {
+  async function handleAddFriend(e) { // note e = event "the thing that just happened"
     e.preventDefault();
     await addFriend({ name: name });
     setName('');

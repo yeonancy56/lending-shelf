@@ -10,7 +10,7 @@ async function lendBook(bookId, friendId) {
     const activeLoan = await loanDao.findActiveByBook(bookId);
     if (activeLoan) throw new Error('This book is already lent out');
 
-    // rule 2: does hte friend already have 3?
+    // rule 2: does the friend already have 3?
     const count = await loanDao.countActiveByFriend(friendId);
     if (count >= MAX_LOANS) throw new Error('this friend already has 3 books');
 
