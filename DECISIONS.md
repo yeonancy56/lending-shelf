@@ -167,3 +167,8 @@ Why: main is already protected, but this is a second safety net, so a broken ver
 Chose: whoever passes the question on (Vite or Vercel) removes "/api" first, so the server still gets the plain "books" question it always has
 Other option: change the server so it answers at "/api/books" too
 Why: the server and its tests don't need to change at all. Vite and Vercel must both drop it, though, or the online shelf would get "not found"
+
+## 2026-10-30 — Let my server restart by itself when I save, using what Node already has
+Chose: a new "npm run dev" command for my computer. If I save a change to the loans code, the server picks it up by itself, with no stopping and starting
+Other option: install nodemon, a separate add-on that does the same thing
+Why: Node can already do this, so there's nothing extra to install or keep updated. Render keeps starting the server the normal way, so the live shelf isn't affected
