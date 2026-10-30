@@ -6,11 +6,15 @@ async function list (req, res) {
 }
 
 async function lend(req, res) {
+    const { bookId, friendId } = req.body;
+    // nothing picked? Answer straight away, no need to ask the service
+    if (!bookId || !friendId) return res.status(400).json({ error: 'Pick a book and a friend' });
+
     try {
-        const loan = await loanService.lendBook(req.body.bookId, req.body.friendId);
+        const loan = await loanService.lendBook(bookId, friendId);
         res.status(201).json(loan)
     } catch (err) {
-        res.status(409).json({ error: err.message });
+        res.status(err.status || 409).json({ error: err.message }); // 400 for a bad request, 409 for a broken rule
     }
 }
 

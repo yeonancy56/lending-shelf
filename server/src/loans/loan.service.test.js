@@ -1,17 +1,23 @@
 // Tests for the loan rules. No database needed:
 // the real DAO is swapped for a fake one, and each test tells the fake what to answer.
 jest.mock('./loan.dao');
+jest.mock('../books/book.dao');
+jest.mock('../friends/friend.dao');
 const loanDao = require('./loan.dao');
+const bookDao = require('../books/book.dao');
+const friendDao = require('../friends/friend.dao');
 const loanService = require('./loan.service');
 
 const DUNE = 'dune-id';
 const SAM = 'sam-id';
 const DUNE_LOAN = 'dune-loan-id';
 
-// Before each test: the fake DAO says "all clear" (Dune is free, Sam has no books, nothing overdue).
+// Before each test: the fake DAOs say "all clear" (Dune and Sam exist, Dune is free, Sam has no books, nothing overdue).
 // Each test then changes only the one answer it cares about.
 beforeEach(() => {
     jest.resetAllMocks();
+    bookDao.exists.mockResolvedValue(true);
+    friendDao.exists.mockResolvedValue(true);
     loanDao.findActiveByBook.mockResolvedValue(null);
     loanDao.countActiveByFriend.mockResolvedValue(0);
     loanDao.findOverdueByFriend.mockResolvedValue(null);
@@ -28,6 +34,25 @@ test('lends Dune to Sam when no rule is broken', async () => {
     await loanService.lendBook(DUNE, SAM);
 
     expect(loanDao.create).toHaveBeenCalledWith({ book: DUNE, friend: SAM });
+});
+
+// before any rule: Dune or Sam isn't real -> stop straight away
+test('does not lend a book that does not exist', async () => {
+    bookDao.exists.mockResolvedValue(false);
+
+    await expect(loanService.lendBook(DUNE, SAM)).rejects.toThrow('That book does not exist');
+    expect(bookDao.exists).toHaveBeenCalledWith(DUNE);
+    expect(loanDao.findActiveByBook).not.toHaveBeenCalled(); // never got as far as the rules
+    expect(loanDao.create).not.toHaveBeenCalled();
+});
+
+test('does not lend to a friend who does not exist', async () => {
+    friendDao.exists.mockResolvedValue(false);
+
+    await expect(loanService.lendBook(DUNE, SAM)).rejects.toThrow('That friend does not exist');
+    expect(friendDao.exists).toHaveBeenCalledWith(SAM);
+    expect(loanDao.findActiveByBook).not.toHaveBeenCalled();
+    expect(loanDao.create).not.toHaveBeenCalled();
 });
 
 // rule 1: Dune is already lent out

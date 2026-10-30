@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Book = require('./book.model')
 
 function findAll()          { return Book.find(); }
@@ -6,4 +7,10 @@ function create(data)       { return Book.create(data); }
 function update(id, data)   { return Book.findByIdAndUpdate(id, data, { returnDocument: 'after' }); }
 function remove(id)         { return Book.findByIdAndDelete(id); }
 
-module.exports = { findAll, findById, create, update, remove}
+// is there a book with this ID? (an ID in the wrong shape, like "abc", can't belong to any book)
+async function exists(id) {
+    if (!mongoose.isValidObjectId(id)) return false;
+    return (await Book.exists({ _id: id })) !== null;
+}
+
+module.exports = { findAll, findById, create, update, remove, exists}

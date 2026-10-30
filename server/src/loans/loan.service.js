@@ -1,11 +1,25 @@
 const loanDao = require ('./loan.dao');
+const bookDao = require('../books/book.dao');
+const friendDao = require('../friends/friend.dao');
 
 const MAX_LOANS = 3;
 const LOAN_DAYS = 14;
 
+// a mistake in the request (like a book that doesn't exist), not a broken rule.
+// The controller answers these with 400 instead of 409.
+function badRequest(message) {
+    const err = new Error(message);
+    err.status = 400;
+    return err;
+}
+
 function listLoans() { return loanDao.findAll(); }
 
 async function lendBook(bookId, friendId) {
+    // first: do this book and friend exist? No point checking the rules otherwise
+    if (!(await bookDao.exists(bookId))) throw badRequest('That book does not exist');
+    if (!(await friendDao.exists(friendId))) throw badRequest('That friend does not exist');
+
     //rule 1: is the book already out?
     const activeLoan = await loanDao.findActiveByBook(bookId);
     if (activeLoan) throw new Error('This book is already lent out');

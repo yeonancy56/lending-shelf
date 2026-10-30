@@ -67,3 +67,18 @@ Why: then each test works on its own and in any order, and an old copy of Dune c
 Chose: when the tests open the pretend database, hand it one small piece it needs (Node's "os" tool) ourselves
 Other option: switch on a setting in our test tool (Jest) that's still marked "experimental"
 Why: the pretend shelf wouldn't open inside Jest, so we couldn't test adding Dune at all. Jest was blocking the way the database code fetches that piece. Handing it over ourselves is one line in one place, and it doesn't rely on an experimental setting that might change
+
+## 2026-10-30 — Two different kinds of "no" when lending a book
+Chose: one kind of "no" for "your request has a mistake" (nothing picked, or a book or friend that isn't on the shelf), and a different kind for "the rules say no" (like Dune already being out). The code numbers for these are 400 and 409
+Other option: give the same "no" every time, like before
+Why: they mean different things. Asking the librarian for "___" means you need to fix your request. Asking for Dune while Sam has it means your request was fine, but the rules say no. Before this, the app even let you lend to a friend who didn't exist
+
+## 2026-10-30 — Check "nothing picked" first, and "is it real?" a step later
+Chose: the part of the app that first receives the request checks that a book and a friend were picked. The part that knows the lending rules then checks that Dune and Sam are really on the list, before checking the three rules
+Other option: do both checks in the same place
+Why: spotting "nothing picked" only needs a look at the request, so it's answered straight away. Checking that Dune and Sam are real means looking them up in the saved data, which belongs with the lending rules. And there's no point checking the rules for a book that isn't there
+
+## 2026-10-30 — Lending asks the books and friends folders directly "does this exist?"
+Chose: the lending code asks the books folder "is Dune real?" and the friends folder "is Sam real?" itself
+Other option: go through the books and friends rule code instead, or copy the look-up into the loans folder
+Why: it's a simple yes/no question with no rules attached, so going the long way would add steps for nothing. And copying it would mean two places to fix if it ever changes
