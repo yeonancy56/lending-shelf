@@ -1,4 +1,4 @@
-const loanService = require ('../services/loan.service');
+const loanService = require ('./loan.service');
 
 async function list (req, res) {
     const loans = await loanService.listLoans();

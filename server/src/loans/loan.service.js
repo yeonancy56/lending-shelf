@@ -1,4 +1,4 @@
-const loanDao = require ('../daos/loan.dao');
+const loanDao = require ('./loan.dao');
 
 const MAX_LOANS = 3;
 const LOAN_DAYS = 14;

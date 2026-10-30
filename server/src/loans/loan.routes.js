@@ -1,5 +1,5 @@
 const express = require('express');
-const loanController = require('../controllers/loan.controller');
+const loanController = require('./loan.controller');
 
 const router = express.Router();
 

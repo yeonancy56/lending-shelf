@@ -11,7 +11,7 @@ app.use('/books', bookRoutes);
 const friendRoutes = require('./friends/friend.routes');
 app.use('/friends', friendRoutes);
 
-const loanRoutes = require('./routes/loan.routes');
+const loanRoutes = require('./loans/loan.routes');
 app.use('/loans', loanRoutes);
 
 app.get ('/health', (req,res) => {       // health route 
