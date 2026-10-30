@@ -177,3 +177,18 @@ Why: Node can already do this, so there's nothing extra to install or keep updat
 Chose: tell git to ignore the .vscode folder
 Other option: share it in the repo
 Why: it holds settings for my own editor, not for the shelf app. One got saved into a PR by accident, so ignoring the folder stops that from happening again
+
+## 2026-10-30 — A loan stays a loan after the book comes back
+Chose: when Sam returns Dune, the loan is kept with its return date, as a record of what happened
+Other option: only call it a loan while the book is out, and forget it after
+Why: I can look back at who borrowed what. The app already keeps returned loans, so the word matches what it does
+
+## 2026-10-30 — Each copy on my shelf is its own book
+Chose: two copies of Dune are two books, and each can be lent on its own
+Other option: a book means the title, so once any Dune is lent out, Dune is out
+Why: if I really own two, I should be able to lend both. The app already works this way, though nothing on the page tells two Dunes apart yet
+
+## 2026-10-30 — Overdue means 14 days to the exact time, and only while the book is still out
+Chose: a loan becomes overdue just after 14 days to the minute, and stops being overdue once the book comes back
+Other option: count whole days, or keep a "late" mark on the loan forever
+Why: it's what the app already does, and it's fair to Sam: once Dune is back, Sam can borrow again straight away
