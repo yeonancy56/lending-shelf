@@ -18,7 +18,7 @@ async function getOne(req, res) {
 
 async function create(req, res) {
     // ?. = if nothing was sent at all, don't crash, just treat the name as missing
-    if (isBlank(req.body?.name)) return res.status(400).json({ error: "Please fill in your friend's name" });
+    if (isBlank(req.body?.name)) return res.status(400).json({ error: "Your friend needs a name" });
 
     const friend = await friendService.addFriend(req.body);
     res.status(201).json(friend);

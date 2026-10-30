@@ -21,7 +21,7 @@ test('POST /friends without a name asks for one (400)', async () => {
     const res = await request(app).post('/friends').send({});
 
     expect(res.status).toBe(400);
-    expect(res.body.error).toBe("Please fill in your friend's name");
+    expect(res.body.error).toBe("Your friend needs a name");
     expect(await Friend.countDocuments()).toBe(0);
 });
 
@@ -29,13 +29,13 @@ test('POST /friends with nothing sent at all still gets a clear message (400)', 
     const res = await request(app).post('/friends'); // no form at all, not even an empty one
 
     expect(res.status).toBe(400);
-    expect(res.body.error).toBe("Please fill in your friend's name");
+    expect(res.body.error).toBe("Your friend needs a name");
 });
 
 test('POST /friends with only spaces as the name asks for one (400)', async () => {
     const res = await request(app).post('/friends').send({ name: '   ' });
 
     expect(res.status).toBe(400);
-    expect(res.body.error).toBe("Please fill in your friend's name");
+    expect(res.body.error).toBe("Your friend needs a name");
     expect(await Friend.countDocuments()).toBe(0);
 });
