@@ -63,7 +63,7 @@ Chose: empty the pretend database before each test, and have each test add the b
 Other option: let a test use the books an earlier test added
 Why: then each test works on its own and in any order, and an old copy of Dune can't sneak into the next test
 
-## 2026-10-30 — Fix the test database crash by handing over the missing tool ourselves
-Chose: when the tests connect, give the database library Node's "os" tool directly
-Other option: switch on an experimental setting in Jest so the library can load the tool by itself
-Why: the crash happened because Jest blocks the way the library loads that tool. Handing it over is one line in one place, and it doesn't depend on an experimental feature that might change
+## 2026-10-30 — Fix the pretend database so it opens inside our test tool
+Chose: when the tests open the pretend database, hand it one small piece it needs (Node's "os" tool) ourselves
+Other option: switch on a setting in our test tool (Jest) that's still marked "experimental"
+Why: the pretend shelf wouldn't open inside Jest, so we couldn't test adding Dune at all. Jest was blocking the way the database code fetches that piece. Handing it over ourselves is one line in one place, and it doesn't rely on an experimental setting that might change

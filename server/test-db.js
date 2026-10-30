@@ -4,13 +4,13 @@ const os = require('os');
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 
-let mongo;
+let mongoServer;
 
 async function start() {
-    mongo = await MongoMemoryServer.create();
+    mongoServer = await MongoMemoryServer.create();
     // The MongoDB driver normally loads Node's os tool with import('os'), which Jest blocks.
     // So we hand it over ourselves. Without this, connecting fails with "Missing required sub-document 'driver'".
-    await mongoose.connect(mongo.getUri(), { runtimeAdapters: { os } });
+    await mongoose.connect(mongoServer.getUri(), { runtimeAdapters: { os } });
 }
 
 // empty every collection, so each test starts with a clean shelf
@@ -23,7 +23,7 @@ async function clear() {
 
 async function stop() {
     await mongoose.disconnect();
-    await mongo.stop();
+    await mongoServer?.stop(); // the ?. skips this if the pretend database never started, so the real error shows
 }
 
 module.exports = { start, clear, stop };

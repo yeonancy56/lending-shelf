@@ -15,16 +15,18 @@ test('POST /books adds Dune', async () => {
     const res = await request(app).post('/books').send(DUNE);
 
     expect(res.status).toBe(201);
+    const saved = await Book.findOne({ title: 'Dune' });
+    expect(saved).not.toBeNull();                      // Dune really got saved
+    expect(res.body._id).toBe(saved._id.toString());   // and the server sent back the saved Dune, not just what we typed
     expect(res.body).toMatchObject(DUNE);
-    expect(await Book.countDocuments()).toBe(1); // Dune really got saved
 });
 
 test('GET /books lists Dune', async () => {
-    await request(app).post('/books').send(DUNE); // this test adds Dune itself, it doesn't rely on the test above
+    await Book.create(DUNE); // put Dune straight on the shelf, so this test doesn't depend on POST working
 
     const res = await request(app).get('/books');
 
     expect(res.status).toBe(200);
-    expect(res.body).toHaveLength(1); // only one Dune, so the shelf really was emptied
+    expect(res.body).toHaveLength(1);
     expect(res.body[0]).toMatchObject(DUNE);
 });
