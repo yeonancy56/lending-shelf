@@ -28,8 +28,13 @@ async function create(req, res) {
         return res.status(400).json({ error: `Keep the note short (${MAX_COPY_NOTE_LENGTH} letters or fewer).` });
     }
 
-    const book = await bookService.addBook({ title, author, copyNote: trimmedCopyNote });
-    res.status(201).json(book)
+    try {
+        const book = await bookService.addBook({ title, author, copyNote: trimmedCopyNote });
+        res.status(201).json(book)
+    } catch (err) {
+        if (!err.status) throw err; // a real crash, not a mistake in the form, so let Express handle it
+        res.status(err.status).json({ error: err.message });
+    }
 }
 
 async function update(req, res) {

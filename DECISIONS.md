@@ -222,3 +222,23 @@ Why: "note" could mean a note about anything, "label" and "tag" sound like group
 Chose: spaces around a note are trimmed, only spaces counts as no note, and anything over 30 letters gets a red "Keep the note short" message
 Other option: save it exactly as typed, with no limit
 Why: same idea as "spaces aren't a real author". The page never shows "Dune (   )", and a long sentence would stretch the "Pick a book" list
+
+## 2026-10-30 — A second copy of the same book needs a copy note
+Chose: if I already have Dune by Frank Herbert and add another one with no note, the app says "You already have Dune. Add a note, like 'signed', to tell them apart." My first Dune can stay without a note
+Other option: let me add two plain "Dune"s, or make me go back and add a note to the first one too
+Why: two identical "Dune"s in the "Pick a book" list means I can't tell which copy I'm giving Sam. Only the new copy needs a note, so books I own one of stay quick to add
+
+## 2026-10-30 — Every copy's note must be different, even from lent-out copies
+Chose: if a Dune already has the note "paperback", a new Dune can't use "paperback" too. "Paperback" and " paperback " count as the same note. The Dune Sam has right now counts as well
+Other option: only check copies that are on the shelf right now, or count capital letters as different
+Why: two "Dune (paperback)"s look the same on the page, so I'd be back to not telling them apart. Sam's copy comes back one day, and then there'd be two
+
+## 2026-10-30 — Capitals and extra spaces don't make a different book, but a different author does
+Chose: "dune" by "frank herbert " is the same book as "Dune" by "Frank Herbert". "Dune" by someone else is a different book and needs no note
+Other option: count only exact matches as the same book, or look at the title only
+Why: a lowercase letter or a stray space shouldn't sneak a second plain Dune past the check. But two different books that happen to share a title aren't copies of each other
+
+## 2026-10-30 — The "You already have" message uses the name already on my shelf
+Chose: if I type "dune" and I already have "Dune", the message says "You already have Dune", the way it's written on my shelf
+Other option: repeat what I typed, so it says "You already have dune"
+Why: the message is telling me about the book I already own, so it should name it the way the Books list does

@@ -3,6 +3,8 @@
 const request = require('supertest');
 const app = require('../app');
 const Book = require('./book.model');
+const Friend = require('../friends/friend.model');
+const Loan = require('../loans/loan.model');
 const testDb = require('../../test-db');
 
 const DUNE = { title: 'Dune', author: 'Frank Herbert' };
@@ -92,4 +94,86 @@ test('POST /books allows a copy note of exactly 30 letters', async () => {
 
     expect(res.status).toBe(201);
     expect(res.body.copyNote).toBe('a'.repeat(30));
+});
+
+test('POST /books refuses a second Dune with no copy note (400)', async () => {
+    await Book.create(DUNE);
+
+    const res = await request(app).post('/books').send(DUNE);
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe("You already have Dune. Add a note, like 'signed', to tell them apart.");
+    expect(await Book.countDocuments()).toBe(1); // the second Dune didn't get saved
+});
+
+test('POST /books refuses a Dune whose copy note matches one I already have (400)', async () => {
+    await Book.create(DUNE);
+    await Book.create({ ...DUNE, copyNote: 'paperback' });
+
+    const res = await request(app).post('/books').send({ ...DUNE, copyNote: ' Paperback ' }); // capitals and spaces don't make it different
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('You already have Dune (paperback). Use a different note.');
+    expect(await Book.countDocuments()).toBe(2);
+});
+
+test('POST /books counts "dune" by "frank herbert " as the same book as Dune by Frank Herbert (400)', async () => {
+    await Book.create(DUNE);
+
+    const res = await request(app).post('/books').send({ title: 'dune', author: 'frank herbert ' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe("You already have Dune. Add a note, like 'signed', to tell them apart.");
+    expect(await Book.countDocuments()).toBe(1);
+});
+
+test('POST /books adds a second Dune with a different copy note', async () => {
+    await Book.create(DUNE);
+
+    const res = await request(app).post('/books').send({ ...DUNE, copyNote: 'signed' });
+
+    expect(res.status).toBe(201);
+    expect(await Book.countDocuments()).toBe(2);
+});
+
+test('POST /books needs a third Dune to have a note different from both others', async () => {
+    await Book.create(DUNE);
+    await Book.create({ ...DUNE, copyNote: 'signed' });
+
+    const sameAsSecond = await request(app).post('/books').send({ ...DUNE, copyNote: 'signed' });
+    const different = await request(app).post('/books').send({ ...DUNE, copyNote: 'paperback' });
+
+    expect(sameAsSecond.status).toBe(400);
+    expect(sameAsSecond.body.error).toBe('You already have Dune (signed). Use a different note.');
+    expect(different.status).toBe(201);
+    expect(await Book.countDocuments()).toBe(3);
+});
+
+test('POST /books adds a book with the same title but a different author, with no copy note', async () => {
+    await Book.create(DUNE);
+
+    const res = await request(app).post('/books').send({ title: 'Dune', author: 'Someone Else' });
+
+    expect(res.status).toBe(201);
+    expect(res.body.copyNote).toBeUndefined();
+});
+
+test('POST /books counts a lent-out Dune too', async () => {
+    const lentDune = await Book.create(DUNE);
+    const sam = await Friend.create({ name: 'Sam' });
+    await Loan.create({ book: lentDune._id, friend: sam._id }); // Sam has my only Dune right now
+
+    const res = await request(app).post('/books').send(DUNE);
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe("You already have Dune. Add a note, like 'signed', to tell them apart.");
+    expect(await Book.countDocuments()).toBe(1);
+});
+
+test('POST /books treats a title with search symbols as plain letters', async () => {
+    await Book.create({ title: 'Why', author: 'Ann' });
+
+    const res = await request(app).post('/books').send({ title: 'Why?', author: 'Ann' }); // "Why?" isn't the same book as "Why"
+
+    expect(res.status).toBe(201);
 });
