@@ -168,7 +168,7 @@ Chose: whoever passes the question on (Vite or Vercel) removes "/api" first, so 
 Other option: change the server so it answers at "/api/books" too
 Why: the server and its tests don't need to change at all. Vite and Vercel must both drop it, though, or the online shelf would get "not found"
 
-## 2026-10-30 — Restart my server by itself with Node's own "watch", not nodemon
-Chose: a new "npm run dev" command that starts the server and restarts it whenever I save a file, using a setting built into Node
-Other option: install nodemon, a separate package that does the same thing
-Why: there's nothing extra to install or keep updated. Render keeps using "npm start", which doesn't restart by itself, so the live shelf isn't affected
+## 2026-10-30 — Let my server restart by itself when I save, using what Node already has
+Chose: a new "npm run dev" command for my computer. If I save a change to the loans code, the server picks it up by itself, with no stopping and starting
+Other option: install nodemon, a separate add-on that does the same thing
+Why: Node can already do this, so there's nothing extra to install or keep updated. Render keeps starting the server the normal way, so the live shelf isn't affected

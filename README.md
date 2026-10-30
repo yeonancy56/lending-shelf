@@ -21,5 +21,5 @@ Merging a PR into `main` updates both by itself. Vercel rebuilds the page, and R
 
 ### Running it on your computer
 
-1. `cd server`, copy `.env.example` to `.env`, and fill in `MONGO_URL`. Then run `npm run dev`. It restarts the server by itself whenever you save a server file.
+1. `cd server`, copy `.env.example` to `.env`, and fill in `MONGO_URL`. Then run `npm run dev`. It restarts the server by itself whenever you save a server code file. (After changing `.env`, stop it with Ctrl+C and start it again yourself.)
 2. In a second terminal: `cd client`, then `npm run dev`. Vite passes `/api` on to the server at `localhost:4000`.
