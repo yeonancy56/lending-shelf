@@ -1,6 +1,6 @@
 const bookService = require('./book.service')
 
-const MAX_NOTE = 30; // a copy note is "a few words", like "signed" or "Mum's copy"
+const MAX_COPY_NOTE_LENGTH = 30; // a copy note is "a few words", like "signed" or "Mum's copy"
 
 // empty, only spaces, or not text at all? Then it's missing
 function isBlank(value) {
@@ -23,10 +23,12 @@ async function create(req, res) {
     const { title, author, copyNote } = req.body ?? {}; // ?? {} = if nothing was sent at all, treat it as an empty form
     if (isBlank(title) || isBlank(author)) return res.status(400).json({ error: 'Please fill in the title and author' });
 
-    const note = isBlank(copyNote) ? undefined : copyNote.trim(); // no note (or only spaces) = no copy note
-    if (note && note.length > MAX_NOTE) return res.status(400).json({ error: 'Keep the note short (30 letters or fewer).' });
+    const trimmedCopyNote = isBlank(copyNote) ? undefined : copyNote.trim(); // no note (or only spaces) = no copy note
+    if (trimmedCopyNote && trimmedCopyNote.length > MAX_COPY_NOTE_LENGTH) {
+        return res.status(400).json({ error: `Keep the note short (${MAX_COPY_NOTE_LENGTH} letters or fewer).` });
+    }
 
-    const book = await bookService.addBook({ title, author, copyNote: note });
+    const book = await bookService.addBook({ title, author, copyNote: trimmedCopyNote });
     res.status(201).json(book)
 }
 

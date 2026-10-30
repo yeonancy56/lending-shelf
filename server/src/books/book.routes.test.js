@@ -86,3 +86,10 @@ test('POST /books refuses a copy note longer than 30 letters (400)', async () =>
     expect(res.body.error).toBe('Keep the note short (30 letters or fewer).');
     expect(await Book.countDocuments()).toBe(0);
 });
+
+test('POST /books allows a copy note of exactly 30 letters', async () => {
+    const res = await request(app).post('/books').send({ ...DUNE, copyNote: 'a'.repeat(30) }); // right on the limit
+
+    expect(res.status).toBe(201);
+    expect(res.body.copyNote).toBe('a'.repeat(30));
+});

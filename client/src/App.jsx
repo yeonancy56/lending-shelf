@@ -34,7 +34,7 @@ function App() { //these are memory boxes
     setBookError('');
     setTitle(''); //clear the text box
     setAuthor(''); //clear the text box
-    setCopyNote('');
+    setCopyNote(''); //clear the text box
     loadBooks(); // get the fresh list from the server, and Matilda will appear 
   }
 
