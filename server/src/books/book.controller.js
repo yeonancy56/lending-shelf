@@ -1,5 +1,10 @@
 const bookService = require('./book.service')
 
+// empty, only spaces, or not text at all? Then it's missing
+function isBlank(value) {
+    return typeof value !== 'string' || value.trim() === '';
+}
+
 async function list(req, res) {
     const books = await bookService.listBooks();
     res.json(books);
@@ -13,6 +18,9 @@ async function getOne(req, res) {
 
 
 async function create(req, res) {
+    const { title, author } = req.body ?? {}; // ?? {} = if nothing was sent at all, treat it as an empty form
+    if (isBlank(title) || isBlank(author)) return res.status(400).json({ error: 'Please fill in the title and author' });
+
     const book = await bookService.addBook(req.body);
     res.status(201).json(book)
 }

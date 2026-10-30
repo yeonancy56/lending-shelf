@@ -30,3 +30,34 @@ test('GET /books lists Dune', async () => {
     expect(res.body).toHaveLength(1);
     expect(res.body[0]).toMatchObject(DUNE);
 });
+
+test('POST /books without an author asks for one (400)', async () => {
+    const res = await request(app).post('/books').send({ title: 'Matilda' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Please fill in the title and author');
+    expect(await Book.countDocuments()).toBe(0); // Matilda didn't get saved
+});
+
+test('POST /books without a title asks for one (400)', async () => {
+    const res = await request(app).post('/books').send({ author: 'Roald Dahl' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Please fill in the title and author');
+    expect(await Book.countDocuments()).toBe(0);
+});
+
+test('POST /books with nothing sent at all still gets a clear message (400)', async () => {
+    const res = await request(app).post('/books'); // no form at all, not even an empty one
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Please fill in the title and author');
+});
+
+test('POST /books with only spaces as the author asks for one (400)', async () => {
+    const res = await request(app).post('/books').send({ title: 'Matilda', author: '   ' }); // spaces aren't a real author
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Please fill in the title and author');
+    expect(await Book.countDocuments()).toBe(0);
+});
