@@ -32,6 +32,9 @@ A MERN app for tracking books I lend to friends.
    tickets.
 6. When you explain something, connect it to this app (Dune, Sam, loans), not
    to abstract examples.
+7. **Every ticket gets its own branch and a pull request.** Use the pr skill
+   for the PR description, run /code-review, and merge only after CI passes.
+   After merging, delete the branch.
 
 ## DECISIONS.md format
 
