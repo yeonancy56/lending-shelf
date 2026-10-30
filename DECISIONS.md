@@ -67,3 +67,13 @@ Why: then each test works on its own and in any order, and an old copy of Dune c
 Chose: when the tests open the pretend database, hand it one small piece it needs (Node's "os" tool) ourselves
 Other option: switch on a setting in our test tool (Jest) that's still marked "experimental"
 Why: the pretend shelf wouldn't open inside Jest, so we couldn't test adding Dune at all. Jest was blocking the way the database code fetches that piece. Handing it over ourselves is one line in one place, and it doesn't rely on an experimental setting that might change
+
+## 2026-10-30 — Use 400 for "you left something out" and 409 for "the rules say no"
+Chose: 400 when the request is missing something or names a book or friend that doesn't exist, and 409 when a lending rule says no (like Dune already being out)
+Other option: answer 409 for every kind of "no", like before
+Why: they mean different things. 400 is like asking the librarian for "___", so you need to fix the form. 409 is like asking for Dune when Sam already has it, so the request was fine but the rules say no. Before this, lending to a friend who doesn't exist even worked by mistake
+
+## 2026-10-30 — Check "nothing picked" in the controller and "doesn't exist" in the service
+Chose: the controller checks that a book and a friend were picked. The service checks that they really exist, before it checks the three rules
+Other option: do both checks in the same place
+Why: the controller can spot "nothing picked" just by looking at the request, without bothering anyone. Checking that Dune and Sam exist means looking in the database, which is a job for the service and the DAO. And there's no point checking the rules for a book that isn't there
