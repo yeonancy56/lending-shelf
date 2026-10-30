@@ -68,12 +68,17 @@ Chose: when the tests open the pretend database, hand it one small piece it need
 Other option: switch on a setting in our test tool (Jest) that's still marked "experimental"
 Why: the pretend shelf wouldn't open inside Jest, so we couldn't test adding Dune at all. Jest was blocking the way the database code fetches that piece. Handing it over ourselves is one line in one place, and it doesn't rely on an experimental setting that might change
 
-## 2026-10-30 — Use 400 for "you left something out" and 409 for "the rules say no"
-Chose: 400 when the request is missing something or names a book or friend that doesn't exist, and 409 when a lending rule says no (like Dune already being out)
-Other option: answer 409 for every kind of "no", like before
-Why: they mean different things. 400 is like asking the librarian for "___", so you need to fix the form. 409 is like asking for Dune when Sam already has it, so the request was fine but the rules say no. Before this, lending to a friend who doesn't exist even worked by mistake
+## 2026-10-30 — Two different kinds of "no" when lending a book
+Chose: one kind of "no" for "your request has a mistake" (nothing picked, or a book or friend that isn't on the shelf), and a different kind for "the rules say no" (like Dune already being out). The code numbers for these are 400 and 409
+Other option: give the same "no" every time, like before
+Why: they mean different things. Asking the librarian for "___" means you need to fix your request. Asking for Dune while Sam has it means your request was fine, but the rules say no. Before this, the app even let you lend to a friend who didn't exist
 
-## 2026-10-30 — Check "nothing picked" in the controller and "doesn't exist" in the service
-Chose: the controller checks that a book and a friend were picked. The service checks that they really exist, before it checks the three rules
+## 2026-10-30 — Check "nothing picked" first, and "is it real?" a step later
+Chose: the part of the app that first receives the request checks that a book and a friend were picked. The part that knows the lending rules then checks that Dune and Sam are really on the list, before checking the three rules
 Other option: do both checks in the same place
-Why: the controller can spot "nothing picked" just by looking at the request, without bothering anyone. Checking that Dune and Sam exist means looking in the database, which is a job for the service and the DAO. And there's no point checking the rules for a book that isn't there
+Why: spotting "nothing picked" only needs a look at the request, so it's answered straight away. Checking that Dune and Sam are real means looking them up in the saved data, which belongs with the lending rules. And there's no point checking the rules for a book that isn't there
+
+## 2026-10-30 — Lending asks the books and friends folders directly "does this exist?"
+Chose: the lending code asks the books folder "is Dune real?" and the friends folder "is Sam real?" itself
+Other option: go through the books and friends rule code instead, or copy the look-up into the loans folder
+Why: it's a simple yes/no question with no rules attached, so going the long way would add steps for nothing. And copying it would mean two places to fix if it ever changes

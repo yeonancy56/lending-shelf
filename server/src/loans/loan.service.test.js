@@ -36,6 +36,25 @@ test('lends Dune to Sam when no rule is broken', async () => {
     expect(loanDao.create).toHaveBeenCalledWith({ book: DUNE, friend: SAM });
 });
 
+// before any rule: Dune or Sam isn't real -> stop straight away
+test('does not lend a book that does not exist', async () => {
+    bookDao.exists.mockResolvedValue(false);
+
+    await expect(loanService.lendBook(DUNE, SAM)).rejects.toThrow('That book does not exist');
+    expect(bookDao.exists).toHaveBeenCalledWith(DUNE);
+    expect(loanDao.findActiveByBook).not.toHaveBeenCalled(); // never got as far as the rules
+    expect(loanDao.create).not.toHaveBeenCalled();
+});
+
+test('does not lend to a friend who does not exist', async () => {
+    friendDao.exists.mockResolvedValue(false);
+
+    await expect(loanService.lendBook(DUNE, SAM)).rejects.toThrow('That friend does not exist');
+    expect(friendDao.exists).toHaveBeenCalledWith(SAM);
+    expect(loanDao.findActiveByBook).not.toHaveBeenCalled();
+    expect(loanDao.create).not.toHaveBeenCalled();
+});
+
 // rule 1: Dune is already lent out
 test('does not lend Dune when Dune is already out', async () => {
     loanDao.findActiveByBook.mockResolvedValue({ book: DUNE });
