@@ -172,3 +172,8 @@ Why: the server and its tests don't need to change at all. Vite and Vercel must 
 Chose: a new "npm run dev" command for my computer. If I save a change to the loans code, the server picks it up by itself, with no stopping and starting
 Other option: install nodemon, a separate add-on that does the same thing
 Why: Node can already do this, so there's nothing extra to install or keep updated. Render keeps starting the server the normal way, so the live shelf isn't affected
+
+## 2026-10-30 — Keep my VS Code settings off GitHub
+Chose: tell git to ignore the .vscode folder
+Other option: share it in the repo
+Why: it holds settings for my own editor, not for the shelf app. One got saved into a PR by accident, so ignoring the folder stops that from happening again
