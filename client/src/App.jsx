@@ -11,6 +11,8 @@ function App() { //these are memory boxes
   const[bookId, setBookId] = useState('');
   const[friendId, setFriendId] = useState('');
   const[error, setError] = useState('');
+  const[bookError, setBookError] = useState(''); // the red message under the book form
+  const[friendError, setFriendError] = useState(''); // the red message under the friend form
 
   async function loadBooks() { //load function, fill a list from the server
     setBooks(await getBooks());
@@ -18,7 +20,12 @@ function App() { //these are memory boxes
   
   async function handleAddBook(e) { // this function runs when you click a button on the page
     e.preventDefault(); //Dont refresh the page
-    await addBook({ title: title, author: author });// take what you tyoed (ex title = "matilda") and send it to the server
+    const result = await addBook({ title: title, author: author });// take what you tyoed (ex title = "matilda") and send it to the server
+    if (result.error) {
+      setBookError(result.error); // show what's missing, and keep "Matilda" in the box so you only add the author
+      return;
+    }
+    setBookError('');
     setTitle(''); //clear the text box
     setAuthor(''); //clear the text box
     loadBooks(); // get the fresh list from the server, and Matilda will appear 
@@ -30,7 +37,12 @@ function App() { //these are memory boxes
  
   async function handleAddFriend(e) { // note e = event "the thing that just happened"
     e.preventDefault();
-    await addFriend({ name: name });
+    const result = await addFriend({ name: name });
+    if (result.error) {
+      setFriendError(result.error);
+      return;
+    }
+    setFriendError('');
     setName('');
     loadFriends();
   }
@@ -71,6 +83,7 @@ return (
         <input placeholder="Author" value={author} onChange={(e) => setAuthor(e.target.value)} />
         <button>Add book</button>
       </form>
+      {bookError && <p style={{ color: 'red' }}>{bookError}</p>}
     <ul> 
       {books.map((book) => (
         <li key = {book._id}>{book.title} by {book.author}</li>
@@ -81,6 +94,7 @@ return (
       <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
       <button>Add Friend</button>
      </form>
+     {friendError && <p style={{ color: 'red' }}>{friendError}</p>}
      <ul>
       {friends.map((friend) => (
         <li key={friend._id}>{friend.name}</li>

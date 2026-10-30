@@ -1,5 +1,10 @@
 const friendService = require ('./friend.service');
 
+// empty, only spaces, or not text at all? Then it's missing
+function isBlank(value) {
+    return typeof value !== 'string' || value.trim() === '';
+}
+
 async function list(req, res) {
     const friends = await friendService.listFriends();
     res.json(friends);
@@ -12,6 +17,8 @@ async function getOne(req, res) {
 }
 
 async function create(req, res) {
+    if (isBlank(req.body.name)) return res.status(400).json({ error: "Please fill in your friend's name" });
+
     const friend = await friendService.addFriend(req.body);
     res.status(201).json(friend);
 }

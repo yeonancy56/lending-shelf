@@ -82,3 +82,18 @@ Why: spotting "nothing picked" only needs a look at the request, so it's answere
 Chose: the lending code asks the books folder "is Dune real?" and the friends folder "is Sam real?" itself
 Other option: go through the books and friends rule code instead, or copy the look-up into the loans folder
 Why: it's a simple yes/no question with no rules attached, so going the long way would add steps for nothing. And copying it would mean two places to fix if it ever changes
+
+## 2026-10-30 — Check for a missing author or name ourselves, before saving
+Chose: when a book or friend arrives, look at it straight away, and if the title, author or name is missing, say so in our own words
+Other option: try to save it anyway, and turn the database's complaint into a message
+Why: the database's complaint reads like "Path 'author' is required", which is computer-speak. Checking first lets us say "Please fill in the title and author"
+
+## 2026-10-30 — Only spaces counts as missing
+Chose: an author or name made of just spaces is treated as empty
+Other option: accept it, since the box isn't technically empty
+Why: spaces aren't a real author. Without this, "Matilda by (blank)" could end up on the shelf, and the tests showed it really did
+
+## 2026-10-30 — Keep what you typed when adding fails
+Chose: if adding Matilda fails, "Matilda" stays in the box and the red message appears
+Other option: clear the form every time, like before
+Why: you only need to add the author, not type everything again
