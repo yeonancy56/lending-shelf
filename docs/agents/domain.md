@@ -21,11 +21,11 @@ If `GLOSSARY.md` doesn't exist, **proceed silently**. Don't flag its absence; do
 └── server/
 ```
 
-## Decisions go in DECISIONS.md, written by Nancy
+## Decisions go in DECISIONS.md, written by Claude
 
 Wherever a skill says "record an ADR" or "write to `docs/adr/`", use `DECISIONS.md` instead. Do not create `docs/adr/`.
 
-This is a learning project: Nancy writes every decision entry **in her own words**. Agents don't write the entry. Point out that a decision was made, remind her to record it, and check the entry against the format below once she has written it.
+When a decision is made, Claude adds the entry to the bottom of `DECISIONS.md`. Write it in plain, everyday language: short sentences, no jargon, as if explaining to a friend who doesn't code. Use this format:
 
 ```
 ## <YYYY-MM-DD> — <what I decided>

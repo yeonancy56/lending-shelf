@@ -12,3 +12,8 @@ Why: if I commit first, node_modules and .env would get included and uploaded to
 Chose: turn on branch protection for main
 Other option: leave main unprotected
 Why: so CI always checks the code, even if I forget, and broken code can't get into main
+
+## 2026-10-29 — Keep decisions in DECISIONS.md, not a docs/adr folder
+Chose: keep writing every decision in the one DECISIONS.md file
+Other option: start a docs/adr folder with a separate file for each decision
+Why: I already have a list of decisions in DECISIONS.md, and one file is easier to read top to bottom than lots of small files
