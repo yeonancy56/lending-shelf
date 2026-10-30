@@ -132,3 +132,8 @@ Why: main only blocks a merge when the check called "test" fails. A separate che
 Chose: run the test in a pretend browser (jsdom), use a helper that picks and clicks like a real person would, and wipe the page clean after each test
 Other option: open a real browser like Chrome for every test, and press buttons with lower-level code
 Why: a pretend browser is fast and needs nothing else installed. Clicking like a person checks what you'd really do on the page. And wiping it after each test is the same idea as the empty shelf in the server tests, so one test can't mess up the next
+
+## 2026-10-30 — Use "Every friend needs a name" as the missing-name message
+Chose: "Every friend needs a name"
+Other option: "Your friend needs a name", which another branch changed the same line to (a merge conflict made on purpose, to practise fixing one)
+Why: git couldn't pick between two changes to the same line, so it stopped and asked. Either message works. This one was picked when fixing the conflict by hand
