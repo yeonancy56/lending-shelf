@@ -42,3 +42,13 @@ Why: the only test we had checked 1 + 1 = 2, so it couldn't catch anything. Movi
 Chose: delete it
 Other option: keep it next to the new "server starts" test
 Why: it never checked anything about my app, so it only made the test count look bigger than it really is
+
+## 2026-10-30 — Test the loan rules with a fake helper instead of a database
+Chose: swap the database helper for a fake one that answers whatever each test needs, like "yes, Dune is already out"
+Other option: run the tests against a pretend database with real books and friends saved in it
+Why: the rules only care about the answer, not where it comes from. The fake is quicker, needs no setup, and works even though the pretend database doesn't run inside our test tool yet
+
+## 2026-10-30 — Keep each test file next to the file it tests
+Chose: put the loan rule tests in the loans folder, right next to the loan rules
+Other option: put all tests together in a separate tests folder
+Why: we just sorted the server by feature, so everything about loans, tests included, should be in the loans folder
