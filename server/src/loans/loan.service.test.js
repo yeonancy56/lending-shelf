@@ -1,17 +1,23 @@
 // Tests for the loan rules. No database needed:
 // the real DAO is swapped for a fake one, and each test tells the fake what to answer.
 jest.mock('./loan.dao');
+jest.mock('../books/book.dao');
+jest.mock('../friends/friend.dao');
 const loanDao = require('./loan.dao');
+const bookDao = require('../books/book.dao');
+const friendDao = require('../friends/friend.dao');
 const loanService = require('./loan.service');
 
 const DUNE = 'dune-id';
 const SAM = 'sam-id';
 const DUNE_LOAN = 'dune-loan-id';
 
-// Before each test: the fake DAO says "all clear" (Dune is free, Sam has no books, nothing overdue).
+// Before each test: the fake DAOs say "all clear" (Dune and Sam exist, Dune is free, Sam has no books, nothing overdue).
 // Each test then changes only the one answer it cares about.
 beforeEach(() => {
     jest.resetAllMocks();
+    bookDao.exists.mockResolvedValue(true);
+    friendDao.exists.mockResolvedValue(true);
     loanDao.findActiveByBook.mockResolvedValue(null);
     loanDao.countActiveByFriend.mockResolvedValue(0);
     loanDao.findOverdueByFriend.mockResolvedValue(null);
