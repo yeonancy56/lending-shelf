@@ -20,9 +20,9 @@ async function addBook(data) {
         throw badRequest(`You already have ${sameBooks[0].title.trim()}. Add a note, like 'signed', to tell them apart.`);
     }
     // and its copy note must be different from every other copy's ("Paperback" and "paperback" count as the same)
-    const sameNote = sameBooks.find((book) => book.copyNote?.toLowerCase() === data.copyNote?.toLowerCase());
-    if (sameNote) {
-        throw badRequest(`You already have ${sameNote.title.trim()} (${sameNote.copyNote}). Use a different note.`);
+    const bookWithSameNote = sameBooks.find((book) => book.copyNote?.toLowerCase() === data.copyNote?.toLowerCase());
+    if (bookWithSameNote) {
+        throw badRequest(`You already have ${bookWithSameNote.title.trim()} (${bookWithSameNote.copyNote}). Use a different note.`);
     }
     return bookDao.create(data);
 }

@@ -124,6 +124,7 @@ test('POST /books counts "dune" by "frank herbert " as the same book as Dune by 
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe("You already have Dune. Add a note, like 'signed', to tell them apart.");
+    expect(await Book.countDocuments()).toBe(1);
 });
 
 test('POST /books adds a second Dune with a different copy note', async () => {
@@ -165,6 +166,8 @@ test('POST /books counts a lent-out Dune too', async () => {
     const res = await request(app).post('/books').send(DUNE);
 
     expect(res.status).toBe(400);
+    expect(res.body.error).toBe("You already have Dune. Add a note, like 'signed', to tell them apart.");
+    expect(await Book.countDocuments()).toBe(1);
 });
 
 test('POST /books treats a title with search symbols as plain letters', async () => {

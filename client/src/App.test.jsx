@@ -62,10 +62,12 @@ test('shows the red message when adding a second Dune fails, and keeps what I ty
 
     await user.type(screen.getByPlaceholderText('Title'), 'Dune');
     await user.type(screen.getByPlaceholderText('Author'), 'Frank Herbert');
+    await user.type(screen.getByPlaceholderText("Note (optional, like 'signed')"), 'paperback');
     await user.click(screen.getByRole('button', { name: 'Add book' }));
 
     expect(await screen.findByText(message)).toHaveStyle({ color: 'rgb(255, 0, 0)' }); // red
-    // the boxes still hold what I typed, so I only need to add a note
+    // the boxes still hold what I typed, so I only need to change what's wrong
     expect(screen.getByPlaceholderText('Title')).toHaveValue('Dune');
     expect(screen.getByPlaceholderText('Author')).toHaveValue('Frank Herbert');
+    expect(screen.getByPlaceholderText("Note (optional, like 'signed')")).toHaveValue('paperback');
 });

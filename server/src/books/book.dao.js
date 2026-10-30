@@ -15,14 +15,14 @@ async function exists(id) {
 
 // turn typed text into a search for exactly that text, ignoring capitals and spaces around it.
 // Characters like "?" or "(" mean something special in a search, so they get a "\" in front to stay plain letters
-function sameText(text) {
+function matchIgnoringCaseAndSpaces(text) {
     const plain = text.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     return new RegExp(`^\\s*${plain}\\s*$`, 'i');
 }
 
 // every copy of this book on the shelf (same title and author), lent out or not
 function findSameBooks(title, author) {
-    return Book.find({ title: sameText(title), author: sameText(author) });
+    return Book.find({ title: matchIgnoringCaseAndSpaces(title), author: matchIgnoringCaseAndSpaces(author) });
 }
 
 module.exports = { findAll, findById, create, update, remove, exists, findSameBooks}
