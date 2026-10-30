@@ -8,7 +8,7 @@ export default defineConfig({
     // while running on my computer: pass /api/books on to the server as /books
     proxy: {
       '/api': {
-        target: 'http://localhost:4000',
+        target: 'http://localhost:4000', // must match the door number in server/index.js
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },

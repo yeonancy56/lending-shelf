@@ -1,4 +1,4 @@
-// Ask our own address, and let something pass it on to the server:
+// Ask our own address, and let Vite or Vercel pass it on to the server:
 // on my computer Vite does that (vite.config.js), online Vercel does (vercel.json).
 const API = '/api';
 

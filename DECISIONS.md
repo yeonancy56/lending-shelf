@@ -143,17 +143,27 @@ Chose: the data on MongoDB Atlas, the server on Render, and the page on Vercel, 
 Other option: put everything on one paid host
 Why: they're free, they update by themselves when main changes, and it's a setup I've already used once
 
-## 2026-10-30 — The page asks its own address, and something passes it on to the server
-Chose: the page always asks for "/api/books". On my computer Vite passes that on to the server, and online Vercel passes it on to Render
-Other option: write Render's address straight into the page
-Why: the page code is the same on my computer and online. If Render's address ever changes, only one small settings file changes. And it's what Just Eat This does
+## 2026-10-30 — The page asks for the book list at its own address, and gets passed on to the server
+Chose: when the page wants the list with Dune on it, it asks its own address, with "/api" at the front. On my computer Vite passes the question on to the server, and online Vercel passes it on to Render
+Other option: write the server's address straight into the page
+Why: the page works the same on my computer and online. If the server's address ever changes, only one small settings file changes
+
+## 2026-10-30 — The "/api" part is dropped on the way to the server
+Chose: whoever passes the question on (Vite or Vercel) removes "/api" first, so the server still gets the plain "books" question it always has
+Other option: change the server so it answers at "/api/books" too
+Why: the server and its tests don't need to change at all. Vite and Vercel must both drop it, though, or the online shelf would get "not found"
 
 ## 2026-10-30 — The server uses whatever door number Render gives it
-Chose: the server listens on the port Render picks, and on 4000 when there isn't one (on my computer)
-Other option: always use 4000
-Why: Render decides which port the server must use, so a fixed 4000 wouldn't be reachable online
+Chose: the server opens the door number Render picks, and door 4000 when there isn't one (on my computer)
+Other option: always use door 4000
+Why: Render decides which door the server must use. If the server kept using 4000, nobody online could reach it
 
 ## 2026-10-30 — The database password lives only in Render's settings
 Chose: on Render, paste the Atlas link into its settings page. On my computer it stays in .env, which never goes to GitHub. A .env.example file lists the name (MONGO_URL) with no value
 Other option: put the link in the code
 Why: anyone who can see the code could copy the password and read or wipe my shelf
+
+## 2026-10-30 — Render only goes live after the tests pass
+Chose: Render waits until CI's tests pass before putting a new version of the server online
+Other option: go live the moment main changes
+Why: main is already protected, but this is a second safety net, so a broken version never reaches the live shelf
