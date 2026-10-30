@@ -192,3 +192,33 @@ Why: if I really own two, I should be able to lend both. The app already works t
 Chose: a loan becomes overdue just after 14 days to the minute, and stops being overdue once the book comes back
 Other option: count whole days, or keep a "late" mark on the loan forever
 Why: it's what the app already does, and it's fair to Sam: once Dune is back, Sam can borrow again straight away
+
+## 2026-10-30 — Tell two copies of Dune apart with a short copy note I type
+Chose: a few words I write myself, like "signed" or "Mum's copy", shown as "Dune (signed)"
+Other option: number the copies automatically ("Dune (2)"), or give each copy a different font colour
+Why: a note describes the real book in my hand. A number only helps if I also write it inside the book, and "the blue Dune" means nothing when I'm looking at my shelf. Colours also don't work for people who can't see them well
+
+## 2026-10-30 — The copy note is optional, and always shown when there is one
+Chose: I can leave it empty, and when a book has one, the page always shows it, even if it's my only Dune
+Other option: make every book need a note, or only show notes when there's a second copy
+Why: most books are my only copy, so asking every time is extra work. And notes that appear and disappear depending on what else is on my shelf would be confusing
+
+## 2026-10-30 — Show the copy note everywhere a book appears, in brackets
+Chose: "Dune (signed)" in the books list, the "Pick a book" list and the loans list. A book with no note shows as just "Dune"
+Other option: a dash ("Dune – signed"), or smaller grey text
+Why: the "Pick a book" list is where I choose which copy goes to Sam, and the loans list is where I check who has which. Brackets look the same in all three places, and the "Pick a book" list can't show grey or small text
+
+## 2026-10-30 — Copy notes are only typed when adding a book, for now
+Chose: the note box is on the add-book form only
+Other option: also let me edit a book's note later
+Why: there's no way to edit a book at all yet. That's a whole feature of its own, so it can wait for its own ticket
+
+## 2026-10-30 — Call it a "copy note"
+Chose: "copy note" in the glossary and the code. The box on the page just says "Note (optional, like 'signed')"
+Other option: "note", "label", "tag" or "edition"
+Why: "note" could mean a note about anything, "label" and "tag" sound like groups like "sci-fi", and "edition" already means something real for books
+
+## 2026-10-30 — A copy note of only spaces is no copy note, and 30 letters is the most
+Chose: spaces around a note are trimmed, only spaces counts as no note, and anything over 30 letters gets a red "Keep the note short" message
+Other option: save it exactly as typed, with no limit
+Why: same idea as "spaces aren't a real author". The page never shows "Dune (   )", and a long sentence would stretch the "Pick a book" list

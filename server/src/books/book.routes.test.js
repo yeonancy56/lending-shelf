@@ -61,3 +61,28 @@ test('POST /books with only spaces as the author asks for one (400)', async () =
     expect(res.body.error).toBe('Please fill in the title and author');
     expect(await Book.countDocuments()).toBe(0);
 });
+
+test('POST /books saves a copy note, without the spaces around it', async () => {
+    const res = await request(app).post('/books').send({ ...DUNE, copyNote: ' signed ' });
+
+    expect(res.status).toBe(201);
+    expect(res.body.copyNote).toBe('signed');
+    const saved = await Book.findById(res.body._id);
+    expect(saved.copyNote).toBe('signed');
+});
+
+test('POST /books treats a copy note of only spaces as no copy note', async () => {
+    const res = await request(app).post('/books').send({ ...DUNE, copyNote: '   ' });
+
+    expect(res.status).toBe(201);
+    const saved = await Book.findById(res.body._id);
+    expect(saved.copyNote).toBeUndefined(); // so the page never shows "Dune (   )"
+});
+
+test('POST /books refuses a copy note longer than 30 letters (400)', async () => {
+    const res = await request(app).post('/books').send({ ...DUNE, copyNote: 'the one Mum gave me for my birthday' }); // 35 letters
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Keep the note short (30 letters or fewer).');
+    expect(await Book.countDocuments()).toBe(0);
+});

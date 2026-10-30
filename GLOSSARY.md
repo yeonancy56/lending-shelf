@@ -5,8 +5,12 @@ The words this app uses for keeping track of which books I've lent to which frie
 ## Things
 
 **Book**:
-One physical copy on my shelf, with a title and an author. If I own two copies of Dune, those are two books, and each can be lent on its own.
+One physical copy on my shelf, with a title and an author. If I own two copies of Dune, those are two books, and each can be lent on its own. Two books count as the same book when the title and author match, ignoring capital letters and extra spaces.
 _Avoid_: title, copy, item
+
+**Copy note**:
+A few words I write to describe one copy of a book, like "signed" or "Mum's copy", so I can tell two Dunes apart. It's optional, but every copy of the same book needs a different one.
+_Avoid_: note, label, tag, edition, nickname
 
 ## People
 

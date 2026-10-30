@@ -35,3 +35,16 @@ test('shows the error in red when lending Dune fails', async () => {
     expect(message).toHaveStyle({ color: 'rgb(255, 0, 0)' }); // red
     expect(api.lendBook).toHaveBeenCalledWith('dune-id', 'sam-id'); // sent Dune and Sam, not the wrong IDs
 });
+
+test('shows the copy note in brackets, so two Dunes look different', async () => {
+    // two copies of Dune on the shelf: one with no copy note, one signed
+    api.getBooks.mockResolvedValue([DUNE, { ...DUNE, _id: 'signed-dune-id', copyNote: 'signed' }]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+
+    render(<App />);
+
+    // in the "Pick a book" list, where I choose which copy goes to Sam
+    expect(await screen.findByRole('option', { name: 'Dune (signed)' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Dune' })).toBeInTheDocument(); // no copy note = no brackets
+});
