@@ -237,3 +237,8 @@ Why: two "Dune (paperback)"s look the same on the page, so I'd be back to not te
 Chose: "dune" by "frank herbert " is the same book as "Dune" by "Frank Herbert". "Dune" by someone else is a different book and needs no note
 Other option: count only exact matches as the same book, or look at the title only
 Why: a lowercase letter or a stray space shouldn't sneak a second plain Dune past the check. But two different books that happen to share a title aren't copies of each other
+
+## 2026-10-30 — The "You already have" message uses the name already on my shelf
+Chose: if I type "dune" and I already have "Dune", the message says "You already have Dune", the way it's written on my shelf
+Other option: repeat what I typed, so it says "You already have dune"
+Why: the message is telling me about the book I already own, so it should name it the way the Books list does
