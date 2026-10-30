@@ -148,11 +148,6 @@ Chose: when the page wants the list with Dune on it, it asks its own address, wi
 Other option: write the server's address straight into the page
 Why: the page works the same on my computer and online. If the server's address ever changes, only one small settings file changes
 
-## 2026-10-30 — The "/api" part is dropped on the way to the server
-Chose: whoever passes the question on (Vite or Vercel) removes "/api" first, so the server still gets the plain "books" question it always has
-Other option: change the server so it answers at "/api/books" too
-Why: the server and its tests don't need to change at all. Vite and Vercel must both drop it, though, or the online shelf would get "not found"
-
 ## 2026-10-30 — The server uses whatever door number Render gives it
 Chose: the server opens the door number Render picks, and door 4000 when there isn't one (on my computer)
 Other option: always use door 4000
@@ -167,3 +162,8 @@ Why: anyone who can see the code could copy the password and read or wipe my she
 Chose: Render waits until CI's tests pass before putting a new version of the server online
 Other option: go live the moment main changes
 Why: main is already protected, but this is a second safety net, so a broken version never reaches the live shelf
+
+## 2026-10-30 — The "/api" part is dropped on the way to the server
+Chose: whoever passes the question on (Vite or Vercel) removes "/api" first, so the server still gets the plain "books" question it always has
+Other option: change the server so it answers at "/api/books" too
+Why: the server and its tests don't need to change at all. Vite and Vercel must both drop it, though, or the online shelf would get "not found"
