@@ -17,3 +17,8 @@ Why: so CI always checks the code, even if I forget, and broken code can't get i
 Chose: keep writing every decision in the one DECISIONS.md file
 Other option: start a docs/adr folder with a separate file for each decision
 Why: I already have a list of decisions in DECISIONS.md, and one file is easier to read top to bottom than lots of small files
+
+## 2026-10-29 — Turn branches and pull requests back on
+Chose: every ticket gets its own branch and a pull request, and main only accepts changes after the tests pass
+Other option: keep making changes straight on main, like we did after 2026-10-22
+Why: I want to follow Matt Pocock's method exactly, and it uses a branch and a pull request for every ticket. It also means the tests always run before anything lands in main
