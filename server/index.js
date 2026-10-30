@@ -4,7 +4,8 @@ const connectDB = require('./src/db');
 
 async function start() {
     await connectDB(process.env.MONGO_URL)
-    app.listen(4000, () => console.log('server on 4000')) // starting server
+    const port = process.env.PORT || 4000; // Render tells us which port to use; on my computer it's 4000
+    app.listen(port, () => console.log('server on ' + port)) // starting server
 
 }
 
