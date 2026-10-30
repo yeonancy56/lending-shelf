@@ -14,8 +14,8 @@ A MERN app for tracking books I lend to friends.
   book can't borrow more.
 - `client/` is React (runs in the browser). `server/` is Express (runs on a
   server). MongoDB stores the data.
-- Backend layers: route → controller → service → DAO. Start with folders by
-  layer. Moving to folders by feature is a later ticket.
+- Backend layers: route → controller → service → DAO. The server is sorted
+  into folders by feature (`books/`, `friends/`, `loans/`), with all the layers inside each.
 
 ## Rules for Claude
 

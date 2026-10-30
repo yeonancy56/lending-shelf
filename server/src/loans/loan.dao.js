@@ -1,4 +1,4 @@
-const Loan = require ('../models/loan.model');
+const Loan = require ('./loan.model');
 
 //basic
 function findAll()    { return Loan.find().populate('book').populate('friend'); }

@@ -1,4 +1,4 @@
-const friendDao = require('../daos/friend.dao')
+const friendDao = require('./friend.dao')
 
 function listFriends()             { return friendDao.findAll(); }
 function getFriend(id)             { return friendDao.findById(id); }
