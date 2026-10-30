@@ -1,4 +1,4 @@
-const Book = require('../models/book.model')
+const Book = require('./book.model')
 
 function findAll()          { return Book.find(); }
 function findById(id)       { return Book.findById(id); }

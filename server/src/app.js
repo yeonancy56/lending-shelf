@@ -3,7 +3,7 @@ const app = express();               // make the app
 const cors = require('cors');
 app.use(cors());
 
-const bookRoutes = require('./routes/book.routes');
+const bookRoutes = require('./books/book.routes');
 
 app.use(express.json());
 app.use('/books', bookRoutes);

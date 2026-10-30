@@ -1,4 +1,4 @@
-const bookDao = require('../daos/book.dao');
+const bookDao = require('./book.dao');
 
 function listBooks()          { return bookDao.findAll(); }
 function getBook(id)          { return bookDao.findById(id); }

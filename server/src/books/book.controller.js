@@ -1,4 +1,4 @@
-const bookService = require('../services/book.service')
+const bookService = require('./book.service')
 
 async function list(req, res) {
     const books = await bookService.listBooks();
