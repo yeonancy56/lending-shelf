@@ -23,12 +23,12 @@ Chose: every ticket gets its own branch and a pull request, and main only accept
 Other option: keep making changes straight on main, like we did after 2026-10-22
 Why: I want to follow Matt Pocock's method exactly, and it uses a branch and a pull request for every ticket. It also means the tests always run before anything lands in main
 
-## 2026-10-29 — Sort the server files by topic
-Chose: one folder for books, one for friends, one for loans, with all 5 files for that topic inside
+## 2026-10-29 — Sort the server files by feature
+Chose: one folder for each feature (books, friends, loans), with all 5 files for that feature inside
 Other option: keep one folder per job, like all the "check the rules" files together and all the "talk to the database" files together
 Why: when I work on loans, everything I need is in one folder instead of spread across five. It also fits building one small feature at a time, all the way through
 
-## 2026-10-29 — Move one topic at a time
+## 2026-10-29 — Move one feature at a time
 Chose: move books, check the app, then friends, check, then loans, check
 Other option: move everything at once and check at the end
 Why: if something breaks, I know exactly which step broke it
@@ -37,3 +37,8 @@ Why: if something breaks, I know exactly which step broke it
 Chose: try the app by hand after each move, and add one test that checks the server can find all its files and start
 Other option: write real tests for the loan rules first, before moving anything
 Why: the only test we had checked 1 + 1 = 2, so it couldn't catch anything. Moving files can break a file path, and the new test catches that. Tests for the loan rules are a bigger job, so they belong in tickets #5 and #6
+
+## 2026-10-29 — Delete the 1 + 1 = 2 test
+Chose: delete it
+Other option: keep it next to the new "server starts" test
+Why: it never checked anything about my app, so it only made the test count look bigger than it really is
