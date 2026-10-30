@@ -97,3 +97,13 @@ Why: spaces aren't a real author. Without this, "Matilda by (blank)" could end u
 Chose: if adding Matilda fails, "Matilda" stays in the box and the red message appears
 Other option: clear the form every time, like before
 Why: you only need to add the author, not type everything again
+
+## 2026-10-30 — Anything that isn't words counts as missing too
+Chose: if the title, author or name is a number or something else that isn't words, treat it as missing
+Other option: only check for empty boxes and spaces
+Why: the page always sends words, so anything else means something went wrong. Saying "Please fill in…" is simpler than writing a new message for a mistake you can't make from the page
+
+## 2026-10-30 — Copy the small "is it blank?" check into books and friends, instead of sharing one
+Chose: books and friends each have their own 3-line "is it blank?" check
+Other option: put one shared copy in a separate place that both use
+Why: each folder stays complete on its own, like we chose when we sorted things by feature. It's only 3 lines, so having two isn't much to keep in step. If a third folder needs it, we'll share it then

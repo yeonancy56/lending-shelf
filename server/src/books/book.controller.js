@@ -18,7 +18,7 @@ async function getOne(req, res) {
 
 
 async function create(req, res) {
-    const { title, author } = req.body;
+    const { title, author } = req.body ?? {}; // ?? {} = if nothing was sent at all, treat it as an empty form
     if (isBlank(title) || isBlank(author)) return res.status(400).json({ error: 'Please fill in the title and author' });
 
     const book = await bookService.addBook(req.body);
