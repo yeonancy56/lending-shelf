@@ -48,3 +48,24 @@ test('shows the copy note in brackets, so two Dunes look different', async () =>
     expect(await screen.findByRole('option', { name: 'Dune (signed)' })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'Dune' })).toBeInTheDocument(); // no copy note = no brackets
 });
+
+test('shows the red message when adding a second Dune fails, and keeps what I typed', async () => {
+    api.getBooks.mockResolvedValue([DUNE]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+    // the "server" says no, because I already have Dune
+    const message = "You already have Dune. Add a note, like 'signed', to tell them apart.";
+    api.addBook.mockResolvedValue({ error: message });
+
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.type(screen.getByPlaceholderText('Title'), 'Dune');
+    await user.type(screen.getByPlaceholderText('Author'), 'Frank Herbert');
+    await user.click(screen.getByRole('button', { name: 'Add book' }));
+
+    expect(await screen.findByText(message)).toHaveStyle({ color: 'rgb(255, 0, 0)' }); // red
+    // the boxes still hold what I typed, so I only need to add a note
+    expect(screen.getByPlaceholderText('Title')).toHaveValue('Dune');
+    expect(screen.getByPlaceholderText('Author')).toHaveValue('Frank Herbert');
+});
