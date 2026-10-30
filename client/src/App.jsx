@@ -1,10 +1,16 @@
 import { useState, useEffect } from 'react'; //useState = memory, what should the page remember, useEffect = do something at a certain time
 import { getBooks, addBook, getFriends, addFriend, getLoans, lendBook, returnLoan} from './api';
 
+// a book's name on the page: "Dune (signed)" when it has a copy note, just "Dune" when it doesn't
+function bookName(book) {
+  return book.copyNote ? `${book.title} (${book.copyNote})` : book.title;
+}
+
 function App() { //these are memory boxes 
   const[books, setBooks] = useState([]);
   const[title, setTitle] = useState('');
   const[author, setAuthor] = useState('');
+  const[copyNote, setCopyNote] = useState(''); // optional, like "signed"
   const[friends, setFriends] = useState([]);
   const[name, setName] = useState('');
   const[loans, setLoans] = useState([]);
@@ -20,7 +26,7 @@ function App() { //these are memory boxes
   
   async function handleAddBook(e) { // this function runs when you click a button on the page
     e.preventDefault(); //Dont refresh the page
-    const result = await addBook({ title: title, author: author });// take what you tyoed (ex title = "matilda") and send it to the server
+    const result = await addBook({ title: title, author: author, copyNote: copyNote });// take what you tyoed (ex title = "matilda") and send it to the server
     if (result.error) {
       setBookError(result.error); // show what's missing, and keep "Matilda" in the box so you only add the author
       return;
@@ -28,6 +34,7 @@ function App() { //these are memory boxes
     setBookError('');
     setTitle(''); //clear the text box
     setAuthor(''); //clear the text box
+    setCopyNote(''); //clear the text box
     loadBooks(); // get the fresh list from the server, and Matilda will appear 
   }
 
@@ -81,12 +88,13 @@ return (
       <form onSubmit={handleAddBook}>
         <input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
         <input placeholder="Author" value={author} onChange={(e) => setAuthor(e.target.value)} />
+        <input placeholder="Note (optional, like 'signed')" value={copyNote} onChange={(e) => setCopyNote(e.target.value)} />
         <button>Add book</button>
       </form>
       {bookError && <p style={{ color: 'red' }}>{bookError}</p>}
     <ul> 
       {books.map((book) => (
-        <li key = {book._id}>{book.title} by {book.author}</li>
+        <li key = {book._id}>{bookName(book)} by {book.author}</li>
      ) )}
     </ul>
     <h2>Friends</h2>
@@ -105,7 +113,7 @@ return (
 <select value={bookId} onChange={(e) => setBookId(e.target.value)}>
   <option value="">Pick a book</option>
   {books.map((book) => (
-    <option key={book._id} value={book._id}>{book.title}</option>
+    <option key={book._id} value={book._id}>{bookName(book)}</option>
   ))}
 </select>
 <select value={friendId} onChange={(e) => setFriendId(e.target.value)}>
@@ -122,7 +130,7 @@ return (
 <ul>
 {loans.map((loan) => (
   <li key={loan._id}>
-    {loan.book.title} → {loan.friend.name}{' '}
+    {bookName(loan.book)} → {loan.friend.name}{' '}
     {loan.returnedAt ? '(returned)' : <button onClick={() => handleReturn(loan._id)}>Return</button>}
   </li>
 ))}
