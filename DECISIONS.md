@@ -52,3 +52,18 @@ Why: the rules only care about the answer, not where it comes from. The fake is 
 Chose: put the loan rule tests in the loans folder, right next to the loan rules
 Other option: put all tests together in a separate tests folder
 Why: we just sorted the server by feature, so everything about loans, tests included, should be in the loans folder
+
+## 2026-10-30 — Test books against a pretend database, not my real one
+Chose: a pretend database that starts empty for the tests and is thrown away after
+Other option: run the tests against my real database
+Why: tests that add Dune every time would fill my real shelf with copies of Dune. Also, CI runs on GitHub's computers, which can't reach my real database
+
+## 2026-10-30 — Every test starts with an empty shelf and sets itself up
+Chose: empty the pretend database before each test, and have each test add the books it needs
+Other option: let a test use the books an earlier test added
+Why: then each test works on its own and in any order, and an old copy of Dune can't sneak into the next test
+
+## 2026-10-30 — Fix the test database crash by handing over the missing tool ourselves
+Chose: when the tests connect, give the database library Node's "os" tool directly
+Other option: switch on an experimental setting in Jest so the library can load the tool by itself
+Why: the crash happened because Jest blocks the way the library loads that tool. Handing it over is one line in one place, and it doesn't depend on an experimental feature that might change
