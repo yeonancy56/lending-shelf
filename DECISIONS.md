@@ -107,3 +107,23 @@ Why: the page always sends words, so anything else means something went wrong. S
 Chose: books and friends each have their own 3-line "is it blank?" check
 Other option: put one shared copy in a separate place that both use
 Why: each folder stays complete on its own, like we chose when we sorted things by feature. It's only 3 lines, so having two isn't much to keep in step. If a third folder needs it, we'll share it then
+
+## 2026-10-30 — Use Vitest to test the page
+Chose: Vitest, a test tool made to work with Vite (the tool that already runs our page)
+Other option: Jest, the same tool the server uses
+Why: Jest would need extra setup to understand the page's code, and Vitest reads it the same way Vite does. The tests look almost the same as the server ones, so there's not much new to learn
+
+## 2026-10-30 — Test the lend form with a fake api.js
+Chose: swap api.js for a fake that says the shelf has Dune and Sam, and "This book is already lent out" when you click Lend
+Other option: start the real server and database for the test
+Why: it's the same idea as the fake helper in the loan rule tests. The test only cares that the page shows the message it's given, and it runs in under a second with nothing else switched on
+
+## 2026-10-30 — Check the message isn't there before clicking Lend
+Chose: the test checks the red message is missing first, then clicks Lend, then checks it's there
+Other option: only check it's there at the end
+Why: otherwise a message that was always on the page would still pass. Checking first proves clicking Lend is what made it show up
+
+## 2026-10-30 — Run the page tests inside the same CI check as the server tests
+Chose: add the page tests as extra steps in the existing "test" check
+Other option: give the page tests their own separate check
+Why: main only blocks a merge when the check called "test" fails. A separate check wouldn't block anything unless we also changed that setting
