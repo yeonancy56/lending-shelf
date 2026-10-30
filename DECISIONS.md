@@ -113,8 +113,8 @@ Chose: Vitest, a test tool made to work with Vite (the tool that already runs ou
 Other option: Jest, the same tool the server uses
 Why: Jest would need extra setup to understand the page's code, and Vitest reads it the same way Vite does. The tests look almost the same as the server ones, so there's not much new to learn
 
-## 2026-10-30 — Test the lend form with a fake api.js
-Chose: swap api.js for a fake that says the shelf has Dune and Sam, and "This book is already lent out" when you click Lend
+## 2026-10-30 — Test the lend form with a pretend server
+Chose: swap the part of the page that talks to the server for a fake. The fake says the shelf has Dune and Sam, and answers "This book is already lent out" when you click Lend
 Other option: start the real server and database for the test
 Why: it's the same idea as the fake helper in the loan rule tests. The test only cares that the page shows the message it's given, and it runs in under a second with nothing else switched on
 
@@ -127,3 +127,8 @@ Why: otherwise a message that was always on the page would still pass. Checking 
 Chose: add the page tests as extra steps in the existing "test" check
 Other option: give the page tests their own separate check
 Why: main only blocks a merge when the check called "test" fails. A separate check wouldn't block anything unless we also changed that setting
+
+## 2026-10-30 — The helpers the page test uses
+Chose: run the test in a pretend browser (jsdom), use a helper that picks and clicks like a real person would, and wipe the page clean after each test
+Other option: open a real browser like Chrome for every test, and press buttons with lower-level code
+Why: a pretend browser is fast and needs nothing else installed. Clicking like a person checks what you'd really do on the page. And wiping it after each test is the same idea as the empty shelf in the server tests, so one test can't mess up the next
