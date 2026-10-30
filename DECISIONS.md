@@ -45,8 +45,8 @@ Why: it never checked anything about my app, so it only made the test count look
 
 ## 2026-10-30 — Test the loan rules with a fake helper instead of a database
 Chose: swap the database helper for a fake one that answers whatever each test needs, like "yes, Dune is already out"
-Other option: run the tests against a pretend database with real books and friends saved in it
-Why: the rules only care about the answer, not where it comes from. The fake is quicker, needs no setup, and works even though the pretend database doesn't run inside our test tool yet
+Other option: run the tests against a pretend database that we fill with books and friends
+Why: the rules only care about the answer, not where it comes from. The fake is quicker and needs no setup. Also, when we tried the pretend database inside our test tool (Jest), it crashed, and fixing that is a job for ticket #3
 
 ## 2026-10-30 — Keep each test file next to the file it tests
 Chose: put the loan rule tests in the loans folder, right next to the loan rules
