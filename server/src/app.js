@@ -8,7 +8,7 @@ const bookRoutes = require('./books/book.routes');
 app.use(express.json());
 app.use('/books', bookRoutes);
 
-const friendRoutes = require('./routes/friend.routes');
+const friendRoutes = require('./friends/friend.routes');
 app.use('/friends', friendRoutes);
 
 const loanRoutes = require('./routes/loan.routes');

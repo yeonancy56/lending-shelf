@@ -1,4 +1,4 @@
-const Friend =  require ('../models/friend.model')
+const Friend =  require ('./friend.model')
 
 function findAll()         { return Friend.find()};
 function findById(id)      { return Friend.findById(id)};
