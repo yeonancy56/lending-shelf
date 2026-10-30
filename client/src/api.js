@@ -1,4 +1,6 @@
-const API = 'http://localhost:4000';
+// Ask our own address, and let something pass it on to the server:
+// on my computer Vite does that (vite.config.js), online Vercel does (vercel.json).
+const API = '/api';
 
 //GET: look at all books (like curl with no -X):
 export async function getBooks() {

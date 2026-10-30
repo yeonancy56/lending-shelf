@@ -137,3 +137,23 @@ Why: a pretend browser is fast and needs nothing else installed. Clicking like a
 Chose: "Every friend needs a name"
 Other option: "Your friend needs a name", which another branch changed the same line to (a merge conflict made on purpose, to practise fixing one)
 Why: git couldn't pick between two changes to the same line, so it stopped and asked. Either message works. This one was picked when fixing the conflict by hand
+
+## 2026-10-30 — Put the app online with Atlas, Render and Vercel
+Chose: the data on MongoDB Atlas, the server on Render, and the page on Vercel, all on free plans, the same as Just Eat This
+Other option: put everything on one paid host
+Why: they're free, they update by themselves when main changes, and it's a setup I've already used once
+
+## 2026-10-30 — The page asks its own address, and something passes it on to the server
+Chose: the page always asks for "/api/books". On my computer Vite passes that on to the server, and online Vercel passes it on to Render
+Other option: write Render's address straight into the page
+Why: the page code is the same on my computer and online. If Render's address ever changes, only one small settings file changes. And it's what Just Eat This does
+
+## 2026-10-30 — The server uses whatever door number Render gives it
+Chose: the server listens on the port Render picks, and on 4000 when there isn't one (on my computer)
+Other option: always use 4000
+Why: Render decides which port the server must use, so a fixed 4000 wouldn't be reachable online
+
+## 2026-10-30 — The database password lives only in Render's settings
+Chose: on Render, paste the Atlas link into its settings page. On my computer it stays in .env, which never goes to GitHub. A .env.example file lists the name (MONGO_URL) with no value
+Other option: put the link in the code
+Why: anyone who can see the code could copy the password and read or wipe my shelf
