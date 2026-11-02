@@ -1,8 +1,10 @@
+const mongoose = require('mongoose');
 const Loan = require ('./loan.model');
 
 //basic
 function findAll()    { return Loan.find().populate('book').populate('friend'); }
-function findById(id) { return Loan.findById(id); }
+// an ID in the wrong shape, like "abc", can't belong to any loan, so there's nothing to find
+function findById(id) { return mongoose.isValidObjectId(id) ? Loan.findById(id) : null; }
 function create(data) { return Loan.create(data); }
 
 // rule 1: is this book still out?

@@ -14,7 +14,8 @@ async function lend(req, res) {
         const loan = await loanService.lendBook(bookId, friendId);
         res.status(201).json(loan)
     } catch (err) {
-        res.status(err.status || 409).json({ error: err.message }); // 400 for a bad request, 409 for a broken rule
+        if (!err.status) throw err; // a real breakdown, not a known mistake, so let Express handle it
+        res.status(err.status).json({ error: err.message }); // 400 for a bad request, 409 for a broken rule
     }
 }
 
@@ -24,7 +25,8 @@ async function returnLoan(req, res) {
         if (!loan) return res.status (404).json({ error: 'Loan not found '});
         res.json(loan);
     } catch (err) {
-        res.status(409).json({ error: err.message });
+        if (!err.status) throw err;
+        res.status(err.status).json({ error: err.message });
     }
 }
 
