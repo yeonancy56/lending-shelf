@@ -9,7 +9,8 @@ function sameTextPattern(text) {
     return new RegExp(`^\\s*${plain}\\s*$`, 'i');
 }
 
-// are these two the same words? (no text at all only matches no text at all)
+// are these two the same words? Uses the same search as the database, so the rule is written only once.
+// (no text at all only matches no text at all)
 function isSameText(a, b) {
     if (!a || !b) return !a && !b;
     return sameTextPattern(a).test(b);

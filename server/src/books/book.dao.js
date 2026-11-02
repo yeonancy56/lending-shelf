@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Book = require('./book.model')
-const { sameTextPattern } = require('./same-text');
+const { sameTextPattern } = require('./book.same-text');
 
 function findAll()          { return Book.find(); }
 function findById(id)       { return Book.findById(id); }

@@ -16,4 +16,11 @@ function ruleBroken(message) {
     return err;
 }
 
-module.exports = { badRequest, ruleBroken };
+// what every controller does when the service says no: a known mistake gets its red message,
+// and a real breakdown is passed on to Express
+function answerKnownMistake(res, err) {
+    if (!err.status) throw err;
+    res.status(err.status).json({ error: err.message }); // 400 for a bad request, 409 for a broken rule
+}
+
+module.exports = { badRequest, ruleBroken, answerKnownMistake };

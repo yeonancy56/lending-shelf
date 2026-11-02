@@ -1,6 +1,6 @@
 const bookDao = require('./book.dao');
 const { badRequest } = require('../errors');
-const { isSameText } = require('./same-text');
+const { isSameText } = require('./book.same-text');
 
 function listBooks()          { return bookDao.findAll(); }
 function getBook(id)          { return bookDao.findById(id); }
