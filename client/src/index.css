@@ -164,6 +164,7 @@ li button {
   border-radius: 3px;
   min-inline-size: 120px;
   max-inline-size: 200px; /* a long name wraps into a thicker spine, never gets cut */
+  overflow-wrap: anywhere; /* even one very long word breaks onto the next line instead of running off */
   font-size: 14px;
 }
 
