@@ -6,14 +6,13 @@ function bookName(book) {
   return book.copyNote ? `${book.title} (${book.copyNote})` : book.title;
 }
 
-// fill a list with the server's answer, or show the red message at the top if it broke
-function showList(result, setList, setListError) {
-  if (result.error) {
-    setListError(result.error);
-    return;
+// fill a list with the server's answer, and remember whether that list broke,
+// so the red message at the top stays until every broken list has loaded
+function fillList(result, list, setList, setListErrors) {
+  setListErrors((errors) => ({ ...errors, [list]: result.error || '' }));
+  if (!result.error) {
+    setList(result);
   }
-  setListError('');
-  setList(result);
 }
 
 function App() { //these are memory boxes 
@@ -29,10 +28,11 @@ function App() { //these are memory boxes
   const[loanError, setLoanError] = useState(''); // the red message under the lend form, for Lend and Return
   const[bookError, setBookError] = useState(''); // the red message under the book form
   const[friendError, setFriendError] = useState(''); // the red message under the friend form
-  const[listError, setListError] = useState(''); // the red message at the top, when a list can't load
+  const[listErrors, setListErrors] = useState({}); // which lists couldn't load, like { loans: 'Something went wrong. Try again.' }
+  const listError = Object.values(listErrors).find((error) => error); // the red message at the top, if any list is broken
 
   function loadBooks() { //load function, fill a list from the server
-    return getBooks().then((result) => showList(result, setBooks, setListError)); // fill the list in once the server answers
+    return getBooks().then((result) => fillList(result, 'books', setBooks, setListErrors)); // fill the list in once the server answers
   }
   
   async function handleAddBook(e) { // this function runs when you click a button on the page
@@ -50,7 +50,7 @@ function App() { //these are memory boxes
   }
 
   function loadFriends() {
-    return getFriends().then((result) => showList(result, setFriends, setListError));
+    return getFriends().then((result) => fillList(result, 'friends', setFriends, setListErrors));
   }
  
   async function handleAddFriend(e) { // note e = event "the thing that just happened"
@@ -66,7 +66,7 @@ function App() { //these are memory boxes
   }
 
   function loadLoans() {
-    return getLoans().then((result) => showList(result, setLoans, setListError));
+    return getLoans().then((result) => fillList(result, 'loans', setLoans, setListErrors));
   }
 
   async function handleAddLoan(e) {

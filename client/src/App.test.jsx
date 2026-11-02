@@ -98,3 +98,24 @@ test('marks "Something went wrong" as an error when the lists can\'t load as the
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong. Try again.'); // one message, at the top
 });
+
+test('keeps "Something went wrong" up when only Loans broke and adding a book works', async () => {
+    // Dune and Sam load fine, but the loans list breaks
+    api.getBooks.mockResolvedValue([DUNE]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue({ error: 'Something went wrong. Try again.' });
+    api.addBook.mockResolvedValue({ _id: 'matilda-id', title: 'Matilda', author: 'Roald Dahl' });
+
+    const user = userEvent.setup();
+    render(<App />);
+    expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong. Try again.');
+
+    // adding Matilda works and reloads the books, but Loans is still missing
+    api.getBooks.mockResolvedValue([DUNE, { _id: 'matilda-id', title: 'Matilda', author: 'Roald Dahl' }]);
+    await user.type(screen.getByPlaceholderText('Title'), 'Matilda');
+    await user.type(screen.getByPlaceholderText('Author'), 'Roald Dahl');
+    await user.click(screen.getByRole('button', { name: 'Add book' }));
+    expect(await screen.findByRole('option', { name: 'Matilda' })).toBeInTheDocument();
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Something went wrong. Try again.'); // still up
+});

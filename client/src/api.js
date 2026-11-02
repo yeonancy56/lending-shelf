@@ -28,7 +28,7 @@ async function send(path, options) {
     return SOMETHING_WENT_WRONG;
 }
 
-//GET: look at all books (like curl with no -X). It goes through send() too, so a breakdown becomes "Something went wrong":
+//GET: look at all books (like curl with no -X):
 export async function getBooks() {
     return send('/books');
 }
