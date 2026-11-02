@@ -347,3 +347,8 @@ Why: the lint check was already set up, but nothing ran it, so a mistake sat the
 Chose: the three steps that fill in the books, friends and loans lists are written a little differently, so the lint check can see they only fill in once the server answers. The page uses the same steps when it opens and after adding a book, friend or loan, and it works the same as before
 Other option: tell the lint check to skip that one line, or turn that rule off for the whole page
 Why: the rule is there to catch a page that keeps redrawing itself over and over. Turning it off for the whole page would also stop it checking new code I write later. Skipping one line would hide the warning instead of fixing the code
+
+## 2026-11-02 — When the lists can't load, one red message shows at the top
+Chose: if the server can't be reached when the page opens, one "Something went wrong. Try again." shows at the top, under "Lending Shelf". The lists go through the same check in api.js as the buttons
+Other option: one message under each list that failed (Books, Friends and Loans)
+Why: when the server is down, all three lists fail together, so three of the same message would just repeat. Before, the page looked like I had no books, no friends and no loans, with nothing saying why
