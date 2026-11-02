@@ -70,7 +70,8 @@ function App() { //these are memory boxes
   }
 
   async function handleReturn(id) {
-    await returnLoan(id);
+    const result = await returnLoan(id);
+    setError(result.error || ''); // shows under the Lend form, the one red spot in Loans
     loadLoans();
   }
 
