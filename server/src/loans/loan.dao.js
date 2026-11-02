@@ -17,9 +17,9 @@ function countActiveByFriend(friendId) {
     return Loan.countDocuments({ friend: friendId, returnedAt: null });
 }
 
-// rule 3: does this firend have an overdue book?
-function findOverdueByFriend(friendId, cutoff) {
-    return Loan.findOne({ friend: friendId, returnedAt: null, lentAt: { $lt:cutoff } });
+// rule 3: the books this friend has right now, so the service can check if any is overdue
+function findActiveByFriend(friendId) {
+    return Loan.find({ friend: friendId, returnedAt: null });
 }
 
 //return a book: fill in today's date
@@ -27,4 +27,4 @@ function markReturned(id) {
     return Loan.findByIdAndUpdate(id, { returnedAt: new Date() }, { returnDocument: 'after' });
 }
 
-module.exports = {findAll, findById, create, findActiveByBook, countActiveByFriend, findOverdueByFriend, markReturned}
+module.exports = {findAll, findById, create, findActiveByBook, countActiveByFriend, findActiveByFriend, markReturned}

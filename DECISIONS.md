@@ -362,3 +362,28 @@ Why: before, the lists just stayed empty and the buttons did nothing, with no me
 Chose: one small piece of the page, called ErrorMessage, draws every red message. Books, Friends, Loans and the message at the top all use it. It lives in App.jsx, next to the piece that writes a book's name like "Dune (signed)"
 Other option: keep writing out the red message by hand in all four places, or give the piece its own file
 Why: four hand-written copies could drift apart. One might lose its alert mark, and then the computer wouldn't read it out loud right away for people who can't see the screen. The page is still just one file, so a separate file would only be one more place to look
+
+## 2026-11-02 — Only books still out show a "due back" date
+Chose: "Dune → Sam, due back 16 Nov" for a book Sam still has. A returned loan just says "(returned)", like now
+Other option: show "due back" on every loan, returned ones too
+Why: once Dune is back, the date doesn't help me, and it would make the list busier
+
+## 2026-11-02 — "Due back" shows the day, not the time
+Chose: "due back 16 Nov". The rule stays exact, so Dune lent at 8pm turns red after 8pm on the 16th
+Other option: "due back 16 Nov, 8:00pm"
+Why: it reads like a library slip. Turning red later that same day is close enough
+
+## 2026-11-02 — An overdue loan's whole line turns red and says "overdue"
+Chose: "Dune → Sam, due back 16 Nov · overdue", with the whole line in the shared red
+Other option: only the date in red, or red with no word
+Why: the whole line is easy to spot. The word helps people who can't see red, and gets read out by a screen reader
+
+## 2026-11-02 — The server works out "due back" and "overdue"
+Chose: the server sends each loan with its "due back" day and whether it's overdue. The page only shows them
+Other option: the page adds 14 days to the lent date itself
+Why: then "14 days" lives in one place. If I ever change it, the red lines and the "Sam can't borrow" rule can't disagree
+
+## 2026-11-02 — "Is it overdue?" is decided in one spot
+Chose: the server fetches the books Sam has right now, and one small check decides which are overdue. The red lines and the "Sam can't borrow" rule both use that same check
+Other option: keep asking the database "does Sam have a book out longer than 14 days?" for the rule, with a separate check for the red lines
+Why: two checks could slowly drift apart, so Dune might look fine in the list while the rules say Sam is overdue. Sam has 3 books at most, so fetching them all costs nothing

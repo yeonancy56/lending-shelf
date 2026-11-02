@@ -119,3 +119,21 @@ test('says the loan was not found when the ID is not a real ID (404)', async () 
 
     expect(res.status).toBe(404);
 });
+
+test('the loans list says when each book is due back, and which ones are overdue', async () => {
+    const matilda = await Book.create({ title: 'Matilda', author: 'Roald Dahl' });
+    const emma = await Book.create({ title: 'Emma', author: 'Jane Austen' });
+    await Loan.create({ book: dune.id, friend: sam.id, lentAt: new Date('2026-10-01T12:00:00Z') }); // out for weeks
+    await Loan.create({ book: matilda.id, friend: sam.id, lentAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) }); // out for 2 days
+    await Loan.create({ book: emma.id, friend: sam.id, lentAt: new Date('2026-10-01T12:00:00Z'), returnedAt: new Date() }); // already back
+
+    const res = await request(app).get('/loans');
+    const loanOf = (title) => res.body.find((loan) => loan.book.title === title);
+
+    expect(res.status).toBe(200);
+    expect(loanOf('Dune').dueBack).toBe('2026-10-15T12:00:00.000Z'); // 14 days after it was lent
+    expect(loanOf('Dune').overdue).toBe(true);
+    expect(loanOf('Matilda').overdue).toBe(false);
+    expect(loanOf('Emma').dueBack).toBeUndefined(); // back on the shelf, so no due back day...
+    expect(loanOf('Emma').overdue).toBe(false); // ...and never overdue
+});

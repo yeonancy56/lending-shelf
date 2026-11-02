@@ -119,3 +119,24 @@ test('keeps "Something went wrong" up when only Loans broke and adding a book wo
 
     expect(screen.getByRole('alert')).toHaveTextContent('Something went wrong. Try again.'); // still up
 });
+
+test('shows when each book is due back, and marks an overdue one', async () => {
+    const MATILDA = { _id: 'matilda-id', title: 'Matilda', author: 'Roald Dahl' };
+    api.getBooks.mockResolvedValue([DUNE, MATILDA]);
+    api.getFriends.mockResolvedValue([SAM]);
+    // midday, so the day is the same in every time zone
+    api.getLoans.mockResolvedValue([
+        { _id: 'loan-1', book: DUNE, friend: SAM, dueBack: '2026-11-16T12:00:00.000Z', overdue: true },
+        { _id: 'loan-2', book: MATILDA, friend: SAM, dueBack: '2026-11-20T12:00:00.000Z', overdue: false },
+    ]);
+
+    render(<App />);
+
+    const duneLine = (await screen.findByText(/Dune → Sam/)).closest('li');
+    const matildaLine = screen.getByText(/Matilda → Sam/).closest('li');
+    expect(duneLine).toHaveTextContent('due back 16 Nov · overdue');
+    expect(duneLine).toHaveClass('overdue'); // the class that turns the line red
+    expect(matildaLine).toHaveTextContent('due back 20 Nov');
+    expect(matildaLine).not.toHaveTextContent('overdue');
+    expect(matildaLine).not.toHaveClass('overdue');
+});

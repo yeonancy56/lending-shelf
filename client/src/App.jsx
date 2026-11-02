@@ -6,6 +6,12 @@ function bookName(book) {
   return book.copyNote ? `${book.title} (${book.copyNote})` : book.title;
 }
 
+// the day a book is due back, like "16 Nov". The server sends the exact due back moment,
+// and this turns it into the day on my own calendar
+function dueBackDay(dueBack) {
+  return new Date(dueBack).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+
 // a red message, like "This book is already lent out". Marked as an alert so a screen reader
 // reads it out loud right away. Shows nothing when there's no message
 function ErrorMessage({ message }) {
@@ -153,8 +159,10 @@ return (
 
 <ul>
 {loans.map((loan) => (
-  <li key={loan._id}>
-    {bookName(loan.book)} → {loan.friend.name}{' '}
+  <li key={loan._id} className={loan.overdue ? 'overdue' : undefined}>
+    {bookName(loan.book)} → {loan.friend.name}
+    {loan.dueBack && `, due back ${dueBackDay(loan.dueBack)}`}
+    {loan.overdue && ' · overdue'}{' '}
     {loan.returnedAt ? '(returned)' : <button onClick={() => handleReturn(loan._id)}>Return</button>}
   </li>
 ))}

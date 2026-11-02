@@ -12,7 +12,7 @@ const DUNE = 'dune-id';
 const SAM = 'sam-id';
 const DUNE_LOAN = 'dune-loan-id';
 
-// Before each test: the fake DAOs say "all clear" (Dune and Sam exist, Dune is free, Sam has no books, nothing overdue).
+// Before each test: the fake DAOs say "all clear" (Dune and Sam exist, Dune is free, Sam has no books out).
 // Each test then changes only the one answer it cares about.
 beforeEach(() => {
     jest.resetAllMocks();
@@ -20,7 +20,7 @@ beforeEach(() => {
     friendDao.exists.mockResolvedValue(true);
     loanDao.findActiveByBook.mockResolvedValue(null);
     loanDao.countActiveByFriend.mockResolvedValue(0);
-    loanDao.findOverdueByFriend.mockResolvedValue(null);
+    loanDao.findActiveByFriend.mockResolvedValue([]);
 });
 
 afterEach(() => {
@@ -73,23 +73,45 @@ test('does not lend Sam a 4th book', async () => {
     expect(loanDao.create).not.toHaveBeenCalled();
 });
 
+// a pretend loan of Matilda to Sam, still out, lent at the given moment
+function matildaLoan(lentAt) {
+    const loan = { book: 'matilda-id', friend: SAM, lentAt: new Date(lentAt), returnedAt: null };
+    return { ...loan, toObject: () => loan };
+}
+
 // rule 3: Sam has a book out for more than 14 days
 test('does not lend to Sam when Sam has an overdue book', async () => {
-    loanDao.findOverdueByFriend.mockResolvedValue({ friend: SAM });
+    loanDao.findActiveByFriend.mockResolvedValue([matildaLoan(Date.now() - 15 * 24 * 60 * 60 * 1000)]); // out for 15 days
 
     await expect(loanService.lendBook(DUNE, SAM)).rejects.toThrow('This friend has an overdue book');
-    expect(loanDao.findOverdueByFriend).toHaveBeenCalledWith(SAM, expect.any(Date)); // checked Sam, not Dune
+    expect(loanDao.findActiveByFriend).toHaveBeenCalledWith(SAM); // checked Sam, not Dune
     expect(loanDao.create).not.toHaveBeenCalled();
 });
 
-// rule 3, part 2: the service asks for loans older than 14 days, not some other number.
-// (The "older than" check itself happens in the database, so the DAO's own tests would cover that.)
-test('asks for loans older than 14 days', async () => {
-    jest.useFakeTimers().setSystemTime(new Date('2026-10-30'));
+// the exact moment, from the glossary: lent Monday 2 November at 8pm, overdue from just after 8pm on Monday 16 November.
+// The red line and rule 3 must agree, so each test checks both
+test('at exactly 14 days, Matilda is not overdue yet, and Sam can still borrow', async () => {
+    const matilda = matildaLoan('2026-11-02T20:00:00Z');
+    loanDao.findActiveByFriend.mockResolvedValue([matilda]);
+    loanDao.findAll.mockResolvedValue([matilda]);
+    jest.useFakeTimers().setSystemTime(new Date('2026-11-16T20:00:00Z')); // 14 days to the second
 
+    const [listed] = await loanService.listLoans();
+    expect(listed.overdue).toBe(false);
     await loanService.lendBook(DUNE, SAM);
+    expect(loanDao.create).toHaveBeenCalled();
+});
 
-    expect(loanDao.findOverdueByFriend).toHaveBeenCalledWith(SAM, new Date('2026-10-16')); // 14 days before today
+test('one second after 14 days, Matilda is overdue, and Sam can not borrow', async () => {
+    const matilda = matildaLoan('2026-11-02T20:00:00Z');
+    loanDao.findActiveByFriend.mockResolvedValue([matilda]);
+    loanDao.findAll.mockResolvedValue([matilda]);
+    jest.useFakeTimers().setSystemTime(new Date('2026-11-16T20:00:01Z')); // one second later
+
+    const [listed] = await loanService.listLoans();
+    expect(listed.overdue).toBe(true);
+    await expect(loanService.lendBook(DUNE, SAM)).rejects.toThrow('This friend has an overdue book');
+    expect(loanDao.create).not.toHaveBeenCalled();
 });
 
 // returning: Dune can't be returned twice
