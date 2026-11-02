@@ -362,3 +362,63 @@ Why: before, the lists just stayed empty and the buttons did nothing, with no me
 Chose: one small piece of the page, called ErrorMessage, draws every red message. Books, Friends, Loans and the message at the top all use it. It lives in App.jsx, next to the piece that writes a book's name like "Dune (signed)"
 Other option: keep writing out the red message by hand in all four places, or give the piece its own file
 Why: four hand-written copies could drift apart. One might lose its alert mark, and then the computer wouldn't read it out loud right away for people who can't see the screen. The page is still just one file, so a separate file would only be one more place to look
+
+## 2026-11-02 — Only books still out show a "due back" date
+Chose: "Dune → Sam, due back 16 Nov" for a book Sam still has. A returned loan just says "(returned)", like now
+Other option: show "due back" on every loan, returned ones too
+Why: once Dune is back, the date doesn't help me, and it would make the list busier
+
+## 2026-11-02 — "Due back" shows the day, not the time
+Chose: "due back 16 Nov". The rule stays exact, so Dune lent at 8pm turns red after 8pm on the 16th
+Other option: "due back 16 Nov, 8:00pm"
+Why: it reads like a library slip. Turning red later that same day is close enough
+
+## 2026-11-02 — An overdue loan's whole line turns red and says "overdue"
+Chose: "Dune → Sam, due back 16 Nov · overdue", with the whole line in the shared red
+Other option: only the date in red, or red with no word
+Why: the whole line is easy to spot. The word helps people who can't see red, and gets read out by a screen reader
+
+## 2026-11-02 — The server works out "due back" and "overdue"
+Chose: the server sends each loan with its "due back" day and whether it's overdue. The page only shows them
+Other option: the page adds 14 days to the lent date itself
+Why: then "14 days" lives in one place. If I ever change it, the red lines and the "Sam can't borrow" rule can't disagree
+
+## 2026-11-02 — Editing a book follows the same checks as adding one
+Chose: no blank title or author, the note is 30 letters at most, and every Dune still needs its own note. The book I'm editing doesn't count as a clash with itself
+Other option: only check for blanks when editing
+Why: otherwise an edit could sneak in the mix-ups adding stops, like two "Dune (paperback)"s
+
+## 2026-11-02 — I can edit a book while it's lent out
+Chose: yes. If Sam has Dune and I fix the author, the loans list shows the fixed name straight away
+Other option: wait until Sam returns it
+Why: fixing a spelling mistake doesn't change who has the book. A loan points at the book, so it always shows the book's name as it is now
+
+## 2026-11-02 — Click a spine to edit that book in the form above the shelf
+Chose: clicking a spine fills the book form with that book. The button says "Save", with a "Cancel" next to it, and the spine gets a highlight. Afterwards it goes back to "Add book"
+Other option: an "Edit" button on every spine, or a pop-up box
+Why: it uses the boxes I already have, and the shelf keeps its look
+
+## 2026-11-02 — A friend's page is a panel on the same page, not a new page
+Chose: click "Sam" in the Friends list, and a box opens under Friends with Sam's loans and a "Close" button
+Other option: a real separate page with its own address, which needs an extra add-on (React Router)
+Why: it's the same click-and-fill idea as editing a book, with nothing new to install. Bookmarkable pages can be their own ticket later
+
+## 2026-11-02 — What Sam's panel shows
+Chose: "2 of 3 books" at the top. Then what Sam has now, with "due back" and red for overdue, like the loans list. Then past loans, newest first, with when each was lent and returned. Empty parts say "Nothing right now" and "No past loans yet"
+Other option: past loans with no dates, and no "2 of 3"
+Why: the dates show what really happened, which is why I keep returned loans. "2 of 3" tells me if I can lend Sam another before I try
+
+## 2026-11-02 — The server answers "what are Sam's loans?"
+Chose: a new server question that sends Sam's current loans, past loans, and the 3-book limit
+Other option: the page picks Sam's loans out of the full loans list it already has
+Why: the 3-book limit stays in one place, like "14 days". And the page doesn't have to sift through everyone's history to find Sam's
+
+## 2026-11-02 — Search filters the shelf as I type, right on the page
+Chose: a search box above the shelf. As I type, only matching books stay. "dune" or "herb" both find "Dune by Frank Herbert", because capitals don't matter and part of a word is enough. The page does this with the books it already has
+Other option: the server does the search, or I press a "Search" button
+Why: it's instant and the simplest way. A home shelf is small enough to load all at once, and there's no rule here that could disagree with the server
+
+## 2026-11-02 — Search only changes the shelf, and only looks at title and author
+Chose: the "Pick a book" list in Loans always shows every book. If nothing matches, the shelf says "No books match 'xyz'". Copy notes aren't searched
+Other option: also filter "Pick a book", or also search notes like "signed"
+Why: if search quietly hid books in Loans, I could think a book was missing. Searching notes can be added later if I want it

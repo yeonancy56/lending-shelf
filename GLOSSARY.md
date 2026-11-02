@@ -40,6 +40,10 @@ _Avoid_: check out, borrow (that's the friend's side)
 An active loan that has been out for more than 14 days, counted to the exact time it was lent. Lent Monday 2 November at 8pm, it's overdue from just after 8pm on Monday 16 November. Once the book comes back, the loan is no longer overdue.
 _Avoid_: late, past due
 
+**Due back**:
+The day an active loan should come back: 14 days after it was lent. Lent Monday 2 November, it's due back Monday 16 November. Returned loans don't have one.
+_Avoid_: due date, deadline, return date (that's when it actually came back)
+
 **Return**:
 When the friend gives the book back, which turns an active loan into a returned loan.
 _Avoid_: check in, give back

@@ -130,6 +130,10 @@ button {
   margin-top: 8px;
 }
 
+.overdue { /* an overdue loan's whole line, in the same shared red */
+  color: var(--error);
+}
+
 /* ---------- lists ---------- */
 ul {
   list-style: none;

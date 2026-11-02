@@ -5,8 +5,20 @@ const { badRequest, ruleBroken } = require('../errors');
 
 const MAX_LOANS = 3;
 const LOAN_DAYS = 14;
+const LOAN_TIME = LOAN_DAYS * 24 * 60 * 60 * 1000; // 14 days, counted in milliseconds
 
-function listLoans() { return loanDao.findAll(); }
+// a book still out gets its due back day, and whether it's overdue. A returned book has neither
+function withDueBack(loan) {
+    const plain = loan.toObject();
+    if (loan.returnedAt) return { ...plain, overdue: false };
+    const dueBack = new Date(loan.lentAt.getTime() + LOAN_TIME);
+    return { ...plain, dueBack, overdue: Date.now() > dueBack.getTime() };
+}
+
+async function listLoans() {
+    const loans = await loanDao.findAll();
+    return loans.map(withDueBack);
+}
 
 async function lendBook(bookId, friendId) {
     // first: do this book and friend exist? No point checking the rules otherwise
@@ -23,7 +35,7 @@ async function lendBook(bookId, friendId) {
 
 
     //rule 3: does the friend have an overdue book?
-    const cutoff = new Date(Date.now() - LOAN_DAYS * 24 * 60 * 60 * 1000);
+    const cutoff = new Date(Date.now() - LOAN_TIME);
     const overdue = await loanDao.findOverdueByFriend(friendId, cutoff);
     if (overdue) throw ruleBroken('This friend has an overdue book');
 
