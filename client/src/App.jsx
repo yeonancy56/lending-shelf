@@ -6,6 +6,12 @@ function bookName(book) {
   return book.copyNote ? `${book.title} (${book.copyNote})` : book.title;
 }
 
+// a red message, like "This book is already lent out". Marked as an alert so a screen reader
+// reads it out loud right away. Shows nothing when there's no message
+function ErrorMessage({ message }) {
+  return message ? <p className="error" role="alert">{message}</p> : null;
+}
+
 // fill a list with the server's answer, and remember whether that list broke,
 // so the red message at the top stays until every broken list has loaded
 function fillList(result, list, setList, setListErrors) {
@@ -96,7 +102,7 @@ useEffect(() => { // when the page opens, fill in all three lists
 return (
   <div>
     <h1>Lending Shelf</h1>
-    {listError && <p className="error" role="alert">{listError}</p>}
+    <ErrorMessage message={listError} />
     <section>
      <h2>Books</h2>
       <form onSubmit={handleAddBook}>
@@ -105,7 +111,7 @@ return (
         <input placeholder="Note (optional, like 'signed')" value={copyNote} onChange={(e) => setCopyNote(e.target.value)} />
         <button>Add book</button>
       </form>
-      {bookError && <p className="error" role="alert">{bookError}</p>}
+      <ErrorMessage message={bookError} />
     <ul className="books-list"> {/* the books stand on the shelf as spines */}
       {books.map((book) => (
         <li key = {book._id}><span className="book-name">{bookName(book)}</span> <span className="book-author">by {book.author}</span></li>
@@ -118,7 +124,7 @@ return (
       <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
       <button>Add Friend</button>
      </form>
-     {friendError && <p className="error" role="alert">{friendError}</p>}
+     <ErrorMessage message={friendError} />
      <ul>
       {friends.map((friend) => (
         <li key={friend._id}>{friend.name}</li>
@@ -143,7 +149,7 @@ return (
 <button>Lend</button>
 </form>
 
-{loanError && <p className="error" role="alert">{loanError}</p>}
+<ErrorMessage message={loanError} />
 
 <ul>
 {loans.map((loan) => (
