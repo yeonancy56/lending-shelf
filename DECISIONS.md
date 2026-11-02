@@ -277,3 +277,58 @@ Why: Loans already has one red spot, and only one thing can go wrong at a time
 Chose: if I click Return on a loan that's already gone, the page says "Loan not found", the way the server wrote it
 Other option: change the server so "not found" uses the same code as "your form has a mistake", or let it fall into "Something went wrong"
 Why: "Try again" would be bad advice here, because trying again can never work. Fixing it on the page was one small line, and the list of known mistakes now sits in one spot in api.js
+
+## 2026-11-02 — The new look is a touch-up, not a redesign
+Chose: keep the same page and the same order (Books, Friends, Loans). Only the colors, fonts and spacing change
+Other option: also show things more clearly, like an "overdue" tag on a book, or build a whole new layout
+Why: it's the smallest change that makes the app nicer to use, and I can follow every part of it
+
+## 2026-11-02 — Lending Shelf should feel warm and cozy
+Chose: a cream background with brown and green, like a bookshelf at home
+Other option: clean and calm, with white or light grey and one soft color
+Why: the app is about lending books from my own shelf to friends, so a homey feel fits
+
+## 2026-11-02 — Clear out the sample leftovers before the new look
+Chose: delete the sample styling and pictures the app never uses, and change the browser tab name from "client" to "Lending Shelf"
+Other option: leave them and add the new look on top
+Why: old rules that do nothing would sit next to the new ones, and I'd have a hard time telling which ones matter
+
+## 2026-11-02 — The look lives in one plain CSS file
+Chose: write all the styling in index.css, the file the app already loads
+Other option: add a styling tool like Tailwind
+Why: the app is one page, and plain CSS is the basic thing to learn first. A tool would add new things to learn without making the page better
+
+## 2026-11-02 — Keep dark mode, with cozy colors in both
+Chose: if my computer is set to dark mode, the page still turns dark. There will be two sets of cozy colors: cream for light, and a dim reading-room look for dark
+Other option: only one set of colors, always light
+Why: it already works today, so dropping it would be a step back for anyone who reads at night
+
+## 2026-11-02 — The page gets the "wooden shelf" look
+Chose: a wooden band at the top with the app's name, and a wooden shelf board under Books, Friends and Loans. Books stand on the shelf like spines. Round green buttons
+Other option: paper cards on a cream background, or a lined notebook page with no boxes
+Why: I tried all three on my real page and liked this one best. It looks the most like my own bookshelf
+
+## 2026-11-02 — A book's spine never cuts off its name
+Chose: the whole name and note always show on the spine, like "Dune (signed)". A long name wraps onto a second line, so that spine gets a bit thicker. The author shows in smaller letters
+Other option: cut long names with "…" so every spine is the same size, or leave the author off
+Why: I decided before that the note must show everywhere, so I can tell my two copies of Dune apart. A cut-off spine could hide exactly that part
+
+## 2026-11-02 — On a spine, the title and the author have different colors
+Chose: the book's name (like "Dune (signed)") is cream and a bit bold. The author is a soft gold and smaller. The gold spine got darker so the words on it are easy to read
+Other option: one color for both
+Why: it's easier to see where the name ends and the author starts. The author is also smaller, so people who can't tell colors apart still see the difference
+
+## 2026-11-02 — All red messages use one shared red
+Chose: the red messages under Books, Friends and Loans all use one softer red, set in one place. It's a bit lighter in dark mode so it's still easy to read
+Other option: each message picks its own plain "red", like now
+Why: same idea as api.js. One place means the three can't drift apart, and the softer red fits the wooden shelf colors
+
+## 2026-11-02 — The new look is two tickets
+Chose: ticket 1 clears out the sample leftovers and renames the tab. Ticket 2 adds the wooden shelf look
+Other option: do it all in one ticket
+Why: ticket 1 is small and changes almost nothing I can see, so ticket 2 only has the new look in it and is easier to follow
+
+## 2026-11-02 — Tests check that a message is marked as an error, not its exact red
+Chose: each red message is marked as an alert, and the tests check for that mark
+Other option: make the tests check the exact new red, or stop checking at all
+Why: the test tool can't see colors from the CSS file. Checking for "this is an error" is what really matters, and screen readers read an alert out loud right away
