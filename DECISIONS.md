@@ -332,3 +332,8 @@ Why: ticket 1 is small and changes almost nothing I can see, so ticket 2 only ha
 Chose: each red message gets a hidden label that says "this is a warning", and the tests check for that label
 Other option: make the tests check the exact new red, or stop checking at all
 Why: the tests can't see colors from the styles file. Checking "this is a warning" is what really matters. Also, for people who can't see the screen and have the computer read the page out loud, a warning gets read out right away
+
+## 2026-11-02 — Boxes for typing get their own solid color in dark mode
+Chose: the boxes are a soft cream in light mode and a dark brown in dark mode, each with its own color
+Other option: one see-through white for both, like in the prototype
+Why: in dark mode, see-through white turns the boxes grey, and my light words on grey were hard to read

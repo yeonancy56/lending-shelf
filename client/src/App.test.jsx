@@ -11,7 +11,7 @@ vi.mock('./api');
 const DUNE = { _id: 'dune-id', title: 'Dune', author: 'Frank Herbert' };
 const SAM = { _id: 'sam-id', name: 'Sam' };
 
-test('shows the error in red when lending Dune fails', async () => {
+test('shows the error as a warning when lending Dune fails', async () => {
     // the shelf the page sees when it opens: Dune, Sam, and no loans yet
     api.getBooks.mockResolvedValue([DUNE]);
     api.getFriends.mockResolvedValue([SAM]);
@@ -31,8 +31,8 @@ test('shows the error in red when lending Dune fails', async () => {
 
     await user.click(screen.getByRole('button', { name: 'Lend' }));
 
-    const message = await screen.findByText('This book is already lent out');
-    expect(message).toHaveStyle({ color: 'rgb(255, 0, 0)' }); // red
+    // marked as a warning, so it shows in the shared red and gets read out loud right away
+    expect(await screen.findByRole('alert')).toHaveTextContent('This book is already lent out');
     expect(api.lendBook).toHaveBeenCalledWith('dune-id', 'sam-id'); // sent Dune and Sam, not the wrong IDs
 });
 
@@ -49,7 +49,7 @@ test('shows the copy note in brackets, so two Dunes look different', async () =>
     expect(screen.getByRole('option', { name: 'Dune' })).toBeInTheDocument(); // no copy note = no brackets
 });
 
-test('shows the red message when adding a second Dune fails, and keeps what I typed', async () => {
+test('shows a warning when adding a second Dune fails, and keeps what I typed', async () => {
     api.getBooks.mockResolvedValue([DUNE]);
     api.getFriends.mockResolvedValue([SAM]);
     api.getLoans.mockResolvedValue([]);
@@ -65,14 +65,14 @@ test('shows the red message when adding a second Dune fails, and keeps what I ty
     await user.type(screen.getByPlaceholderText("Note (optional, like 'signed')"), 'paperback');
     await user.click(screen.getByRole('button', { name: 'Add book' }));
 
-    expect(await screen.findByText(message)).toHaveStyle({ color: 'rgb(255, 0, 0)' }); // red
+    expect(await screen.findByRole('alert')).toHaveTextContent(message); // marked as a warning
     // the boxes still hold what I typed, so I only need to change what's wrong
     expect(screen.getByPlaceholderText('Title')).toHaveValue('Dune');
     expect(screen.getByPlaceholderText('Author')).toHaveValue('Frank Herbert');
     expect(screen.getByPlaceholderText("Note (optional, like 'signed')")).toHaveValue('paperback');
 });
 
-test('shows "Something went wrong" in red when the server breaks while returning Dune', async () => {
+test('shows "Something went wrong" as a warning when the server breaks while returning Dune', async () => {
     // Sam has Dune, so there's a Return button
     api.getBooks.mockResolvedValue([DUNE]);
     api.getFriends.mockResolvedValue([SAM]);
@@ -85,5 +85,5 @@ test('shows "Something went wrong" in red when the server breaks while returning
 
     await user.click(await screen.findByRole('button', { name: 'Return' }));
 
-    expect(await screen.findByText('Something went wrong. Try again.')).toHaveStyle({ color: 'rgb(255, 0, 0)' }); // red
+    expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong. Try again.'); // marked as a warning
 });

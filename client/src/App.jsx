@@ -85,6 +85,7 @@ useEffect(() => {
 return (
   <div>
     <h1>Lending Shelf</h1>
+    <section>
      <h2>Books</h2>
       <form onSubmit={handleAddBook}>
         <input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -92,23 +93,27 @@ return (
         <input placeholder="Note (optional, like 'signed')" value={copyNote} onChange={(e) => setCopyNote(e.target.value)} />
         <button>Add book</button>
       </form>
-      {bookError && <p style={{ color: 'red' }}>{bookError}</p>}
-    <ul> 
+      {bookError && <p className="error" role="alert">{bookError}</p>}
+    <ul className="books-list"> {/* the books stand on the shelf as spines */}
       {books.map((book) => (
-        <li key = {book._id}>{bookName(book)} by {book.author}</li>
+        <li key = {book._id}><span className="book-title">{bookName(book)}</span> <span className="book-author">by {book.author}</span></li>
      ) )}
     </ul>
+    </section>
+    <section>
     <h2>Friends</h2>
      <form onSubmit={handleAddFriend}>
       <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
       <button>Add Friend</button>
      </form>
-     {friendError && <p style={{ color: 'red' }}>{friendError}</p>}
+     {friendError && <p className="error" role="alert">{friendError}</p>}
      <ul>
       {friends.map((friend) => (
         <li key={friend._id}>{friend.name}</li>
       ))}
      </ul>
+    </section>
+    <section>
     <h2>Loans</h2>
 <form onSubmit={handleAddLoan}>
 <select value={bookId} onChange={(e) => setBookId(e.target.value)}>
@@ -126,7 +131,7 @@ return (
 <button>Lend</button>
 </form>
 
-{loanError && <p style={{ color: 'red' }}>{loanError}</p>}
+{loanError && <p className="error" role="alert">{loanError}</p>}
 
 <ul>
 {loans.map((loan) => (
@@ -136,6 +141,7 @@ return (
   </li>
 ))}
       </ul>
+    </section>
   </div>
 );
 }
