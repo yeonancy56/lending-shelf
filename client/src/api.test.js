@@ -57,3 +57,17 @@ test.each([
 
     expect(await load()).toEqual({ error: 'Something went wrong. Try again.' });
 });
+
+test('says something went wrong when the server says OK but sends a web page instead of the books', async () => {
+    // like Vercel set up wrong online: /api gives back the app's own page, not the list
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(answer(200, '<!doctype html><html></html>')));
+
+    expect(await getBooks()).toEqual({ error: 'Something went wrong. Try again.' });
+});
+
+test('says something went wrong when a lending rule says no but the answer isn\'t data', async () => {
+    // a 409 is a known mistake, like Dune already being with Sam, but here there are no words to show
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(answer(409, '<!doctype html><html></html>')));
+
+    expect(await lendBook('dune-id', 'sam-id')).toEqual({ error: 'Something went wrong. Try again.' });
+});

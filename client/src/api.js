@@ -13,8 +13,9 @@ const SOMETHING_WENT_WRONG = { error: 'Something went wrong. Try again.' };
 
 // Send something to the server (or ask it for a list) and read its answer.
 // A known mistake comes back as the server wrote it.
-// Anything else that fails, or no answer at all (wifi down), is a real breakdown,
-// so the page gets one plain message instead.
+// Anything else that fails, no answer at all (wifi down), or an answer that isn't data
+// (like a web page sent back by mistake) is a real breakdown,
+// so the page gets one plain message instead. send never throws.
 async function send(path, options) {
     let res;
     try {
@@ -23,7 +24,11 @@ async function send(path, options) {
         return SOMETHING_WENT_WRONG;
     }
     if (res.ok || KNOWN_MISTAKES.includes(res.status)) {
-        return res.json();
+        try {
+            return await res.json();
+        } catch {
+            return SOMETHING_WENT_WRONG;
+        }
     }
     return SOMETHING_WENT_WRONG;
 }

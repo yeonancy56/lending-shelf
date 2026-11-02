@@ -352,3 +352,8 @@ Why: the rule is there to catch a page that keeps redrawing itself over and over
 Chose: if the server can't be reached or breaks when the page opens, one "Something went wrong. Try again." shows at the top, under "Lending Shelf". It stays until every list that broke has loaded again, so adding a book can't hide that Loans is still missing. The lists go through the same check in api.js as the buttons
 Other option: one message under each list that failed (Books, Friends and Loans)
 Why: when the server is down, all three lists fail together, so three of the same message would just repeat. Before, the page looked like I had no books, no friends and no loans, with nothing saying why
+
+## 2026-11-02 — An answer the app can't read counts as "Something went wrong"
+Chose: if the server says "OK" (or a rule says no) but sends back something that isn't data, like a web page, api.js shows the usual "Something went wrong. Try again." It catches this in the same place it already catches the wifi being down
+Other option: let each part of the page catch it on its own, or show a new, different message
+Why: before, the lists just stayed empty and the buttons did nothing, with no message at all. Catching it in api.js means every button and list is covered at once, and one wording means I only have one message to look after
