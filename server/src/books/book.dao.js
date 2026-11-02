@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Book = require('./book.model')
+const { sameTextPattern } = require('./book.same-text');
 
 function findAll()          { return Book.find(); }
 function findById(id)       { return Book.findById(id); }
@@ -13,16 +14,9 @@ async function exists(id) {
     return (await Book.exists({ _id: id })) !== null;
 }
 
-// turn typed text into a search for exactly that text, ignoring capitals and spaces around it.
-// Characters like "?" or "(" mean something special in a search, so they get a "\" in front to stay plain letters
-function matchIgnoringCaseAndSpaces(text) {
-    const plain = text.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    return new RegExp(`^\\s*${plain}\\s*$`, 'i');
-}
-
 // every copy of this book on the shelf (same title and author), lent out or not
 function findSameBooks(title, author) {
-    return Book.find({ title: matchIgnoringCaseAndSpaces(title), author: matchIgnoringCaseAndSpaces(author) });
+    return Book.find({ title: sameTextPattern(title), author: sameTextPattern(author) });
 }
 
 module.exports = { findAll, findById, create, update, remove, exists, findSameBooks}

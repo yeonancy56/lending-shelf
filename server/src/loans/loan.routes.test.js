@@ -71,3 +71,51 @@ test('says the friend does not exist when no friend has that ID (400)', async ()
     expect(res.body.error).toBe('That friend does not exist');
     expect(await Loan.countDocuments()).toBe(0);
 });
+
+test('lends two copies of Dune at the same time, because each copy is its own book', async () => {
+    const signed = await Book.create({ title: 'Dune', author: 'Frank Herbert', copyNote: 'signed' });
+    const ana = await Friend.create({ name: 'Ana' });
+    await request(app).post('/loans').send({ bookId: signed.id, friendId: sam.id }); // Sam has the signed Dune
+
+    const res = await request(app).post('/loans').send({ bookId: dune.id, friendId: ana.id }); // the other Dune is still free
+
+    expect(res.status).toBe(201);
+    expect(await Loan.countDocuments()).toBe(2);
+});
+
+test('does not lend Sam a 4th book (409)', async () => {
+    for (const title of ['Matilda', 'Emma', 'Holes']) {
+        const book = await Book.create({ title, author: 'Someone' });
+        await Loan.create({ book: book.id, friend: sam.id }); // Sam already has 3 books
+    }
+
+    const res = await request(app).post('/loans').send({ bookId: dune.id, friendId: sam.id });
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toBe('this friend already has 3 books');
+});
+
+test('does not lend to Sam when Sam has an overdue book (409)', async () => {
+    const matilda = await Book.create({ title: 'Matilda', author: 'Roald Dahl' });
+    await Loan.create({ book: matilda.id, friend: sam.id, lentAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000) }); // out for 15 days
+
+    const res = await request(app).post('/loans').send({ bookId: dune.id, friendId: sam.id });
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toBe('This friend has an overdue book');
+});
+
+test('does not return Dune twice (409)', async () => {
+    const loan = await Loan.create({ book: dune.id, friend: sam.id, returnedAt: new Date() }); // Dune is already back
+
+    const res = await request(app).post(`/loans/${loan.id}/return`);
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toBe('This book was already returned');
+});
+
+test('says the loan was not found when the ID is not a real ID (404)', async () => {
+    const res = await request(app).post('/loans/not-an-id/return');
+
+    expect(res.status).toBe(404);
+});

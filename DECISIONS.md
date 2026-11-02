@@ -242,3 +242,18 @@ Why: a lowercase letter or a stray space shouldn't sneak a second plain Dune pas
 Chose: if I type "dune" and I already have "Dune", the message says "You already have Dune", the way it's written on my shelf
 Other option: repeat what I typed, so it says "You already have dune"
 Why: the message is telling me about the book I already own, so it should name it the way the Books list does
+
+## 2026-11-02 — The red messages say "note", not "copy note"
+Chose: messages like "Use a different note" and "Keep the note short" just say "note"
+Other option: say "copy note" in the messages too, the way the glossary and the code do
+Why: the box I just typed in says "Note (optional, like 'signed')", so the message should use the same word as the box. "Copy note" stays the proper name everywhere behind the page
+
+## 2026-11-02 — Only known mistakes get a red message
+Chose: when I break a rule ("This book is already lent out") or fill in the form wrong ("You already have Dune…"), the page shows that message in red. If something really breaks, like the database being down, the server just says something went wrong
+Other option: treat every problem as if I broke a rule, and show whatever the server said in red
+Why: a breakdown isn't my mistake, and its message is computer talk nobody can act on. Books and loans now both work this way. It also fixed a small thing: returning a loan that doesn't exist now says "Loan not found" instead of a confusing message
+
+## 2026-11-02 — Helpers that books and loans both use live at the top of the server folder
+Chose: the shared "your form has a mistake" and "a rule says no" helpers live in one file next to app.js, not inside books or loans
+Other option: keep a copy inside each feature folder
+Why: both books and loans need them, so putting them in one feature's folder would be odd, and two copies could drift apart. app.js and db.js already sit there for the same reason
