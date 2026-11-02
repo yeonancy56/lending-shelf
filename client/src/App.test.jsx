@@ -87,3 +87,14 @@ test('marks "Something went wrong" as an error when the server breaks while retu
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong. Try again.'); // marked as an error
 });
+
+test('marks "Something went wrong" as an error when the lists can\'t load as the page opens', async () => {
+    // the wifi is down, so all three lists come back as a breakdown instead of Dune and Sam
+    api.getBooks.mockResolvedValue({ error: 'Something went wrong. Try again.' });
+    api.getFriends.mockResolvedValue({ error: 'Something went wrong. Try again.' });
+    api.getLoans.mockResolvedValue({ error: 'Something went wrong. Try again.' });
+
+    render(<App />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong. Try again.'); // one message, at the top
+});

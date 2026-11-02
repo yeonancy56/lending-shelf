@@ -6,6 +6,16 @@ function bookName(book) {
   return book.copyNote ? `${book.title} (${book.copyNote})` : book.title;
 }
 
+// fill a list with the server's answer, or show the red message at the top if it broke
+function showList(result, setList, setListError) {
+  if (result.error) {
+    setListError(result.error);
+    return;
+  }
+  setListError('');
+  setList(result);
+}
+
 function App() { //these are memory boxes 
   const[books, setBooks] = useState([]);
   const[title, setTitle] = useState('');
@@ -19,9 +29,10 @@ function App() { //these are memory boxes
   const[loanError, setLoanError] = useState(''); // the red message under the lend form, for Lend and Return
   const[bookError, setBookError] = useState(''); // the red message under the book form
   const[friendError, setFriendError] = useState(''); // the red message under the friend form
+  const[listError, setListError] = useState(''); // the red message at the top, when a list can't load
 
   function loadBooks() { //load function, fill a list from the server
-    return getBooks().then(setBooks); // fill the list in once the server answers
+    return getBooks().then((result) => showList(result, setBooks, setListError)); // fill the list in once the server answers
   }
   
   async function handleAddBook(e) { // this function runs when you click a button on the page
@@ -39,7 +50,7 @@ function App() { //these are memory boxes
   }
 
   function loadFriends() {
-    return getFriends().then(setFriends);
+    return getFriends().then((result) => showList(result, setFriends, setListError));
   }
  
   async function handleAddFriend(e) { // note e = event "the thing that just happened"
@@ -55,7 +66,7 @@ function App() { //these are memory boxes
   }
 
   function loadLoans() {
-    return getLoans().then(setLoans);
+    return getLoans().then((result) => showList(result, setLoans, setListError));
   }
 
   async function handleAddLoan(e) {
@@ -85,6 +96,7 @@ useEffect(() => { // when the page opens, fill in all three lists
 return (
   <div>
     <h1>Lending Shelf</h1>
+    {listError && <p className="error" role="alert">{listError}</p>}
     <section>
      <h2>Books</h2>
       <form onSubmit={handleAddBook}>
