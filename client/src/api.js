@@ -2,12 +2,19 @@
 // on my computer Vite does that (vite.config.js), online Vercel does (vercel.json).
 const API = '/api';
 
-// Send something to the server and read its answer.
-// A known mistake (400 or 409, like "This book is already lent out") comes back as the server wrote it.
-// Anything else that fails, or no answer at all (wifi down), is a real breakdown,
-// so the page gets one plain message instead.
+// The server's known mistakes, each with its own red message. Keep in step with server/src/errors.js:
+// 400 = a mistake in the form, like a second Dune with no note
+// 404 = it doesn't exist (any more), like returning a loan that's gone
+// 409 = a lending rule says no, like Dune already being with Sam
+const KNOWN_MISTAKES = [400, 404, 409];
+
+// what the page shows when the server really breaks, or can't be reached at all
 const SOMETHING_WENT_WRONG = { error: 'Something went wrong. Try again.' };
 
+// Send something to the server and read its answer.
+// A known mistake comes back as the server wrote it.
+// Anything else that fails, or no answer at all (wifi down), is a real breakdown,
+// so the page gets one plain message instead.
 async function send(path, options) {
     let res;
     try {
@@ -15,7 +22,7 @@ async function send(path, options) {
     } catch {
         return SOMETHING_WENT_WRONG;
     }
-    if (res.ok || res.status === 400 || res.status === 409) {
+    if (res.ok || KNOWN_MISTAKES.includes(res.status)) {
         return res.json();
     }
     return SOMETHING_WENT_WRONG;

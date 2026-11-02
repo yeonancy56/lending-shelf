@@ -16,7 +16,7 @@ function App() { //these are memory boxes
   const[loans, setLoans] = useState([]);
   const[bookId, setBookId] = useState('');
   const[friendId, setFriendId] = useState('');
-  const[error, setError] = useState('');
+  const[loanError, setLoanError] = useState(''); // the red message under the lend form, for Lend and Return
   const[bookError, setBookError] = useState(''); // the red message under the book form
   const[friendError, setFriendError] = useState(''); // the red message under the friend form
 
@@ -62,16 +62,16 @@ function App() { //these are memory boxes
     e.preventDefault();
     const results = await lendBook(bookId, friendId);
     if (results.error) {
-      setError(results.error);
+      setLoanError(results.error);
     }else {
-      setError('');
+      setLoanError('');
     }
     loadLoans();
   }
 
   async function handleReturn(id) {
     const result = await returnLoan(id);
-    setError(result.error || ''); // shows under the Lend form, the one red spot in Loans
+    setLoanError(result.error || '');
     loadLoans();
   }
 
@@ -126,7 +126,7 @@ return (
 <button>Lend</button>
 </form>
 
-{error && <p style={{ color: 'red' }}>{error}</p>}
+{loanError && <p style={{ color: 'red' }}>{loanError}</p>}
 
 <ul>
 {loans.map((loan) => (

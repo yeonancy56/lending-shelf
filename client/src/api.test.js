@@ -21,6 +21,12 @@ test('keeps the server\'s own words for a known mistake, like a second Dune with
     expect(await addBook(DUNE)).toEqual({ error: message });
 });
 
+test('keeps the server\'s own words when returning a loan that no longer exists', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(answer(404, JSON.stringify({ error: 'Loan not found' }))));
+
+    expect(await returnLoan('loan-id')).toEqual({ error: 'Loan not found' });
+});
+
 // every button that sends something: Add book, Add Friend, Lend and Return
 test.each([
     ['adding a book', () => addBook(DUNE)],
