@@ -6,7 +6,8 @@ function bookName(book) {
   return book.copyNote ? `${book.title} (${book.copyNote})` : book.title;
 }
 
-// the day a book is due back, like "16 Nov" (the server works out which day)
+// the day a book is due back, like "16 Nov". The server sends the exact due back moment,
+// and this turns it into the day on my own calendar
 function dueBackDay(dueBack) {
   return new Date(dueBack).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 }

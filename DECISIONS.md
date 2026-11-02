@@ -383,42 +383,7 @@ Chose: the server sends each loan with its "due back" day and whether it's overd
 Other option: the page adds 14 days to the lent date itself
 Why: then "14 days" lives in one place. If I ever change it, the red lines and the "Sam can't borrow" rule can't disagree
 
-## 2026-11-02 — Editing a book follows the same checks as adding one
-Chose: no blank title or author, the note is 30 letters at most, and every Dune still needs its own note. The book I'm editing doesn't count as a clash with itself
-Other option: only check for blanks when editing
-Why: otherwise an edit could sneak in the mix-ups adding stops, like two "Dune (paperback)"s
-
-## 2026-11-02 — I can edit a book while it's lent out
-Chose: yes. If Sam has Dune and I fix the author, the loans list shows the fixed name straight away
-Other option: wait until Sam returns it
-Why: fixing a spelling mistake doesn't change who has the book. A loan points at the book, so it always shows the book's name as it is now
-
-## 2026-11-02 — Click a spine to edit that book in the form above the shelf
-Chose: clicking a spine fills the book form with that book. The button says "Save", with a "Cancel" next to it, and the spine gets a highlight. Afterwards it goes back to "Add book"
-Other option: an "Edit" button on every spine, or a pop-up box
-Why: it uses the boxes I already have, and the shelf keeps its look
-
-## 2026-11-02 — A friend's page is a panel on the same page, not a new page
-Chose: click "Sam" in the Friends list, and a box opens under Friends with Sam's loans and a "Close" button
-Other option: a real separate page with its own address, which needs an extra add-on (React Router)
-Why: it's the same click-and-fill idea as editing a book, with nothing new to install. Bookmarkable pages can be their own ticket later
-
-## 2026-11-02 — What Sam's panel shows
-Chose: "2 of 3 books" at the top. Then what Sam has now, with "due back" and red for overdue, like the loans list. Then past loans, newest first, with when each was lent and returned. Empty parts say "Nothing right now" and "No past loans yet"
-Other option: past loans with no dates, and no "2 of 3"
-Why: the dates show what really happened, which is why I keep returned loans. "2 of 3" tells me if I can lend Sam another before I try
-
-## 2026-11-02 — The server answers "what are Sam's loans?"
-Chose: a new server question that sends Sam's current loans, past loans, and the 3-book limit
-Other option: the page picks Sam's loans out of the full loans list it already has
-Why: the 3-book limit stays in one place, like "14 days". And the page doesn't have to sift through everyone's history to find Sam's
-
-## 2026-11-02 — Search filters the shelf as I type, right on the page
-Chose: a search box above the shelf. As I type, only matching books stay. "dune" or "herb" both find "Dune by Frank Herbert", because capitals don't matter and part of a word is enough. The page does this with the books it already has
-Other option: the server does the search, or I press a "Search" button
-Why: it's instant and the simplest way. A home shelf is small enough to load all at once, and there's no rule here that could disagree with the server
-
-## 2026-11-02 — Search only changes the shelf, and only looks at title and author
-Chose: the "Pick a book" list in Loans always shows every book. If nothing matches, the shelf says "No books match 'xyz'". Copy notes aren't searched
-Other option: also filter "Pick a book", or also search notes like "signed"
-Why: if search quietly hid books in Loans, I could think a book was missing. Searching notes can be added later if I want it
+## 2026-11-02 — "Is it overdue?" is decided in one spot
+Chose: the server fetches the books Sam has right now, and one small check decides which are overdue. The red lines and the "Sam can't borrow" rule both use that same check
+Other option: keep asking the database "does Sam have a book out longer than 14 days?" for the rule, with a separate check for the red lines
+Why: two checks could slowly drift apart, so Dune might look fine in the list while the rules say Sam is overdue. Sam has 3 books at most, so fetching them all costs nothing
