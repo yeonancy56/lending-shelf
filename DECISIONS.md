@@ -337,3 +337,13 @@ Why: the tests can't see colors from the styles file. Checking "this is a warnin
 Chose: the boxes are a soft cream in light mode and a dark brown in dark mode. In dark mode, their edge is a lighter brown
 Other option: one see-through white for both, with the same wood-brown edge, like in the prototype
 Why: in dark mode, see-through white turns the boxes grey, and my light words on grey were hard to read. The darker edge almost disappeared against the dark page, so I couldn't see where a box was
+
+## 2026-11-02 — CI runs the lint check too
+Chose: every pull request now runs the lint check (a tool that reads the code and points out common mistakes), right after the tests. If it finds a mistake, the pull request can't be merged
+Other option: keep running only the tests, and run the lint check by hand when I remember
+Why: the lint check was already set up, but nothing ran it, so a mistake sat there unnoticed. Now it can't hide
+
+## 2026-11-02 — Fix the lint mistake by rewriting the step, not by turning the rule off
+Chose: when the page opens, it fills in the books, friends and loans lists only once the server answers. The page works the same as before
+Other option: tell the lint check to skip that one line, or turn that rule off for the whole page
+Why: turning the rule off would also stop it from checking any new code I write later. Rewriting the step keeps the check fully on

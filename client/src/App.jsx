@@ -76,10 +76,10 @@ function App() { //these are memory boxes
   }
 
 
-useEffect(() => {
-  loadBooks();
-  loadFriends();
-  loadLoans();
+useEffect(() => { // when the page opens, ask the server for the lists and fill them in once it answers
+  getBooks().then(setBooks);
+  getFriends().then(setFriends);
+  getLoans().then(setLoans);
 }, []);
 
 return (

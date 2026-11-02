@@ -20,3 +20,6 @@ jobs:
         working-directory: client
       - run: npm test
         working-directory: client
+      # client lint check, so code the checker flags blocks the merge too
+      - run: npm run lint
+        working-directory: client
