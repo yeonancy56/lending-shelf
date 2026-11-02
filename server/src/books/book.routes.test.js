@@ -136,7 +136,7 @@ test('POST /books adds a second Dune with a different copy note', async () => {
     expect(await Book.countDocuments()).toBe(2);
 });
 
-test('POST /books needs a third Dune to have a note different from both others', async () => {
+test('POST /books needs a third Dune to have a copy note different from both others', async () => {
     await Book.create(DUNE);
     await Book.create({ ...DUNE, copyNote: 'signed' });
 

@@ -1,5 +1,6 @@
 const bookDao = require('./book.dao');
 const { badRequest } = require('../errors');
+const { isSameText } = require('./same-text');
 
 function listBooks()          { return bookDao.findAll(); }
 function getBook(id)          { return bookDao.findById(id); }
@@ -13,7 +14,7 @@ async function addBook(data) {
         throw badRequest(`You already have ${sameBooks[0].title.trim()}. Add a note, like 'signed', to tell them apart.`);
     }
     // and its copy note must be different from every other copy's ("Paperback" and "paperback" count as the same)
-    const bookWithSameNote = sameBooks.find((book) => book.copyNote?.toLowerCase() === data.copyNote?.toLowerCase());
+    const bookWithSameNote = sameBooks.find((book) => isSameText(book.copyNote, data.copyNote));
     if (bookWithSameNote) {
         throw badRequest(`You already have ${bookWithSameNote.title.trim()} (${bookWithSameNote.copyNote}). Use a different note.`);
     }
