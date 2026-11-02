@@ -343,7 +343,7 @@ Chose: every pull request now runs the lint check (a tool that reads the code an
 Other option: keep running only the tests, and run the lint check by hand when I remember
 Why: the lint check was already set up, but nothing ran it, so a mistake sat there unnoticed. Now it can't hide
 
-## 2026-11-02 — Fix the lint mistake by rewriting the step, not by turning the rule off
-Chose: when the page opens, it fills in the books, friends and loans lists only once the server answers. The page works the same as before
+## 2026-11-02 — Fix the lint mistake by rewriting how a list fills in, not by turning the rule off
+Chose: the three steps that fill in the books, friends and loans lists are written a little differently, so the lint check can see they only fill in once the server answers. The page uses the same steps when it opens and after adding a book, friend or loan, and it works the same as before
 Other option: tell the lint check to skip that one line, or turn that rule off for the whole page
-Why: turning the rule off would also stop it from checking any new code I write later. Rewriting the step keeps the check fully on
+Why: the rule is there to catch a page that keeps redrawing itself over and over. Turning it off for the whole page would also stop it checking new code I write later. Skipping one line would hide the warning instead of fixing the code

@@ -20,8 +20,8 @@ function App() { //these are memory boxes
   const[bookError, setBookError] = useState(''); // the red message under the book form
   const[friendError, setFriendError] = useState(''); // the red message under the friend form
 
-  async function loadBooks() { //load function, fill a list from the server
-    setBooks(await getBooks());
+  function loadBooks() { //load function, fill a list from the server
+    return getBooks().then(setBooks); // fill the list in once the server answers
   }
   
   async function handleAddBook(e) { // this function runs when you click a button on the page
@@ -38,8 +38,8 @@ function App() { //these are memory boxes
     loadBooks(); // get the fresh list from the server, and Matilda will appear 
   }
 
-  async function loadFriends() {
-    setFriends(await getFriends());
+  function loadFriends() {
+    return getFriends().then(setFriends);
   }
  
   async function handleAddFriend(e) { // note e = event "the thing that just happened"
@@ -54,8 +54,8 @@ function App() { //these are memory boxes
     loadFriends();
   }
 
-  async function loadLoans() {
-    setLoans(await getLoans());
+  function loadLoans() {
+    return getLoans().then(setLoans);
   }
 
   async function handleAddLoan(e) {
@@ -76,10 +76,10 @@ function App() { //these are memory boxes
   }
 
 
-useEffect(() => { // when the page opens, ask the server for the lists and fill them in once it answers
-  getBooks().then(setBooks);
-  getFriends().then(setFriends);
-  getLoans().then(setLoans);
+useEffect(() => { // when the page opens, fill in all three lists
+  loadBooks();
+  loadFriends();
+  loadLoans();
 }, []);
 
 return (
