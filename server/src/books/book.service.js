@@ -4,21 +4,33 @@ const { isSameText } = require('./book.same-text');
 
 function listBooks()          { return bookDao.findAll(); }
 function getBook(id)          { return bookDao.findById(id); }
-function updateBook(id, data) { return bookDao.update(id, data); }
 function deleteBook(id)       { return bookDao.remove(id); }
 
-async function addBook(data) {
-    // already have this book? Then the new copy needs a copy note, so the two look different on the page
+// the other copies of this book must look different from it: if there are any, it needs a copy note,
+// and that note must be different from every other copy's ("Paperback" and "paperback" count as the same).
+// When editing, the book being edited is left out, so it never clashes with itself
+async function checkOtherCopies(data, editingId) {
     const sameBooks = await bookDao.findSameBooks(data.title, data.author);
-    if (sameBooks.length > 0 && !data.copyNote) {
-        throw badRequest(`You already have ${sameBooks[0].title.trim()}. Add a note, like 'signed', to tell them apart.`);
+    const otherCopies = sameBooks.filter((book) => !book._id.equals(editingId));
+    if (otherCopies.length > 0 && !data.copyNote) {
+        throw badRequest(`You already have ${otherCopies[0].title.trim()}. Add a note, like 'signed', to tell them apart.`);
     }
-    // and its copy note must be different from every other copy's ("Paperback" and "paperback" count as the same)
-    const bookWithSameNote = sameBooks.find((book) => isSameText(book.copyNote, data.copyNote));
+    const bookWithSameNote = otherCopies.find((book) => isSameText(book.copyNote, data.copyNote));
     if (bookWithSameNote) {
         throw badRequest(`You already have ${bookWithSameNote.title.trim()} (${bookWithSameNote.copyNote}). Use a different note.`);
     }
+}
+
+async function addBook(data) {
+    await checkOtherCopies(data);
     return bookDao.create(data);
+}
+
+// gives back nothing when there's no such book, so the controller can say "Book not found"
+async function updateBook(id, data) {
+    if (!(await bookDao.exists(id))) return null;
+    await checkOtherCopies(data, id);
+    return bookDao.update(id, data);
 }
 
 module.exports = {listBooks, getBook, addBook, updateBook, deleteBook};

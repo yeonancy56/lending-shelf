@@ -165,7 +165,7 @@ li button {
   writing-mode: vertical-rl; /* the words run up the spine... */
   transform: rotate(180deg); /* ...reading bottom to top, like a real shelf */
   background: var(--spine-1);
-  padding: 10px 6px;
+  padding: 0; /* the spine button inside fills the whole spine */
   border-radius: 3px;
   min-inline-size: 120px;
   max-inline-size: 200px; /* a long name wraps into a thicker spine, never gets cut */
@@ -178,6 +178,26 @@ li button {
 }
 .books-list li:nth-child(3n) {
   background: var(--spine-3);
+}
+
+/* the whole spine is a button: click it to edit that book. It keeps the spine's look, not the round green one */
+.books-list .spine {
+  display: block;
+  writing-mode: inherit; /* some browsers keep buttons sideways, so say it again: words run up the spine */
+  inline-size: 100%;
+  background: none;
+  color: inherit;
+  border-radius: inherit;
+  padding: 10px 6px;
+  margin: 0;
+  font-size: inherit;
+  text-align: start;
+}
+
+/* the spine of the book that's in the form right now */
+.spine[aria-pressed="true"] {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
 }
 
 .book-name {

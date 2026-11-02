@@ -387,3 +387,23 @@ Why: then "14 days" lives in one place. If I ever change it, the red lines and t
 Chose: the server fetches the books Sam has right now, and one small check decides which are overdue. The red lines and the "Sam can't borrow" rule both use that same check
 Other option: keep asking the database "does Sam have a book out longer than 14 days?" for the rule, with a separate check for the red lines
 Why: two checks could slowly drift apart, so Dune might look fine in the list while the rules say Sam is overdue. Sam has 3 books at most, so fetching them all costs nothing
+
+## 2026-11-02 — Editing a book follows the same checks as adding one
+Chose: no blank title or author, the note is 30 letters at most, and every Dune still needs its own note. The book I'm editing doesn't count as a clash with itself
+Other option: only check for blanks when editing
+Why: otherwise an edit could sneak in the mix-ups adding stops, like two "Dune (paperback)"s
+
+## 2026-11-02 — I can edit a book while it's lent out
+Chose: yes. If Sam has Dune and I fix the author, the loans list shows the fixed name straight away
+Other option: wait until Sam returns it
+Why: fixing a spelling mistake doesn't change who has the book. A loan points at the book, so it always shows the book's name as it is now
+
+## 2026-11-02 — Click a spine to edit that book in the form above the shelf
+Chose: clicking a spine fills the book form with that book. The button says "Save", with a "Cancel" next to it, and the spine gets a highlight. Afterwards it goes back to "Add book"
+Other option: an "Edit" button on every spine, or a pop-up box
+Why: it uses the boxes I already have, and the shelf keeps its look
+
+## 2026-11-02 — A spine is a button, so the keyboard can pick it too
+Chose: each spine is a button that keeps the spine's look. Tab gets to it and Enter picks it, and a screen reader says which one is picked
+Other option: make the spine clickable with the mouse only
+Why: some people don't use a mouse. A button gives them the same way in, for free

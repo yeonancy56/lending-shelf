@@ -140,3 +140,80 @@ test('shows when each book is due back, and marks an overdue one', async () => {
     expect(matildaLine).not.toHaveTextContent('overdue');
     expect(matildaLine).not.toHaveClass('overdue');
 });
+
+test('clicking a spine puts that book in the form, ready to edit', async () => {
+    api.getBooks.mockResolvedValue([{ ...DUNE, copyNote: 'signed' }]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: /Dune \(signed\)/ })); // the spine
+
+    expect(screen.getByPlaceholderText('Title')).toHaveValue('Dune');
+    expect(screen.getByPlaceholderText('Author')).toHaveValue('Frank Herbert');
+    expect(screen.getByPlaceholderText("Note (optional, like 'signed')")).toHaveValue('signed');
+    expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add book' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Dune \(signed\)/ })).toHaveAttribute('aria-pressed', 'true'); // the highlighted spine
+});
+
+test('Save sends the fixed author, then the form goes back to adding books', async () => {
+    api.getBooks.mockResolvedValue([{ ...DUNE, author: 'Frank Hebert' }]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+    api.updateBook.mockResolvedValue(DUNE);
+
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: /Dune/ }));
+    api.getBooks.mockResolvedValue([DUNE]); // what the shelf looks like after saving
+    await user.clear(screen.getByPlaceholderText('Author'));
+    await user.type(screen.getByPlaceholderText('Author'), 'Frank Herbert');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(api.updateBook).toHaveBeenCalledWith('dune-id', { title: 'Dune', author: 'Frank Herbert', copyNote: '' });
+    expect(await screen.findByText('by Frank Herbert')).toBeInTheDocument(); // the shelf shows the fixed name
+    expect(api.getLoans).toHaveBeenCalledTimes(2); // the loans list reloads too, so it shows the fixed name
+    expect(screen.getByRole('button', { name: 'Add book' })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Author')).toHaveValue('');
+});
+
+test('Cancel empties the form and goes back to adding books, without saving', async () => {
+    api.getBooks.mockResolvedValue([DUNE]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: /Dune/ }));
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.getByPlaceholderText('Title')).toHaveValue('');
+    expect(screen.getByRole('button', { name: 'Add book' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Dune/ })).toHaveAttribute('aria-pressed', 'false'); // no longer highlighted
+    expect(api.updateBook).not.toHaveBeenCalled();
+});
+
+test('a Save that fails shows the red message and keeps what I typed, still ready to save', async () => {
+    api.getBooks.mockResolvedValue([DUNE, { ...DUNE, _id: 'signed-dune-id', copyNote: 'signed' }]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+    const message = 'You already have Dune (signed). Use a different note.';
+    api.updateBook.mockResolvedValue({ error: message });
+
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: /^Dune by/ })); // the Dune with no copy note
+    await user.type(screen.getByPlaceholderText("Note (optional, like 'signed')"), 'signed');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(message);
+    expect(screen.getByPlaceholderText("Note (optional, like 'signed')")).toHaveValue('signed');
+    expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument(); // fix the note and try again
+});

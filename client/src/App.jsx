@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'; //useState = memory, what should the page remember, useEffect = do something at a certain time
-import { getBooks, addBook, getFriends, addFriend, getLoans, lendBook, returnLoan} from './api';
+import { getBooks, addBook, updateBook, getFriends, addFriend, getLoans, lendBook, returnLoan} from './api';
 
 // a book's name on the page: "Dune (signed)" when it has a copy note, just "Dune" when it doesn't
 function bookName(book) {
@@ -32,6 +32,7 @@ function App() { //these are memory boxes
   const[title, setTitle] = useState('');
   const[author, setAuthor] = useState('');
   const[copyNote, setCopyNote] = useState(''); // optional, like "signed"
+  const[editingId, setEditingId] = useState(''); // the book in the form for editing, or '' when the form adds a new book
   const[friends, setFriends] = useState([]);
   const[name, setName] = useState('');
   const[loans, setLoans] = useState([]);
@@ -47,18 +48,37 @@ function App() { //these are memory boxes
     return getBooks().then((result) => fillList(result, 'books', setBooks, setListErrors)); // fill the list in once the server answers
   }
   
-  async function handleAddBook(e) { // this function runs when you click a button on the page
-    e.preventDefault(); //Dont refresh the page
-    const result = await addBook({ title: title, author: author, copyNote: copyNote });// take what you tyoed (ex title = "matilda") and send it to the server
-    if (result.error) {
-      setBookError(result.error); // show what's missing, and keep "Matilda" in the box so you only add the author
-      return;
-    }
+  // empty the book form, and go back to adding a new book
+  function resetBookForm() {
+    setEditingId('');
     setBookError('');
     setTitle(''); //clear the text box
     setAuthor(''); //clear the text box
     setCopyNote(''); //clear the text box
-    loadBooks(); // get the fresh list from the server, and Matilda will appear 
+  }
+
+  async function handleSaveBook(e) { // this function runs when you click Add book or Save
+    e.preventDefault(); //Dont refresh the page
+    const form = { title: title, author: author, copyNote: copyNote }; // what you typed, ex title = "matilda"
+    // editing? Then save the changes to that book. Otherwise add a new one
+    const result = editingId ? await updateBook(editingId, form) : await addBook(form);
+    if (result.error) {
+      setBookError(result.error); // show what's missing, and keep "Matilda" in the box so you only add the author
+      return;
+    }
+    const wasEditing = editingId;
+    resetBookForm();
+    loadBooks(); // get the fresh list from the server, and Matilda will appear
+    if (wasEditing) loadLoans(); // a loan shows the book's name, so a fixed name shows there too
+  }
+
+  // clicking a spine puts that book in the form, so I can fix its title, author or copy note
+  function startEditing(book) {
+    setEditingId(book._id);
+    setTitle(book.title);
+    setAuthor(book.author);
+    setCopyNote(book.copyNote || '');
+    setBookError('');
   }
 
   function loadFriends() {
@@ -111,16 +131,28 @@ return (
     <ErrorMessage message={listError} />
     <section>
      <h2>Books</h2>
-      <form onSubmit={handleAddBook}>
+      <form onSubmit={handleSaveBook}>
         <input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
         <input placeholder="Author" value={author} onChange={(e) => setAuthor(e.target.value)} />
         <input placeholder="Note (optional, like 'signed')" value={copyNote} onChange={(e) => setCopyNote(e.target.value)} />
-        <button>Add book</button>
+        {editingId ? (
+          <>
+            <button>Save</button>
+            <button type="button" onClick={resetBookForm}>Cancel</button>
+          </>
+        ) : (
+          <button>Add book</button>
+        )}
       </form>
       <ErrorMessage message={bookError} />
     <ul className="books-list"> {/* the books stand on the shelf as spines */}
       {books.map((book) => (
-        <li key = {book._id}><span className="book-name">{bookName(book)}</span> <span className="book-author">by {book.author}</span></li>
+        <li key = {book._id}>
+          {/* a button, so the spine can be clicked, or reached with the keyboard. aria-pressed = this one is in the form */}
+          <button className="spine" aria-pressed={book._id === editingId} onClick={() => startEditing(book)}>
+            <span className="book-name">{bookName(book)}</span> <span className="book-author">by {book.author}</span>
+          </button>
+        </li>
      ) )}
     </ul>
     </section>
