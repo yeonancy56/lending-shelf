@@ -294,9 +294,9 @@ Other option: leave them and add the new look on top
 Why: old rules that do nothing would sit next to the new ones, and I'd have a hard time telling which ones matter
 
 ## 2026-11-02 — The look lives in one plain CSS file
-Chose: write all the styling in index.css, the file the app already loads
-Other option: add a styling tool like Tailwind
-Why: the app is one page, and plain CSS is the basic thing to learn first. A tool would add new things to learn without making the page better
+Chose: write all the colors, fonts and spacing myself in one file, index.css, which the app already uses
+Other option: add an extra add-on that comes with ready-made styles
+Why: the app is one page, and writing the styles myself is the basic thing to learn first. An add-on would mean more to learn without making the page better
 
 ## 2026-11-02 — Keep dark mode, with cozy colors in both
 Chose: if my computer is set to dark mode, the page still turns dark. There will be two sets of cozy colors: cream for light, and a dim reading-room look for dark
@@ -329,6 +329,6 @@ Other option: do it all in one ticket
 Why: ticket 1 is small and changes almost nothing I can see, so ticket 2 only has the new look in it and is easier to follow
 
 ## 2026-11-02 — Tests check that a message is marked as an error, not its exact red
-Chose: each red message is marked as an alert, and the tests check for that mark
+Chose: each red message gets a hidden label that says "this is a warning", and the tests check for that label
 Other option: make the tests check the exact new red, or stop checking at all
-Why: the test tool can't see colors from the CSS file. Checking for "this is an error" is what really matters, and screen readers read an alert out loud right away
+Why: the tests can't see colors from the styles file. Checking "this is a warning" is what really matters. Also, for people who can't see the screen and have the computer read the page out loud, a warning gets read out right away
