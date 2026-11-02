@@ -198,9 +198,11 @@ html[data-look='c'] {
   --on-wood: #fbf1e1;
   --ink: #3d2e20;
   --heading: #6a4224;
-  --spine-1: #4f7a4a;
-  --spine-2: #9c4f3a;
-  --spine-3: #c79a4b;
+  --spine-1: #3f6a3a;
+  --spine-2: #7a3f2e;
+  --spine-3: #7a5a22;
+  --spine-title: #fff6e5;
+  --spine-author: #ffe3a8;
   --green: #4f7a4a;
   --on-green: #fff;
   --error: #b0402b;
@@ -214,9 +216,9 @@ html[data-look='c'] {
     --on-wood: #f1e2c9;
     --ink: #eadcc6;
     --heading: #e2b98b;
-    --spine-1: #4a6e45;
-    --spine-2: #8a4636;
-    --spine-3: #a37d3c;
+    --spine-1: #3c5a38;
+    --spine-2: #6e3a2c;
+    --spine-3: #7a5a22;
     --green: #8fb886;
     --on-green: #17120e;
     --error: #f2907c;
@@ -278,13 +280,21 @@ html[data-look='c'] .books-list li {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   background: var(--spine-1);
-  color: #fff;
   padding: 10px 6px;
   border-radius: 3px;
-  min-height: 120px;
-  max-height: 200px;
-  overflow: hidden;
+  min-inline-size: 120px;
+  max-inline-size: 200px; /* a long name wraps into a thicker spine, never gets cut */
   font-size: 14px;
+}
+html[data-look='c'] .book-title {
+  display: block;
+  color: var(--spine-title);
+  font-weight: 600;
+}
+html[data-look='c'] .book-author {
+  display: block;
+  color: var(--spine-author);
+  font-size: 12px;
 }
 html[data-look='c'] .books-list li:nth-child(3n + 2) {
   background: var(--spine-2);

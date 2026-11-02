@@ -97,7 +97,7 @@ return (
       {bookError && <p className="error">{bookError}</p>}
     <ul className="books-list">
       {books.map((book) => (
-        <li key = {book._id}>{bookName(book)} by {book.author}</li>
+        <li key = {book._id}><span className="book-title">{bookName(book)}</span> <span className="book-author">by {book.author}</span></li>
      ) )}
     </ul>
     </section>
