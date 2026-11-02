@@ -138,6 +138,7 @@ ul {
 
 li {
   padding: 6px 0;
+  overflow-wrap: anywhere; /* even one very long word (a book, a friend) breaks onto the next line instead of running off */
 }
 
 /* the small Return button next to a loan */
