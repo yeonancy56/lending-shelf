@@ -71,3 +71,19 @@ test('shows the red message when adding a second Dune fails, and keeps what I ty
     expect(screen.getByPlaceholderText('Author')).toHaveValue('Frank Herbert');
     expect(screen.getByPlaceholderText("Note (optional, like 'signed')")).toHaveValue('paperback');
 });
+
+test('shows "Something went wrong" in red when the server breaks while returning Dune', async () => {
+    // Sam has Dune, so there's a Return button
+    api.getBooks.mockResolvedValue([DUNE]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([{ _id: 'loan-id', book: DUNE, friend: SAM }]);
+    // and when you click Return, the fake api.js answers the way it does for a breakdown
+    api.returnLoan.mockResolvedValue({ error: 'Something went wrong. Try again.' });
+
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: 'Return' }));
+
+    expect(await screen.findByText('Something went wrong. Try again.')).toHaveStyle({ color: 'rgb(255, 0, 0)' }); // red
+});

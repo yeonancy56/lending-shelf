@@ -257,3 +257,23 @@ Why: a breakdown isn't my mistake, and its message is computer talk nobody can a
 Chose: the shared "your form has a mistake" and "a rule says no" helpers live in one file next to app.js, not inside books or loans
 Other option: keep a copy inside each feature folder
 Why: both books and loans need them, so putting them in one feature's folder would be odd, and two copies could drift apart. app.js and db.js already sit there for the same reason
+
+## 2026-11-02 — When the server really breaks, the page says "Something went wrong. Try again."
+Chose: if the database is down or the wifi drops, the page shows "Something went wrong. Try again." in red under the form I used, and keeps what I typed. This works for Add book, Add Friend, Lend and Return
+Other option: show nothing, like before, or show the server's own computer talk
+Why: before, clicking Lend just did nothing, and an old red message could stay up and look like it was about this click. "Try again" tells me the one thing I can do
+
+## 2026-11-02 — The page sorts the server's answers in one place, api.js
+Chose: api.js checks the answer every time I click a button (Add book, Add Friend, Lend, Return) before the page sees it. A known mistake keeps its own words, and anything else becomes "Something went wrong". The lists that load when the page opens aren't checked yet; that's a separate ticket
+Other option: let each button (Add book, Add Friend, Lend, Return) check for itself
+Why: four buttons would mean four copies of the same check, which could drift apart. It's the same idea as keeping the server's mistake helpers in one file
+
+## 2026-11-02 — Returning a book can show a red message now
+Chose: if Return fails, the message shows in the red spot under the Lend form
+Other option: give each loan in the list its own red spot
+Why: Loans already has one red spot, and only one thing can go wrong at a time
+
+## 2026-11-02 — "Loan not found" counts as a known mistake
+Chose: if I click Return on a loan that's already gone, the page says "Loan not found", the way the server wrote it
+Other option: change the server so "not found" uses the same code as "your form has a mistake", or let it fall into "Something went wrong"
+Why: "Try again" would be bad advice here, because trying again can never work. Fixing it on the page was one small line, and the list of known mistakes now sits in one spot in api.js
