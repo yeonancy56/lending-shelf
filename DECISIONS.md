@@ -361,4 +361,4 @@ Why: before, the lists just stayed empty and the buttons did nothing, with no me
 ## 2026-11-02 — The red messages are one shared piece
 Chose: one small piece of the page, called ErrorMessage, draws every red message. Books, Friends, Loans and the message at the top all use it. It lives in App.jsx, next to the piece that writes a book's name like "Dune (signed)"
 Other option: keep writing out the red message by hand in all four places, or give the piece its own file
-Why: four hand-written copies could drift apart. One might lose its alert mark, and then a screen reader wouldn't read it out loud. The page is still just one file, so a separate file would only be one more place to look
+Why: four hand-written copies could drift apart. One might lose its alert mark, and then the computer wouldn't read it out loud right away for people who can't see the screen. The page is still just one file, so a separate file would only be one more place to look
