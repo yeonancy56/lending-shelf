@@ -334,6 +334,6 @@ Other option: make the tests check the exact new red, or stop checking at all
 Why: the tests can't see colors from the styles file. Checking "this is a warning" is what really matters. Also, for people who can't see the screen and have the computer read the page out loud, a warning gets read out right away
 
 ## 2026-11-02 — Boxes for typing get their own solid color in dark mode
-Chose: the boxes are a soft cream in light mode and a dark brown in dark mode, each with its own color
-Other option: one see-through white for both, like in the prototype
-Why: in dark mode, see-through white turns the boxes grey, and my light words on grey were hard to read
+Chose: the boxes are a soft cream in light mode and a dark brown in dark mode. In dark mode, their edge is a lighter brown
+Other option: one see-through white for both, with the same wood-brown edge, like in the prototype
+Why: in dark mode, see-through white turns the boxes grey, and my light words on grey were hard to read. The darker edge almost disappeared against the dark page, so I couldn't see where a box was

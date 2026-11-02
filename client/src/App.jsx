@@ -96,7 +96,7 @@ return (
       {bookError && <p className="error" role="alert">{bookError}</p>}
     <ul className="books-list"> {/* the books stand on the shelf as spines */}
       {books.map((book) => (
-        <li key = {book._id}><span className="book-title">{bookName(book)}</span> <span className="book-author">by {book.author}</span></li>
+        <li key = {book._id}><span className="book-name">{bookName(book)}</span> <span className="book-author">by {book.author}</span></li>
      ) )}
     </ul>
     </section>

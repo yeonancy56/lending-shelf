@@ -10,9 +10,10 @@
   --wood-dark: #6a4224; /* the shadow under each shelf board */
   --on-wood: #fbf1e1; /* words on the wooden band */
   --field: #fffaf0; /* inside the boxes for typing */
+  --field-edge: #8a5a35; /* the edge of the boxes for typing */
   --green: #4f7a4a;
   --on-green: #fff;
-  --error: #b0402b; /* the one shared red for every warning */
+  --error: #b0402b; /* the one shared red for every error message */
   /* spines: dark enough that the cream and gold words are easy to read */
   --spine-1: #3f6a3a; /* green */
   --spine-2: #7a3f2e; /* rust */
@@ -37,19 +38,18 @@
     --wood-dark: #3e2816;
     --on-wood: #f1e2c9;
     --field: #2a221b;
+    --field-edge: #9a6a42; /* lighter, so you can see where each box is */
     --green: #8fb886;
     --on-green: #17120e;
     --error: #f2907c; /* lighter, so it's still easy to read on the dark page */
     --spine-1: #3c5a38;
     --spine-2: #6e3a2c;
-    --spine-3: #7a5a22;
   }
 }
 
 /* ---------- the page ---------- */
 body {
   margin: 0;
-  background: var(--page);
 }
 
 #root {
@@ -108,7 +108,7 @@ button {
 input,
 select {
   background: var(--field);
-  border: 1px solid var(--wood);
+  border: 1px solid var(--field-edge);
   border-radius: 999px;
   padding: 8px 14px;
   flex: 1 1 140px;
@@ -175,7 +175,7 @@ li button {
   background: var(--spine-3);
 }
 
-.book-title {
+.book-name {
   display: block;
   color: var(--spine-title);
   font-weight: 600;
