@@ -15,7 +15,7 @@ const SOMETHING_WENT_WRONG = { error: 'Something went wrong. Try again.' };
 // A known mistake comes back as the server wrote it.
 // Anything else that fails, no answer at all (wifi down), or an answer that isn't data
 // (like a web page sent back by mistake) is a real breakdown,
-// so the page gets one plain message instead. send never throws.
+// so the page gets one plain message instead. send always hands back an answer, it never crashes the page.
 async function send(path, options) {
     let res;
     try {
