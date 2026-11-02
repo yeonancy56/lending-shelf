@@ -6,6 +6,15 @@ function bookName(book) {
   return book.copyNote ? `${book.title} (${book.copyNote})` : book.title;
 }
 
+// fill a list with the server's answer, and remember whether that list broke,
+// so the red message at the top stays until every broken list has loaded
+function fillList(result, list, setList, setListErrors) {
+  setListErrors((errors) => ({ ...errors, [list]: result.error || '' }));
+  if (!result.error) {
+    setList(result);
+  }
+}
+
 function App() { //these are memory boxes 
   const[books, setBooks] = useState([]);
   const[title, setTitle] = useState('');
@@ -19,9 +28,11 @@ function App() { //these are memory boxes
   const[loanError, setLoanError] = useState(''); // the red message under the lend form, for Lend and Return
   const[bookError, setBookError] = useState(''); // the red message under the book form
   const[friendError, setFriendError] = useState(''); // the red message under the friend form
+  const[listErrors, setListErrors] = useState({}); // which lists couldn't load, like { loans: 'Something went wrong. Try again.' }
+  const listError = Object.values(listErrors).find((error) => error); // the red message at the top, if any list is broken
 
   function loadBooks() { //load function, fill a list from the server
-    return getBooks().then(setBooks); // fill the list in once the server answers
+    return getBooks().then((result) => fillList(result, 'books', setBooks, setListErrors)); // fill the list in once the server answers
   }
   
   async function handleAddBook(e) { // this function runs when you click a button on the page
@@ -39,7 +50,7 @@ function App() { //these are memory boxes
   }
 
   function loadFriends() {
-    return getFriends().then(setFriends);
+    return getFriends().then((result) => fillList(result, 'friends', setFriends, setListErrors));
   }
  
   async function handleAddFriend(e) { // note e = event "the thing that just happened"
@@ -55,7 +66,7 @@ function App() { //these are memory boxes
   }
 
   function loadLoans() {
-    return getLoans().then(setLoans);
+    return getLoans().then((result) => fillList(result, 'loans', setLoans, setListErrors));
   }
 
   async function handleAddLoan(e) {
@@ -85,6 +96,7 @@ useEffect(() => { // when the page opens, fill in all three lists
 return (
   <div>
     <h1>Lending Shelf</h1>
+    {listError && <p className="error" role="alert">{listError}</p>}
     <section>
      <h2>Books</h2>
       <form onSubmit={handleAddBook}>

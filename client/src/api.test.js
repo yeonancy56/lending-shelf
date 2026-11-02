@@ -1,7 +1,7 @@
 // Tests how api.js reads the server's answer. No server needed:
 // fetch (the browser's way of calling the server) is swapped for a fake one.
 import { afterEach, expect, test, vi } from 'vitest';
-import { addBook, addFriend, lendBook, returnLoan } from './api';
+import { addBook, addFriend, getBooks, getFriends, getLoans, lendBook, returnLoan } from './api';
 
 const DUNE = { title: 'Dune', author: 'Frank Herbert' };
 
@@ -45,4 +45,15 @@ test('says something went wrong when the server can\'t be reached, like the wifi
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
 
     expect(await addBook(DUNE)).toEqual({ error: 'Something went wrong. Try again.' });
+});
+
+// the three lists the page fills in when it opens
+test.each([
+    ['books', getBooks],
+    ['friends', getFriends],
+    ['loans', getLoans],
+])('says something went wrong when the %s list can\'t load', async (_, load) => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+
+    expect(await load()).toEqual({ error: 'Something went wrong. Try again.' });
 });

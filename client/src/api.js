@@ -11,7 +11,7 @@ const KNOWN_MISTAKES = [400, 404, 409];
 // what the page shows when the server really breaks, or can't be reached at all
 const SOMETHING_WENT_WRONG = { error: 'Something went wrong. Try again.' };
 
-// Send something to the server and read its answer.
+// Send something to the server (or ask it for a list) and read its answer.
 // A known mistake comes back as the server wrote it.
 // Anything else that fails, or no answer at all (wifi down), is a real breakdown,
 // so the page gets one plain message instead.
@@ -30,8 +30,7 @@ async function send(path, options) {
 
 //GET: look at all books (like curl with no -X):
 export async function getBooks() {
-    const res = await fetch(API + '/books');
-    return res.json();
+    return send('/books');
 }
 
 // POST: add a book (like curl -X POST -H... -d...)
@@ -44,8 +43,7 @@ export async function addBook(book) {
 }
 
 export async function getFriends() {
-    const res = await fetch(API + '/friends');
-    return res.json();
+    return send('/friends');
 }
 
 export async function addFriend(friend) {
@@ -60,8 +58,7 @@ export async function addFriend(friend) {
 
 //getLoans: the same pattern as getBooks()
 export async function getLoans() {
-    const res = await fetch(API + '/loans');
-    return res.json();
+    return send('/loans');
 }
 
 //lendBook: a POST like addBook but you send two IDs The new part is how the body is built, so that line is shown in full:
