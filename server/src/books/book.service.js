@@ -7,6 +7,10 @@ const { isSameText } = require('./book.same-text');
 function listBooks()          { return bookDao.findAll(); }
 function getBook(id)          { return bookDao.findById(id); }
 
+// the three words Sam's page shows next to a book. Sam's page has its own copy (SHELF_STATE in client/src/App.jsx),
+// so a rename changes this line and that one
+const SHELF_STATE = { atHome: 'at home', lentOut: 'lent out', askedFor: 'asked for' };
+
 // the friend shelf view: every book, and whether it's "at home", "lent out" or "asked for".
 // Only the book's own details are copied over, so who has Dune, or who asked for it, can never slip into Sam's page
 async function listShelf() {
@@ -15,9 +19,9 @@ async function listShelf() {
     const askedForIds = await requestDao.findAskedForBookIds();
     const isIn = (ids, book) => ids.some((id) => id.equals(book._id));
     function stateOf(book) {
-        if (isIn(lentOutIds, book)) return 'lent out';
-        if (isIn(askedForIds, book)) return 'asked for';
-        return 'at home';
+        if (isIn(lentOutIds, book)) return SHELF_STATE.lentOut;
+        if (isIn(askedForIds, book)) return SHELF_STATE.askedFor;
+        return SHELF_STATE.atHome;
     }
     return books.map((book) => ({
         _id: book._id,
