@@ -26,8 +26,8 @@ A MERN app for tracking books I lend to friends.
    time, until the plan is clear.
 3. **After each ticket**, run /code-review, then offer 1–2 questions to check
    I understand the change, plus 1 about an earlier ticket ("want a quick
-   question, or skip?"). This is the only quiz offer. A new session doesn't
-   start with one.
+   question, or skip?"). This is the only offer of review questions. A new
+   session doesn't start with one.
 4. **Every decision goes in DECISIONS.md.** Claude writes the entry in plain,
    everyday language — short sentences, no jargon, as if explaining to a friend
    who doesn't code.
