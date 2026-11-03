@@ -57,6 +57,24 @@ test('a note sent as null counts as no note (200)', async () => {
     expect(res.body.note).toBe('');
 });
 
+test('a note of only spaces counts as no note (200)', async () => {
+    const asked = await Request.create({ book: dune.id, friend: sam.id });
+
+    const res = await asMe.post(`/requests/${asked.id}/decline`).send({ note: '     ' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.note).toBe('');
+});
+
+test('spaces around a note are trimmed, so they don\'t count toward the 200 (200)', async () => {
+    const asked = await Request.create({ book: dune.id, friend: sam.id });
+
+    const res = await asMe.post(`/requests/${asked.id}/decline`).send({ note: '  ' + 'a'.repeat(200) + '  ' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.note).toBe('a'.repeat(200));
+});
+
 test('a note that isn\'t words is refused, and the request keeps waiting (400)', async () => {
     const asked = await Request.create({ book: dune.id, friend: sam.id });
 

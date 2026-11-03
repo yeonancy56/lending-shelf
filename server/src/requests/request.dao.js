@@ -1,24 +1,25 @@
 const mongoose = require('mongoose');
 const Request = require('./request.model');
+const STATUS = require('./request.status');
 
 function create(data) { return Request.create(data); }
 
 // the lending rules: has someone asked for this book, and is still waiting? With their name, so my lend form can say who
 function findWaitingByBook(bookId) {
-    return Request.findOne({ book: bookId, status: 'waiting' }).populate('friend');
+    return Request.findOne({ book: bookId, status: STATUS.WAITING }).populate('friend');
 }
 
 // the 3-book limit: how many requests is this friend still waiting on?
 // Leaves out the one I'm approving (leaveOutId), if any, so it doesn't count against itself
 function countWaitingByFriend(friendId, leaveOutId = null) {
-    const filter = { friend: friendId, status: 'waiting' };
+    const filter = { friend: friendId, status: STATUS.WAITING };
     if (leaveOutId) filter._id = { $ne: leaveOutId };
     return Request.countDocuments(filter);
 }
 
 // the friend shelf view: which books are asked for right now? Only the books' ids, never who asked
 function findAskedForBookIds() {
-    return Request.distinct('book', { status: 'waiting' });
+    return Request.distinct('book', { status: STATUS.WAITING });
 }
 
 // Sam's requests: every one Sam ever made, with each book's name, the newest first
@@ -44,36 +45,26 @@ function findByIdForFriend(id, friendId) {
 
 // my Requests list: every request still waiting on me, the oldest first, with the book's and the friend's names
 function findWaiting() {
-    return Request.find({ status: 'waiting' }).sort({ askedAt: 1 }).populate('book').populate('friend');
+    return Request.find({ status: STATUS.WAITING }).sort({ askedAt: 1 }).populate('book').populate('friend');
 }
 
-// cancel: only if it's this friend's and still waiting, in one step, so two clicks can't both cancel it.
-// Gives back nothing when there was nothing to cancel
-function markCancelled(id, friendId) {
+// cancel, approve or decline: change the request only if it's still waiting, in one step,
+// so two clicks can't both change it, and a decline can't land on a request I just approved.
+// changes says what it becomes, like { status: 'declined', answeredAt: now, note }.
+// friendId, when given, also means "only if it's this friend's", so Sam can only cancel Sam's own.
+// Gives back nothing when there was nothing to change
+function markIfWaiting(id, changes, friendId = null) {
     if (!mongoose.isValidObjectId(id)) return null;
-    return Request.findOneAndUpdate(
-        { _id: id, friend: friendId, status: 'waiting' },
-        { status: 'cancelled', cancelledAt: new Date() },
-        { returnDocument: 'after' },
-    );
+    const filter = { _id: id, status: STATUS.WAITING };
+    if (friendId) filter.friend = friendId;
+    return Request.findOneAndUpdate(filter, changes, { returnDocument: 'after' });
 }
 
-// approve: only if it's still waiting, in one step, so two clicks can't both say yes.
-// Gives back nothing when it wasn't waiting any more
-function markApproved(id) {
+// approve broke before Dune was lent: undo the yes, so the request waits for my answer again
+function putBackToWaiting(id) {
     return Request.findOneAndUpdate(
-        { _id: id, status: 'waiting' },
-        { status: 'approved', answeredAt: new Date() },
-        { returnDocument: 'after' },
-    );
-}
-
-// decline: only if it's still waiting, in one step, so a decline can't land on a request I just approved.
-// Gives back nothing when it wasn't waiting any more
-function markDeclined(id, note) {
-    return Request.findOneAndUpdate(
-        { _id: id, status: 'waiting' },
-        { status: 'declined', answeredAt: new Date(), note },
+        { _id: id, status: STATUS.APPROVED, loan: null },
+        { status: STATUS.WAITING, answeredAt: null },
         { returnDocument: 'after' },
     );
 }
@@ -89,4 +80,4 @@ function linkLoan(id, loanId) {
     return Request.findByIdAndUpdate(id, { loan: loanId }, { returnDocument: 'after' });
 }
 
-module.exports = { create, findWaitingByBook, countWaitingByFriend, findAskedForBookIds, hasEverBeenAskedFor, hasEverAsked, findByFriend, findByIdForFriend, markCancelled, findWaiting, markApproved, markDeclined, linkLoan, findById };
+module.exports = { create, findWaitingByBook, countWaitingByFriend, findAskedForBookIds, hasEverBeenAskedFor, hasEverAsked, findByFriend, findByIdForFriend, findWaiting, markIfWaiting, putBackToWaiting, linkLoan, findById };

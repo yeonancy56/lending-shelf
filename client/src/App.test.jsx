@@ -830,13 +830,13 @@ test('Sam cancels the waiting request for Dune: it\'s sent, then it shows as can
 
 test('when Cancel fails, Sam sees the red message', async () => {
     signedInAsSam({ myRequests: [{ _id: 'request-1', book: DUNE, status: 'waiting', askedAt: '2026-11-02T10:00:00Z' }] });
-    api.cancelRequest.mockResolvedValue({ error: 'This request was already cancelled' });
+    api.cancelRequest.mockResolvedValue({ error: 'This request was cancelled' });
 
     const user = userEvent.setup();
     render(<App />);
     await user.click(await screen.findByRole('button', { name: 'Cancel' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('This request was already cancelled');
+    expect(await screen.findByRole('alert')).toHaveTextContent('This request was cancelled');
 });
 
 test('signing in as me still shows my page', async () => {

@@ -157,7 +157,7 @@ test('Sam can\'t cancel a request twice (409)', async () => {
     const res = await asSam.post(`/requests/${asked.id}/cancel`);
 
     expect(res.status).toBe(409);
-    expect(res.body.error).toBe('This request was already cancelled');
+    expect(res.body.error).toBe('This request was cancelled');
 });
 
 test('Sam can\'t cancel Alex\'s request: as far as Sam can tell, it isn\'t there (404)', async () => {

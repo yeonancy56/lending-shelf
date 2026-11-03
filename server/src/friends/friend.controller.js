@@ -1,5 +1,4 @@
 const friendService = require ('./friend.service');
-const tidyEmail = require('../auth/tidy-email');
 const { answerKnownMistake } = require('../errors');
 
 // empty, only spaces, or not text at all? Then it's missing
@@ -18,11 +17,10 @@ async function getOne(req, res) {
     res.json(friend);
 }
 
-// the friend form: a name, and a Google email if there is one.
-// An empty email box means no email, so Gran (who'll never sign in) works like today
+// the friend form: a name, and a Google email if there is one. The service tidies the email
 function readFriendForm(body) {
     const { name, email } = body ?? {}; // ?? {} = if nothing was sent at all, treat it as an empty form
-    return { name, email: isBlank(email) ? undefined : tidyEmail(email) };
+    return { name, email };
 }
 
 async function create(req, res) {

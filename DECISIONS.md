@@ -653,3 +653,28 @@ Why: sometimes "no" needs no reason. 200 is plenty for "I'm rereading it this we
 Chose: each waiting request in my Requests list has its note box out all the time, next to Approve and Decline. I type a note if I want, then click Decline. No "are you sure?" step
 Other option: click Decline first to open the note box, or ask me to confirm
 Why: it's the quickest way to answer Sam. A decline lends nothing and Sam can ask again straight away, so a slip is easy to fix
+
+## 2026-11-02 — If lending breaks while I approve, the request goes back to waiting
+Chose: approving still says yes first, so two clicks lend Dune only once. But if saving the loan then fails, my yes is undone. Sam's request is back on my Requests list, and Sam sees it waiting again
+Other option: leave it marked "approved", even though Dune was never lent
+Why: an "approved" with no loan is a lie. Sam would think Dune is coming, and I'd have nothing left to click. Putting it back means I can just click Approve again
+
+## 2026-11-02 — The database itself stops Dune having two active loans
+Chose: the database refuses a second loan of Dune while one is still out. If that ever happens, I see the usual "This book is already lent out"
+Other option: rely only on the lending rules, which already check this
+Why: if my lend form and my Approve button lend Dune at the very same moment, both can pass the rules before either is saved. Then Dune would be with Sam and Alex at once. It's the same guard that already stops two waiting requests for one book
+
+## 2026-11-02 — The database itself stops two friends having the same email
+Chose: the database refuses a second friend with an email that's already taken. Friends with no email don't count. If it happens, I see the usual "Sam already has this email."
+Other option: rely only on the friend form's check
+Why: the same "two clicks at once" problem. Two friends with one email would mean sign-in can't tell who it is
+
+## 2026-11-02 — A decline note of only spaces is no note
+Chose: spaces around my note are trimmed. A note of only spaces is saved as no note, so Sam just sees "declined"
+Other option: save it exactly as typed
+Why: same idea as "spaces aren't a real author". Sam would otherwise see an empty note in quotes. Spaces also don't eat into the 200 letters
+
+## 2026-11-02 — Requests get their own routes file, like books, friends and loans
+Chose: every requests address now lives in requests/request.routes.js, each one still marked as mine or Sam's. Sam's shelf view and Sam's loans moved out of app.js the same way, into the books and loans folders. The addresses didn't change
+Other option: keep listing them one by one in app.js
+Why: app.js should only plug the folders in. When I work on requests, all of it is in one folder, like we chose when we sorted the server by feature

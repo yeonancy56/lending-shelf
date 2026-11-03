@@ -229,3 +229,27 @@ test('GET /friends/:id/loans for a friend who isn\'t there says so (404)', async
     expect(wrongShape.status).toBe(404);
     expect(wrongShape.body.error).toBe('Friend not found');
 });
+
+test('lending Dune to Sam and to Alex at the same moment: only one gets Dune', async () => {
+    await Loan.init(); // make sure the database's own "one active loan per book" rule is in place
+    const alex = await Friend.create({ name: 'Alex' });
+
+    const answers = await Promise.all([
+        owner.post('/loans').send({ bookId: dune.id, friendId: sam.id }),
+        owner.post('/loans').send({ bookId: dune.id, friendId: alex.id }),
+    ]);
+
+    expect(answers.map((a) => a.status).sort()).toEqual([201, 409]);
+    expect(answers.find((a) => a.status === 409).body.error).toBe('This book is already lent out');
+    expect(await Loan.countDocuments({ book: dune.id, returnedAt: null })).toBe(1);
+});
+
+test('once Dune comes back, it can be lent again: returned loans don\'t count as active (201)', async () => {
+    await Loan.init();
+    await Loan.create({ book: dune.id, friend: sam.id, returnedAt: new Date() });
+    await Loan.create({ book: dune.id, friend: sam.id, returnedAt: new Date() });
+
+    const res = await owner.post('/loans').send({ bookId: dune.id, friendId: sam.id });
+
+    expect(res.status).toBe(201);
+});
