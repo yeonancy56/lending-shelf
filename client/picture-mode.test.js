@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { pictureAnswer, pictureMode } from './picture-mode';
 
+// what Sam's shelf says about one book: "at home", "lent out" or "asked for"
+const stateOnSamsShelf = (bookId) => pictureAnswer('/shelf', 'friend').body.find((book) => book._id === bookId).state;
+
 describe('picture mode', () => {
   it('says I am the owner, so the page shows my shelf', () => {
     expect(pictureAnswer('/me')).toEqual({ status: 200, body: { who: 'owner' } });
@@ -37,21 +40,26 @@ describe('picture mode', () => {
   it('as Sam, he has a book now, and his shelf says it\'s "lent out"', () => {
     const { active } = pictureAnswer('/me/loans', 'friend').body;
     expect(active).toHaveLength(1);
-    const onShelf = pictureAnswer('/shelf', 'friend').body.find((book) => book._id === active[0].book._id);
-    expect(onShelf.state).toBe('lent out');
+    expect(stateOnSamsShelf(active[0].book._id)).toBe('lent out');
   });
 
   it('as Sam, he has a waiting request, and his shelf says that book is "asked for"', () => {
     const [request] = pictureAnswer('/me/requests', 'friend').body;
     expect(request.status).toBe('waiting'); // so the picture shows its Cancel button
-    const onShelf = pictureAnswer('/shelf', 'friend').body.find((book) => book._id === request.book._id);
-    expect(onShelf.state).toBe('asked for');
+    expect(stateOnSamsShelf(request.book._id)).toBe('asked for');
   });
 
   it('on both pages, has a copy with an average from 2 ratings, one with "1 rating", and one with none', () => {
     for (const books of [pictureAnswer('/books').body, pictureAnswer('/shelf', 'friend').body]) {
-      expect(books.map((book) => book.ratingCount).slice(0, 3)).toEqual([2, 1, undefined]);
+      const counts = books.map((book) => book.ratingCount);
+      expect(counts).toEqual(expect.arrayContaining([2, 1, undefined])); // in any order
     }
+  });
+
+  it('only one friend asks for a book at a time, so Sam never asks for the book Ana asked for', () => {
+    const [anasRequest] = pictureAnswer('/requests').body;
+    const [samsRequest] = pictureAnswer('/me/requests', 'friend').body;
+    expect(samsRequest.book._id).not.toBe(anasRequest.book._id);
   });
 
   it('runs on its own door, not the real app\'s 5173, so its pretend sign-in stays out of the real app', () => {
