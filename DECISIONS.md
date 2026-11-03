@@ -618,3 +618,8 @@ Why: sign-in isn't about books, friends or loans. It stands in front of all of t
 Chose: if my owner email or the Google client id is missing from the server's settings, nobody gets in, not even me
 Other option: carry on without it
 Why: without the client id, Google's checker skips "was this sign-in made for my app?". Then a sign-in made for some other website could get into my shelf
+
+## 2026-11-02 — I edit a friend from their panel
+Chose: Sam's panel gets an Edit button. It puts Sam's name and email in the friend form at the top, with Save and Cancel, like clicking a book's spine
+Other option: an edit box inside Sam's panel, or an Edit button next to each name in the list
+Why: it works the same way as editing a book, so there's nothing new to learn. The panel is already where I go to look at Sam

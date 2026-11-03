@@ -112,6 +112,15 @@ export async function addFriend(friend) {
     });
 }
 
+// PUT: save an edited friend, like Sam with a new Google email. An empty email removes it
+export async function updateFriend(id, friend) {
+    return send('/friends/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(friend),
+    });
+}
+
 // Sam's panel: what Sam has now, Sam's past loans, and the 3-book limit
 export async function getFriendLoans(friendId) {
     return send('/friends/' + friendId + '/loans');

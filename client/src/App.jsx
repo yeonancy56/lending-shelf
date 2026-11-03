@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'; //useState = memory, what should the page remember, useEffect = do something at a certain time
-import { getBooks, addBook, updateBook, getFriends, addFriend, getFriendLoans, getLoans, lendBook, returnLoan, isSignedIn, saveSignIn, signOut, whenSignedOut } from './api';
+import { getBooks, addBook, updateBook, getFriends, addFriend, updateFriend, getFriendLoans, getLoans, lendBook, returnLoan, isSignedIn, saveSignIn, signOut, whenSignedOut } from './api';
 import GoogleSignIn from './GoogleSignIn';
 
 // a book's name on the page: "Dune (signed)" when it has a copy note, just "Dune" when it doesn't
@@ -37,13 +37,14 @@ function fillList(result, list, setList, setListErrors) {
 
 // one friend's loans, in a box under the Friends list: how many they have, what they have now, and what they had before.
 // loans is null while the server hasn't answered yet
-function FriendPanel({ friend, loans, onClose }) {
+function FriendPanel({ friend, loans, onEdit, onClose }) {
   return (
     <section aria-labelledby="friend-panel-title">
       <h3 id="friend-panel-title">{friend.name}'s loans</h3>
       {!loans && <p>Loading…</p>} {/* Sam's loans are still on the way */}
       <ErrorMessage message={loans?.error} />
       {loans && !loans.error && <FriendLoans loans={loans} />}
+      <button onClick={onEdit}>Edit</button> {/* puts Sam's name and email in the friend form */}
       <button onClick={onClose}>Close</button>
     </section>
   );
@@ -127,6 +128,8 @@ function Shelf({ onSignOut }) { //these are memory boxes
   const[search, setSearch] = useState(''); // what I typed in the search box above the shelf
   const[friends, setFriends] = useState([]);
   const[name, setName] = useState('');
+  const[email, setEmail] = useState(''); // optional: Sam's Google email, so Sam can sign in
+  const[editingFriendId, setEditingFriendId] = useState(''); // the friend in the form for editing, or '' when the form adds a new friend
   const[openFriend, setOpenFriend] = useState(null); // the friend whose panel is open, or null when it's closed
   const[friendLoans, setFriendLoans] = useState(null); // that friend's loans, once the server answers
   // the friend I last asked the server about. A ref, not useState, because the page doesn't show it
@@ -183,16 +186,36 @@ function Shelf({ onSignOut }) { //these are memory boxes
     return getFriends().then((result) => fillList(result, 'friends', setFriends, setListErrors));
   }
  
-  async function handleAddFriend(e) { // note e = event "the thing that just happened"
-    e.preventDefault();
-    const result = await addFriend({ name: name });
-    if (result.error) {
-      setFriendError(result.error);
-      return;
-    }
+  // empty the friend form, and go back to adding a new friend
+  function resetFriendForm() {
+    setEditingFriendId('');
     setFriendError('');
     setName('');
+    setEmail('');
+  }
+
+  async function handleSaveFriend(e) { // note e = event "the thing that just happened"
+    e.preventDefault();
+    const form = { name: name, email: email }; // an empty email box means no email
+    // editing? Then save the changes to that friend. Otherwise add a new one
+    const result = editingFriendId ? await updateFriend(editingFriendId, form) : await addFriend(form);
+    if (result.error) {
+      setFriendError(result.error); // like "Sam already has this email.", and what I typed stays in the boxes
+      return;
+    }
+    if (openFriend?._id === result._id) setOpenFriend(result); // Sam's panel shows Sam's new name, and Edit gets the new email
+    const wasEditing = editingFriendId;
+    resetFriendForm();
     loadFriends();
+    if (wasEditing) loadLoans(); // a loan shows the friend's name, so a fixed name shows there too
+  }
+
+  // Edit in Sam's panel puts Sam in the form, so I can add, change or remove Sam's email
+  function startEditingFriend(friend) {
+    setEditingFriendId(friend._id);
+    setName(friend.name);
+    setEmail(friend.email || '');
+    setFriendError('');
   }
 
   // ask the server for Sam's loans, and put them in Sam's panel
@@ -283,9 +306,18 @@ return (
     </section>
     <section>
     <h2>Friends</h2>
-     <form onSubmit={handleAddFriend}>
+     <form onSubmit={handleSaveFriend}>
       <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
-      <button>Add Friend</button>
+      {/* type="email": a phone shows the @ key, and the browser stops a typo like "sam.gmail.com" before it's sent */}
+      <input type="email" placeholder="Google email (optional)" value={email} onChange={(e) => setEmail(e.target.value)} />
+      {editingFriendId ? (
+        <>
+          <button>Save</button>
+          <button type="button" onClick={resetFriendForm}>Cancel</button>
+        </>
+      ) : (
+        <button>Add Friend</button>
+      )}
      </form>
      <ErrorMessage message={friendError} />
      <ul>
@@ -293,7 +325,7 @@ return (
         <li key={friend._id}><button onClick={() => openFriendPanel(friend)}>{friend.name}</button></li>
       ))}
      </ul>
-     {openFriend && <FriendPanel friend={openFriend} loans={friendLoans} onClose={closeFriendPanel} />}
+     {openFriend && <FriendPanel friend={openFriend} loans={friendLoans} onEdit={() => startEditingFriend(openFriend)} onClose={closeFriendPanel} />}
     </section>
     <section>
     <h2>Loans</h2>

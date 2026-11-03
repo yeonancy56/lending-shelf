@@ -2,13 +2,9 @@
 // and answers who is asking. This is the only file that talks to Google.
 // Tests swap it for the pretend one in __mocks__/who-is-this.js.
 const { OAuth2Client } = require('google-auth-library');
+const tidyEmail = require('./tidy-email');
 
 const google = new OAuth2Client();
-
-// "Nancy@Gmail.com " and "nancy@gmail.com" are the same email
-function tidyEmail(email) {
-    return (email || '').trim().toLowerCase();
-}
 
 // Asks Google whether this sign-in is real, recent, and made for my app (the client id).
 // Hands back the email Google checked, or '' if Google says no
