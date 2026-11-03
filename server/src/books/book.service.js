@@ -9,7 +9,7 @@ const SHELF_STATE = require('./book.shelf-state');
 // every book on my shelf, each with its average rating if friends have rated it
 async function listBooks() {
     const books = await bookDao.findAll();
-    const averages = await ratingDao.findAverages();
+    const averages = await ratingDao.findAverageStarsByBook();
     return books.map((book) => ({ ...book.toObject(), ...averageOf(book, averages) }));
 }
 
@@ -32,7 +32,7 @@ async function listShelf(friendId) {
     const askedForIds = await requestDao.findAskedForBookIds();
     const returnedIds = await loanDao.findReturnedBookIds(friendId);
     const myRatings = await ratingDao.findByFriend(friendId);
-    const averages = await ratingDao.findAverages();
+    const averages = await ratingDao.findAverageStarsByBook();
     const isIn = (ids, book) => ids.some((id) => id.equals(book._id));
     function stateOf(book) {
         if (isIn(lentOutIds, book)) return SHELF_STATE.LENT_OUT;

@@ -844,3 +844,8 @@ Why: 5 stars from one friend means less than 4.5 from six, so the count matters.
 Chose: on my shelf, the average sits on the spine under the author. On Sam's page, it sits on its own line between the Ask button and "your stars"
 Other option: put the average on the same line as "your stars"
 Why: side by side, Sam might read "★ 4.5" as his own stars. On separate lines, "your stars" is clearly his and the line above is everyone's
+
+## 2026-11-03 — The shelf asks the ratings folder straight for stars
+Chose: when the books folder builds my shelf or Sam's, it asks the ratings DAO for Sam's own stars and for each copy's average. This covers the "your stars" from the last ticket too
+Other option: go through the ratings service, which would only pass the question along
+Why: these are plain look-ups with no rules in them, so a step in the middle would add a file that does nothing. The rating rules (only after returning, 1 to 5 stars) still live in the ratings folder
