@@ -15,7 +15,7 @@ jobs:
         working-directory: server
       - run: npm test
         working-directory: server
-      # server lint check, so unused variables or missing imports block the merge
+      # server lint check, so code the checker flags blocks the merge too
       - run: npm run lint
         working-directory: server
       # client (page) tests, in the same job so a failing one blocks the merge too
