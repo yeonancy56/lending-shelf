@@ -5,8 +5,12 @@ const { sameTextPattern } = require('./book.same-text');
 function findAll()          { return Book.find(); }
 function findById(id)       { return Book.findById(id); }
 function create(data)       { return Book.create(data); }
-function update(id, data)   { return Book.findByIdAndUpdate(id, data, { returnDocument: 'after' }); }
 function remove(id)         { return Book.findByIdAndDelete(id); }
+
+// swap the book for its edited version. The whole book is replaced, so an emptied copy note is gone too
+function update(id, data) {
+    return Book.findOneAndReplace({ _id: id }, data, { returnDocument: 'after' });
+}
 
 // is there a book with this ID? (an ID in the wrong shape, like "abc", can't belong to any book)
 async function exists(id) {

@@ -177,3 +177,112 @@ test('POST /books treats a title with search symbols as plain letters', async ()
 
     expect(res.status).toBe(201);
 });
+
+test('PUT /books/:id fixes a spelling mistake in the author', async () => {
+    const dune = await Book.create({ title: 'Dune', author: 'Frank Hebert' });
+
+    const res = await request(app).put(`/books/${dune._id}`).send(DUNE);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject(DUNE);
+    const saved = await Book.findById(dune._id);
+    expect(saved.author).toBe('Frank Herbert');
+});
+
+test('PUT /books/:id with only spaces as the author asks for one (400)', async () => {
+    const dune = await Book.create(DUNE);
+
+    const res = await request(app).put(`/books/${dune._id}`).send({ title: 'Dune', author: '   ' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Please fill in the title and author');
+    expect((await Book.findById(dune._id)).author).toBe('Frank Herbert'); // Dune didn't change
+});
+
+test('PUT /books/:id with a blank title asks for one (400)', async () => {
+    const dune = await Book.create(DUNE);
+
+    const res = await request(app).put(`/books/${dune._id}`).send({ title: '', author: 'Frank Herbert' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Please fill in the title and author');
+    expect((await Book.findById(dune._id)).title).toBe('Dune');
+});
+
+test('PUT /books/:id refuses a copy note longer than 30 letters (400)', async () => {
+    const dune = await Book.create(DUNE);
+
+    const res = await request(app).put(`/books/${dune._id}`).send({ ...DUNE, copyNote: 'the one Mum gave me for my birthday' }); // 35 letters
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Keep the note short (30 letters or fewer).');
+    expect((await Book.findById(dune._id)).copyNote).toBeUndefined(); // the long note didn't get saved
+});
+
+test('PUT /books/:id refuses to rename a book into a second Dune with no copy note (400)', async () => {
+    await Book.create(DUNE);
+    const typo = await Book.create({ title: 'Dun', author: 'Frank Herbert' }); // a typo, so it didn't clash when it was added
+
+    const res = await request(app).put(`/books/${typo._id}`).send(DUNE);
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe("You already have Dune. Add a note, like 'signed', to tell them apart.");
+    expect((await Book.findById(typo._id)).title).toBe('Dun'); // still the typo
+});
+
+test('PUT /books/:id refuses to give a Dune the same copy note as another Dune (400)', async () => {
+    await Book.create({ ...DUNE, copyNote: 'paperback' });
+    const signed = await Book.create({ ...DUNE, copyNote: 'signed' });
+
+    const res = await request(app).put(`/books/${signed._id}`).send({ ...DUNE, copyNote: 'Paperback' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('You already have Dune (paperback). Use a different note.');
+    expect((await Book.findById(signed._id)).copyNote).toBe('signed'); // still signed
+});
+
+test('PUT /books/:id saves a Dune with no changes, because it doesn\'t clash with itself', async () => {
+    const dune = await Book.create(DUNE); // my only Dune, with no copy note
+
+    const res = await request(app).put(`/books/${dune._id}`).send(DUNE);
+
+    expect(res.status).toBe(200);
+});
+
+test('PUT /books/:id takes the copy note away when I empty the note box', async () => {
+    const dune = await Book.create({ ...DUNE, copyNote: 'signed' });
+
+    const res = await request(app).put(`/books/${dune._id}`).send({ ...DUNE, copyNote: '' });
+
+    expect(res.status).toBe(200);
+    expect((await Book.findById(dune._id)).copyNote).toBeUndefined(); // so the page shows "Dune", not "Dune ()"
+});
+
+test('PUT /books/:id edits a Dune that Sam has, and the loan shows the fixed name', async () => {
+    const dune = await Book.create({ title: 'Dune', author: 'Frank Hebert' });
+    const sam = await Friend.create({ name: 'Sam' });
+    await Loan.create({ book: dune._id, friend: sam._id });
+
+    const res = await request(app).put(`/books/${dune._id}`).send(DUNE);
+
+    expect(res.status).toBe(200);
+    const loans = await request(app).get('/loans');
+    expect(loans.body[0].book.author).toBe('Frank Herbert');
+});
+
+test('PUT /books/:id for a book that isn\'t there says so (404)', async () => {
+    const gone = await Book.create(DUNE);
+    await Book.findByIdAndDelete(gone._id);
+
+    const res = await request(app).put(`/books/${gone._id}`).send(DUNE);
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe('Book not found');
+});
+
+test('PUT /books/:id with an ID in the wrong shape says the book isn\'t there (404)', async () => {
+    const res = await request(app).put('/books/abc').send(DUNE);
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe('Book not found');
+});

@@ -47,6 +47,15 @@ export async function addBook(book) {
     });
 }
 
+// PUT: save an edited book. The ID goes in the address, the fixed title, author and copy note in the body
+export async function updateBook(id, book) {
+    return send('/books/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(book),
+    });
+}
+
 export async function getFriends() {
     return send('/friends');
 }
