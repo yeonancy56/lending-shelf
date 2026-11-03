@@ -745,6 +745,6 @@ Other option: keep one long conversation going until it runs out of room
 Why: a long conversation gets slow and Claude starts forgetting the early parts. A merged ticket is a clean place to stop, since everything is saved on GitHub. If we're halfway through, like in the middle of lending Dune to Sam, the note keeps the bits that aren't saved anywhere yet
 
 ## 2026-11-03 — The handoff note lives in HANDOFF.md, kept out of git
-Chose: the handoff note is always a file called HANDOFF.md in the main project folder. Git ignores it, so it never goes into a pull request. Each new note replaces the old one
+Chose: the handoff note is always a file called HANDOFF.md in the main project folder. Git ignores it, so it never goes into a pull request. Each new note replaces the old one. If the note isn't there, Claude says so
 Other option: save it in Claude's memory folder, or commit it to GitHub with the ticket
-Why: today a fresh Claude couldn't find the note, because nothing said where it was. One fixed name in the main folder is the first place to look, and I can open it myself too. It only matters for the next conversation, like "halfway through lending Dune to Sam", so it doesn't belong in the app's history on GitHub
+Why: today a fresh Claude couldn't find the note, because nothing said where it was. One fixed name in the main folder is the first place to look, and I can open it myself too. The note only matters for the next conversation, for example if we stopped halfway through lending Dune to Sam. So it doesn't belong in the app's history on GitHub
