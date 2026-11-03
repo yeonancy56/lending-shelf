@@ -78,6 +78,15 @@ function markDeclined(id, note) {
     );
 }
 
+// approve broke before Dune was lent: undo the yes, so the request waits for my answer again
+function putBackToWaiting(id) {
+    return Request.findOneAndUpdate(
+        { _id: id, status: 'approved', loan: null },
+        { status: 'waiting', answeredAt: null },
+        { returnDocument: 'after' },
+    );
+}
+
 // one request, whoever made it, for my Approve and Decline buttons.
 // An ID in the wrong shape, like "abc", can't belong to any request, so there's nothing to find
 function findById(id) {
@@ -89,4 +98,4 @@ function linkLoan(id, loanId) {
     return Request.findByIdAndUpdate(id, { loan: loanId }, { returnDocument: 'after' });
 }
 
-module.exports = { create, findWaitingByBook, countWaitingByFriend, findAskedForBookIds, hasEverBeenAskedFor, hasEverAsked, findByFriend, findByIdForFriend, markCancelled, findWaiting, markApproved, markDeclined, linkLoan, findById };
+module.exports = { create, findWaitingByBook, countWaitingByFriend, findAskedForBookIds, hasEverBeenAskedFor, hasEverAsked, findByFriend, findByIdForFriend, markCancelled, findWaiting, markApproved, markDeclined, putBackToWaiting, linkLoan, findById };

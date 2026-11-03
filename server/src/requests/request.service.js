@@ -1,7 +1,6 @@
 const requestDao = require('./request.dao');
 const bookDao = require('../books/book.dao');
 const loanService = require('../loans/loan.service');
-const loanDao = require('../loans/loan.dao');
 const friendDao = require('../friends/friend.dao');
 const { badRequest, ruleBroken } = require('../errors');
 
@@ -63,7 +62,14 @@ async function approveRequest(requestId) {
     // say yes first, in one step: if I clicked twice, only one click gets this far, so Dune is lent only once
     const approved = await requestDao.markApproved(requestId);
     if (!approved) throw notWaiting(await requestDao.findById(requestId));
-    const loan = await loanDao.create({ book: approved.book, friend: approved.friend });
+    let loan;
+    try {
+        loan = await loanService.startLoan(approved.book, approved.friend); // the loans code makes the loan, the same way it does for my lend form
+    } catch (err) {
+        // lending broke, so my yes didn't happen: the request waits again, on my list and on Sam's page
+        await requestDao.putBackToWaiting(requestId);
+        throw err;
+    }
     return requestDao.linkLoan(requestId, loan.id);
 }
 

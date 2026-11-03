@@ -26,6 +26,7 @@ beforeEach(async () => {
     alex = await Friend.create({ name: 'Alex', email: 'alex@gmail.com' });
     dune = await Book.create({ title: 'Dune', author: 'Frank Herbert' });
 });
+afterEach(() => jest.restoreAllMocks()); // put back anything a test made break on purpose
 afterAll(testDb.stop);
 
 // three more books, so Sam can get close to the 3-book limit
@@ -129,6 +130,32 @@ test('clicking Approve twice at the same moment still lends Dune only once', asy
 
     expect(answers.map((a) => a.status).sort()).toEqual([200, 409]);
     expect(await Loan.countDocuments()).toBe(1);
+});
+
+test('if lending Dune breaks while I approve, the request goes back to waiting, on my list and Sam\'s', async () => {
+    const asked = await Request.create({ book: dune.id, friend: sam.id });
+    jest.spyOn(Loan, 'create').mockRejectedValueOnce(new Error('the database is down')); // saving the loan breaks, once
+
+    const res = await asMe.post(`/requests/${asked.id}/approve`);
+    const myList = await asMe.get('/requests');
+    const samsRequests = await asSam.get('/me/requests');
+
+    expect(res.status).toBe(500); // a real breakdown, not a red message
+    expect(await Loan.countDocuments()).toBe(0);
+    expect(myList.body.map((r) => r._id)).toEqual([asked.id]);
+    expect(samsRequests.body.map((r) => [r.book.title, r.status])).toEqual([['Dune', 'waiting']]);
+});
+
+test('after a broken approve puts the request back, approving again lends Dune (200)', async () => {
+    const asked = await Request.create({ book: dune.id, friend: sam.id });
+    jest.spyOn(Loan, 'create').mockRejectedValueOnce(new Error('the database is down'));
+    await asMe.post(`/requests/${asked.id}/approve`);
+
+    const again = await asMe.post(`/requests/${asked.id}/approve`);
+
+    expect(again.status).toBe(200);
+    expect(again.body.status).toBe('approved');
+    expect(await Loan.countDocuments({ book: dune.id })).toBe(1);
 });
 
 test('approving a request Sam cancelled is refused (409)', async () => {

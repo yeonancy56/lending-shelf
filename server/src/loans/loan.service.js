@@ -84,7 +84,13 @@ async function lendBook(bookId, friendId) {
     if (!(await friendDao.exists(friendId))) throw badRequest('That friend does not exist');
     await checkLendingRules(bookId, friendId, 'owner');
     // all rules passed -> lend it
-    return loanDao.create({book: bookId, friend: friendId});
+    return startLoan(bookId, friendId);
+}
+
+// saves the new loan of Dune to Sam. The lending rules must already have said yes:
+// my lend form checks them just above, and approving a request checks them before calling this
+function startLoan(bookId, friendId) {
+    return loanDao.create({ book: bookId, friend: friendId });
 }
 
 async function returnBook(loanId) {
@@ -94,4 +100,4 @@ async function returnBook(loanId) {
     return loanDao.markReturned(loanId);
 }
 
-module.exports = {listLoans, listFriendLoans, checkLendingRules, lendBook, returnBook}
+module.exports = {listLoans, listFriendLoans, checkLendingRules, lendBook, startLoan, returnBook}
