@@ -68,6 +68,11 @@ export async function addFriend(friend) {
     });
 }
 
+// Sam's panel: what Sam has now, Sam's past loans, and the 3-book limit
+export async function getFriendLoans(friendId) {
+    return send('/friends/' + friendId + '/loans');
+}
+
 //Loans in api.js
 
 //getLoans: the same pattern as getBooks()

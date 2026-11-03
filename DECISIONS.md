@@ -408,3 +408,23 @@ Why: it uses the boxes I already have, and the shelf keeps its look
 Chose: each spine is a button that keeps the spine's look. Tab gets to it and Enter picks it, and a screen reader says which one is picked
 Other option: make the spine clickable with the mouse only
 Why: some people don't use a mouse. A button gives them the same way in, for free
+
+## 2026-11-02 — A friend's page is a panel on the same page, not a new page
+Chose: click "Sam" in the Friends list, and a box opens under Friends with Sam's loans and a "Close" button
+Other option: a real separate page with its own address, which needs an extra add-on (React Router)
+Why: it's the same click-and-fill idea as editing a book, with nothing new to install. Bookmarkable pages can be their own ticket later
+
+## 2026-11-02 — What Sam's panel shows
+Chose: "2 of 3 books" at the top. Then what Sam has now, with "due back" and red for overdue, like the loans list. Then past loans, newest first, with when each was lent and returned. Empty parts say "Nothing right now" and "No past loans yet"
+Other option: past loans with no dates, and no "2 of 3"
+Why: the dates show what really happened, which is why I keep returned loans. "2 of 3" tells me if I can lend Sam another before I try
+
+## 2026-11-02 — The server answers "what are Sam's loans?"
+Chose: a new server question that sends Sam's current loans, past loans, and the 3-book limit
+Other option: the page picks Sam's loans out of the full loans list it already has
+Why: the 3-book limit stays in one place, like "14 days". And the page doesn't have to sift through everyone's history to find Sam's
+
+## 2026-11-02 — If Sam's loans can't load, the panel says so
+Chose: the panel still opens, with the red "Something went wrong" message inside it and the "Close" button
+Other option: show nothing, or put the message at the top of the page
+Why: I clicked Sam, so the answer belongs where I'm looking. And without this, the page would break
