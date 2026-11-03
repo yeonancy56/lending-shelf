@@ -273,3 +273,17 @@ test('DELETE /friends/:id with an ID in the wrong shape says the friend isn\'t t
     expect(res.status).toBe(404);
     expect(res.body.error).toBe('Friend not found');
 });
+
+test('GET /friends/:id with an ID in the wrong shape says the friend isn\'t there (404)', async () => {
+    const res = await owner.get('/friends/abc');
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe('Friend not found');
+});
+
+test('PUT /friends/:id with an ID in the wrong shape says the friend isn\'t there (404)', async () => {
+    const res = await owner.put('/friends/abc').send({ name: 'Sam' });
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe('Friend not found');
+});
