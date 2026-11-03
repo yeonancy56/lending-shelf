@@ -69,7 +69,7 @@ const phonePage = (search) => `<!doctype html><title>Phone width</title>
 <body style="margin:0"><iframe src="/${search}" width="${PHONE_WIDTH}" height="${PHONE_HEIGHT}" style="border:0;display:block"></iframe></body>`;
 
 // picture mode's own door. The browser keeps each door's saved things apart, so the pretend sign-in
-// stays here and the real app on 5173 never sees it. Keep in step with CLAUDE.md rule 6
+// stays here and the real app on 5173 (Vite's usual door) never sees it. Keep in step with CLAUDE.md rule 6
 const PICTURE_PORT = 5174;
 
 // the Vite plugin: answers /api with the pretend answers, and starts the page already signed in
