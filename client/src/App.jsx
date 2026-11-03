@@ -45,6 +45,14 @@ function BookCount({ books, arrived }) {
   return <p className="book-count">{books.length === 1 ? '1 book' : `${books.length} books`}</p>;
 }
 
+// a copy's average rating, like "★ 4.5 · 2 ratings", to one decimal place. A copy no one has rated shows nothing, not "0 stars".
+// Only the average and how many: never who gave what
+function AverageRating({ book }) {
+  if (!book.ratingCount) return null;
+  const count = book.ratingCount === 1 ? '1 rating' : `${book.ratingCount} ratings`;
+  return <span className="average-rating">★ {book.averageStars.toFixed(1)} · {count}</span>;
+}
+
 // Sam's own stars for one copy he's returned: five buttons, filled up to his stars (★★★★☆), or all empty (☆☆☆☆☆) before he rates.
 // Clicking one saves it straight away. Labelled "your stars", so it's never mixed up with anyone else's
 const STARS = [1, 2, 3, 4, 5];
@@ -250,6 +258,7 @@ function FriendPage({ name, onSignOut }) {
             <li key={book._id}>
               {bookName(book)} by {book.author} · {book.state}
               {book.state === SHELF_STATE.AT_HOME && <button onClick={() => handleAsk(book._id)}>Ask</button>}
+              <AverageRating book={book} />
               {book.canRate && <YourStars book={book} onRate={handleRate} />} {/* only copies Sam has returned */}
             </li>
           ))}
@@ -517,6 +526,7 @@ return (
           {/* a button, so the spine can be clicked, or reached with the keyboard. aria-pressed = this one is in the form */}
           <button className="spine" aria-pressed={book._id === editingId} onClick={() => startEditing(book)}>
             <span className="book-name">{bookName(book)}</span> <span className="book-author">by {book.author}</span>
+            <AverageRating book={book} />
           </button>
         </li>
      ) )}

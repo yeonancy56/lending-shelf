@@ -1250,3 +1250,37 @@ test('two copies of Dune count as 2 books', async () => {
 
     expect(await screen.findByText('2 books')).toBeInTheDocument();
 });
+
+// the average rating: every friend's stars for one copy, averaged, with how many rated it, like "★ 4.5 · 2 ratings"
+test('my shelf shows each copy\'s average: one decimal place, "1 rating" for one, and nothing when no one rated it', async () => {
+    api.getBooks.mockResolvedValue([
+        { ...DUNE, copyNote: 'signed', averageStars: 4.5, ratingCount: 2 },
+        { ...DUNE, _id: 'mums-dune-id', copyNote: "Mum's copy", averageStars: 4, ratingCount: 1 },
+        MATILDA,
+    ]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+
+    render(<App />);
+    await screen.findByRole('button', { name: /^Dune \(signed\) by/ }); // the shelf has loaded
+
+    expect(spine('Dune (signed)')).toHaveTextContent('★ 4.5 · 2 ratings');
+    expect(spine("Dune (Mum's copy)")).toHaveTextContent('★ 4.0 · 1 rating');
+    expect(spine('Matilda')).not.toHaveTextContent('★');
+    expect(spine('Matilda')).not.toHaveTextContent('rating');
+});
+
+test('Sam sees the average next to his own stars, labelled apart; an unrated copy shows no average', async () => {
+    signedInAsSam({ shelf: [
+        { ...DUNE, state: 'at home', canRate: true, myStars: 4, averageStars: 3.6667, ratingCount: 3 },
+        { ...MATILDA, state: 'at home', canRate: true },
+    ] });
+
+    render(<App />);
+
+    const [dune, matilda] = await within(await screen.findByRole('list', { name: 'Books' })).findAllByRole('listitem');
+    expect(within(dune).getByText('★ 3.7 · 3 ratings')).toBeInTheDocument();
+    expect(within(dune).getByRole('group', { name: 'Your stars for Dune' })).not.toHaveTextContent('3.7'); // the average is not inside his stars
+    expect(matilda).not.toHaveTextContent('rating');
+    expect(within(matilda).getByRole('group', { name: 'Your stars for Matilda' })).toHaveTextContent('your stars ☆☆☆☆☆');
+});

@@ -34,6 +34,12 @@ describe('picture mode', () => {
     expect(shelf.some((book) => book.canRate && book.title.length > 60)).toBe(true);
   });
 
+  it('on both pages, has a copy with an average from 2 ratings, one with "1 rating", and one with none', () => {
+    for (const books of [pictureAnswer('/books').body, pictureAnswer('/shelf', 'friend').body]) {
+      expect(books.map((book) => book.ratingCount)).toEqual([2, 1, undefined]);
+    }
+  });
+
   it('says "not found" to anything else', () => {
     expect(pictureAnswer('/nothing-here').status).toBe(404);
   });

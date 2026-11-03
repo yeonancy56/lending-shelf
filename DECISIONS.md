@@ -834,3 +834,13 @@ Why: the page already gets the shelf to draw each book, so the stars come along 
 Chose: picture mode has a second page, /phone?as=friend, that shows Sam's page with pretend answers: one copy he rated 4, one he can rate but hasn't, and the long book name with stars under it. Plain /phone still shows my shelf
 Other option: only picture my page, and check Sam's stars by hand
 Why: the stars only show on Sam's page, so a picture of my page would never show them. Pretend answers mean no Google sign-in is needed for Sam either
+
+## 2026-11-03 — The average shows with how many rated it
+Chose: each copy shows "★ 4.5 · 2 ratings" ("1 rating" for one), and nothing at all when no one has rated it. I see only the average. Sam sees the average and his own stars, never what Priya gave
+Other option: show just "★ 4.5", show "0 stars" for no ratings, or show me who gave what
+Why: 5 stars from one friend means less than 4.5 from six, so the count matters. "0 stars" would look like everyone hated it. If friends could see each other's stars, Priya might feel awkward giving a low one
+
+## 2026-11-03 — The average gets its own line
+Chose: on my shelf, the average sits on the spine under the author. On Sam's page, it sits on its own line between the Ask button and "your stars"
+Other option: put the average on the same line as "your stars"
+Why: side by side, Sam might read "★ 4.5" as his own stars. On separate lines, "your stars" is clearly his and the line above is everyone's
