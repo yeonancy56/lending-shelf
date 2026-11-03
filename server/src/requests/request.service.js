@@ -59,18 +59,15 @@ async function approveRequest(requestId) {
     if (request.status !== STATUS.WAITING) throw notWaiting(request);
     // the rules again, in case something changed since Sam asked, like Sam's loan going overdue
     await loanService.checkLendingRules(request.book, request.friend, ROLE.OWNER, request._id);
-    // say yes first, in one step: if I clicked twice, only one click gets this far, so Dune is lent only once
-    const approved = await requestDao.markIfWaiting(requestId, { status: STATUS.APPROVED, answeredAt: new Date() });
-    if (!approved) throw notWaiting(await requestDao.findById(requestId));
-    let loan;
-    try {
-        loan = await loanService.startLoan(approved.book, approved.friend); // the loans code makes the loan, the same way it does for my lend form
-    } catch (err) {
-        // lending broke, so my yes didn't happen: the request waits again, on my list and on Sam's page
-        await requestDao.putBackToWaiting(requestId);
-        throw err;
-    }
-    return requestDao.linkLoan(requestId, loan.id);
+    // lend first, while Sam's request still waits, so Dune stays "asked for" the whole time and Alex can't ask in between.
+    // If lending breaks, there's nothing to undo: the request was never changed. If I clicked twice, the database lets only one loan of Dune through
+    const loan = await loanService.startLoan(request.book, request.friend); // the loans code makes the loan, the same way it does for my lend form
+    // then say yes, in one step, pointing to the loan
+    const approved = await requestDao.markIfWaiting(requestId, { status: STATUS.APPROVED, answeredAt: new Date(), loan: loan.id });
+    if (approved) return approved;
+    // Sam cancelled in the split second between: take Dune back, so it isn't lent to Sam after all
+    await loanService.takeBackLoan(loan.id);
+    throw notWaiting(await requestDao.findById(requestId));
 }
 
 // I say no to Sam's request for Dune, maybe with a short note Sam will read. Nothing is lent.

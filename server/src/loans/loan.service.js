@@ -100,6 +100,12 @@ async function startLoan(bookId, friendId) {
     }
 }
 
+// a loan I just started for an approve that couldn't finish, because Sam cancelled in the same split second.
+// Dune was never really lent, so the loan is removed, not marked returned
+function takeBackLoan(loanId) {
+    return loanDao.deleteById(loanId);
+}
+
 async function returnBook(loanId) {
     const loan = await loanDao.findById(loanId);
     if (!loan) return null;
@@ -107,4 +113,4 @@ async function returnBook(loanId) {
     return loanDao.markReturned(loanId);
 }
 
-module.exports = {listLoans, listFriendLoans, checkLendingRules, lendBook, startLoan, returnBook}
+module.exports = {listLoans, listFriendLoans, checkLendingRules, lendBook, startLoan, takeBackLoan, returnBook}

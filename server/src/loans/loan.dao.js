@@ -47,4 +47,9 @@ function markReturned(id) {
     return Loan.findByIdAndUpdate(id, { returnedAt: new Date() }, { returnDocument: 'after' });
 }
 
-module.exports = {findAll, findById, create, findActiveByBook, hasEverBeenLent, findLentOutBookIds, hasEverBorrowed, countActiveByFriend, findActiveByFriend, findByFriend, markReturned}
+// approving broke after Dune was lent, so the loan never really happened: remove it
+function deleteById(id) {
+    return Loan.findByIdAndDelete(id);
+}
+
+module.exports = {findAll, findById, create, deleteById, findActiveByBook, hasEverBeenLent, findLentOutBookIds, hasEverBorrowed, countActiveByFriend, findActiveByFriend, findByFriend, markReturned}

@@ -748,3 +748,8 @@ Why: a long conversation gets slow and Claude starts forgetting the early parts.
 Chose: the handoff note is always a file called HANDOFF.md in the main project folder. Git ignores it, so it never goes into a pull request. Each new note replaces the old one. If the note isn't there, Claude says so
 Other option: save it in Claude's memory folder, or commit it to GitHub with the ticket
 Why: today a fresh Claude couldn't find the note, because nothing said where it was. One fixed name in the main folder is the first place to look, and I can open it myself too. The note only matters for the next conversation, for example if we stopped halfway through lending Dune to Sam. So it doesn't belong in the app's history on GitHub
+
+## 2026-11-03 — Approving lends the book first, then says yes
+Chose: when I approve Sam's request for Dune, Dune is lent first, and only then is the request marked "approved". This replaces "leave the gap for now" from 2026-11-02. Sam's request keeps waiting the whole time, so nobody else can ask for Dune in between. If lending breaks, nothing needs undoing. If Sam cancels in that same split second, Dune is taken back
+Other option: decline Sam's request on its own when lending breaks
+Why: Sam would be told "no" when I never said no. Lending first closes the gap and makes the code shorter
