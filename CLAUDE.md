@@ -39,7 +39,9 @@ A MERN app for tracking books I lend to friends.
    If the ticket changes the look, the review also takes a picture: run
    `npm run picture` in `client/` (pretend answers, no sign-in, with a long
    book name; it stops if 5174 is busy), then picture
-   `http://localhost:5174/phone`. That page shows the shelf in a frame 375
+   `http://localhost:5174/phone` (my page), or
+   `http://localhost:5174/phone?as=friend` if the ticket changes Sam's page
+   (picture both if it changes both). That page shows the shelf in a frame 375
    wide, because Chrome won't make its own window narrower than 500.
    Headless Chrome works:
    `--headless=new --hide-scrollbars --window-size=375,2400 --virtual-time-budget=5000 --screenshot=<file>`.

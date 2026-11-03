@@ -34,9 +34,23 @@ describe('picture mode', () => {
     expect(shelf.some((book) => book.canRate && book.title.length > 60)).toBe(true);
   });
 
+  it('as Sam, he has a book now, and his shelf says it\'s "lent out"', () => {
+    const { active } = pictureAnswer('/me/loans', 'friend').body;
+    expect(active).toHaveLength(1);
+    const onShelf = pictureAnswer('/shelf', 'friend').body.find((book) => book._id === active[0].book._id);
+    expect(onShelf.state).toBe('lent out');
+  });
+
+  it('as Sam, he has a waiting request, and his shelf says that book is "asked for"', () => {
+    const [request] = pictureAnswer('/me/requests', 'friend').body;
+    expect(request.status).toBe('waiting'); // so the picture shows its Cancel button
+    const onShelf = pictureAnswer('/shelf', 'friend').body.find((book) => book._id === request.book._id);
+    expect(onShelf.state).toBe('asked for');
+  });
+
   it('on both pages, has a copy with an average from 2 ratings, one with "1 rating", and one with none', () => {
     for (const books of [pictureAnswer('/books').body, pictureAnswer('/shelf', 'friend').body]) {
-      expect(books.map((book) => book.ratingCount)).toEqual([2, 1, undefined]);
+      expect(books.map((book) => book.ratingCount).slice(0, 3)).toEqual([2, 1, undefined]);
     }
   });
 
