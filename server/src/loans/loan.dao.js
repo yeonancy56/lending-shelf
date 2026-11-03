@@ -22,9 +22,14 @@ function findActiveByFriend(friendId) {
     return Loan.find({ friend: friendId, returnedAt: null });
 }
 
+// Sam's panel: every loan Sam ever had, with each book's name, the most recently lent first
+function findByFriend(friendId) {
+    return Loan.find({ friend: friendId }).sort({ lentAt: -1 }).populate('book');
+}
+
 //return a book: fill in today's date
 function markReturned(id) {
     return Loan.findByIdAndUpdate(id, { returnedAt: new Date() }, { returnDocument: 'after' });
 }
 
-module.exports = {findAll, findById, create, findActiveByBook, countActiveByFriend, findActiveByFriend, markReturned}
+module.exports = {findAll, findById, create, findActiveByBook, countActiveByFriend, findActiveByFriend, findByFriend, markReturned}

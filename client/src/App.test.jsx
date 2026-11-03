@@ -1,6 +1,6 @@
 // Tests the lend form on the page. No server needed:
 // the real api.js is swapped for a fake one, and the test tells the fake what to answer.
-import { render, screen } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
 import App from './App';
@@ -216,4 +216,164 @@ test('a Save that fails shows the red message and keeps what I typed, still read
     expect(await screen.findByRole('alert')).toHaveTextContent(message);
     expect(screen.getByPlaceholderText("Note (optional, like 'signed')")).toHaveValue('signed');
     expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument(); // fix the note and try again
+});
+
+test('clicking Sam opens Sam\'s panel with what Sam has now, and Close shuts it', async () => {
+    const MATILDA = { _id: 'matilda-id', title: 'Matilda', author: 'Roald Dahl' };
+    api.getBooks.mockResolvedValue([DUNE, MATILDA]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+    // the "server" says Sam has 2 books right now, one overdue, and the limit is 3
+    api.getFriendLoans.mockResolvedValue({
+        active: [
+            { _id: 'loan-1', book: DUNE, dueBack: '2026-11-16T12:00:00.000Z', overdue: true },
+            { _id: 'loan-2', book: MATILDA, dueBack: '2026-11-20T12:00:00.000Z', overdue: false },
+        ],
+        returned: [],
+        limit: 3,
+    });
+
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: 'Sam' })); // Sam's name in the Friends list
+
+    const panel = await screen.findByRole('region', { name: "Sam's loans" });
+    expect(api.getFriendLoans).toHaveBeenCalledWith('sam-id');
+    expect(panel).toHaveTextContent('2 of 3 books');
+    const duneLine = within(panel).getByText(/Dune/).closest('li');
+    const matildaLine = within(panel).getByText(/Matilda/).closest('li');
+    expect(duneLine).toHaveTextContent('due back 16 Nov · overdue');
+    expect(duneLine).toHaveClass('overdue'); // red, like the loans list
+    expect(matildaLine).toHaveTextContent('due back 20 Nov');
+    expect(matildaLine).not.toHaveClass('overdue');
+
+    await user.click(within(panel).getByRole('button', { name: 'Close' }));
+
+    expect(screen.queryByRole('region', { name: "Sam's loans" })).not.toBeInTheDocument();
+});
+
+test('Sam\'s panel lists past loans in the server\'s order, newest first, with when each was lent and returned', async () => {
+    const EMMA = { _id: 'emma-id', title: 'Emma', author: 'Jane Austen' };
+    api.getBooks.mockResolvedValue([DUNE, EMMA]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+    api.getFriendLoans.mockResolvedValue({
+        active: [],
+        returned: [
+            { _id: 'loan-2', book: EMMA, lentAt: '2026-09-01T12:00:00.000Z', returnedAt: '2026-09-10T12:00:00.000Z' },
+            { _id: 'loan-1', book: DUNE, lentAt: '2026-07-01T12:00:00.000Z', returnedAt: '2026-07-05T12:00:00.000Z' },
+        ],
+        limit: 3,
+    });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Sam' }));
+
+    const returned = within(await screen.findByRole('region', { name: "Sam's loans" })).getByRole('list', { name: 'Past loans' });
+    const lines = within(returned).getAllByRole('listitem');
+    expect(lines).toHaveLength(2);
+    expect(lines[0]).toHaveTextContent('Emma, lent 1 Sept, returned 10 Sept');
+    expect(lines[1]).toHaveTextContent('Dune, lent 1 Jul, returned 5 Jul');
+});
+
+test('Sam\'s panel says "Nothing right now" and "No past loans yet" when Sam has never borrowed anything', async () => {
+    api.getBooks.mockResolvedValue([DUNE]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+    api.getFriendLoans.mockResolvedValue({ active: [], returned: [], limit: 3 });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Sam' }));
+
+    const panel = await screen.findByRole('region', { name: "Sam's loans" });
+    expect(panel).toHaveTextContent('0 of 3 books');
+    expect(panel).toHaveTextContent('Nothing right now');
+    expect(panel).toHaveTextContent('No past loans yet');
+});
+
+test('Sam\'s panel shows the red message when the server can\'t send Sam\'s loans', async () => {
+    api.getBooks.mockResolvedValue([DUNE]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+    api.getFriendLoans.mockResolvedValue({ error: 'Something went wrong. Try again.' });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Sam' }));
+
+    const panel = await screen.findByRole('region', { name: "Sam's loans" });
+    expect(within(panel).getByRole('alert')).toHaveTextContent('Something went wrong. Try again.');
+    expect(within(panel).getByRole('button', { name: 'Close' })).toBeInTheDocument(); // so I can still close it
+});
+
+test('Sam\'s panel updates when Sam returns Dune while the panel is open', async () => {
+    api.getBooks.mockResolvedValue([DUNE]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([{ _id: 'loan-id', book: DUNE, friend: SAM, dueBack: '2026-11-16T12:00:00.000Z' }]);
+    api.returnLoan.mockResolvedValue({ _id: 'loan-id' });
+    // first Sam has Dune. After the return, the "server" says Sam has nothing
+    api.getFriendLoans
+        .mockResolvedValueOnce({ active: [{ _id: 'loan-id', book: DUNE, dueBack: '2026-11-16T12:00:00.000Z', overdue: false }], returned: [], limit: 3 })
+        .mockResolvedValueOnce({ active: [], returned: [], limit: 3 });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Sam' }));
+    const panel = await screen.findByRole('region', { name: "Sam's loans" });
+    expect(panel).toHaveTextContent('1 of 3 books');
+
+    await user.click(screen.getByRole('button', { name: 'Return' })); // in the loans list, not the panel
+
+    expect(await within(panel).findByText('0 of 3 books')).toBeInTheDocument();
+    expect(api.getFriendLoans).toHaveBeenLastCalledWith('sam-id');
+});
+
+test('a slow answer for Sam doesn\'t show up in Alex\'s panel', async () => {
+    const ALEX = { _id: 'alex-id', name: 'Alex' };
+    api.getBooks.mockResolvedValue([DUNE]);
+    api.getFriends.mockResolvedValue([SAM, ALEX]);
+    api.getLoans.mockResolvedValue([]);
+    // Sam's answer is slow: it only arrives when the test says so
+    let sendSamsAnswer;
+    const samsAnswer = new Promise((resolve) => { sendSamsAnswer = resolve; });
+    api.getFriendLoans.mockImplementation((id) => id === 'sam-id'
+        ? samsAnswer
+        : Promise.resolve({ active: [], returned: [], limit: 3 }));
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Sam' }));
+    await user.click(screen.getByRole('button', { name: 'Alex' })); // changed my mind before Sam's loans arrived
+    const panel = await screen.findByRole('region', { name: "Alex's loans" });
+    expect(panel).toHaveTextContent('0 of 3 books');
+
+    // now Sam's late answer arrives: Sam has Dune
+    await act(async () => { // act waits until the page has finished redrawing
+        sendSamsAnswer({ active: [{ _id: 'loan-id', book: DUNE, dueBack: '2026-11-16T12:00:00.000Z', overdue: false }], returned: [], limit: 3 });
+    });
+
+    expect(screen.getByRole('region', { name: "Alex's loans" })).toHaveTextContent('0 of 3 books'); // still Alex's, not Sam's Dune
+});
+
+test('Sam\'s panel says "Loading…" while Sam\'s loans are on the way', async () => {
+    api.getBooks.mockResolvedValue([DUNE]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+    let sendSamsAnswer;
+    api.getFriendLoans.mockReturnValue(new Promise((resolve) => { sendSamsAnswer = resolve; }));
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Sam' }));
+
+    const panel = await screen.findByRole('region', { name: "Sam's loans" });
+    expect(panel).toHaveTextContent('Loading…');
+
+    await act(async () => { sendSamsAnswer({ active: [], returned: [], limit: 3 }); });
+
+    expect(panel).toHaveTextContent('0 of 3 books');
+    expect(panel).not.toHaveTextContent('Loading…');
 });

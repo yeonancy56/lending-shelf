@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react'; //useState = memory, what should the page remember, useEffect = do something at a certain time
-import { getBooks, addBook, updateBook, getFriends, addFriend, getLoans, lendBook, returnLoan} from './api';
+import { useState, useEffect, useRef } from 'react'; //useState = memory, what should the page remember, useEffect = do something at a certain time
+import { getBooks, addBook, updateBook, getFriends, addFriend, getFriendLoans, getLoans, lendBook, returnLoan} from './api';
 
 // a book's name on the page: "Dune (signed)" when it has a copy note, just "Dune" when it doesn't
 function bookName(book) {
   return book.copyNote ? `${book.title} (${book.copyNote})` : book.title;
 }
 
-// the day a book is due back, like "16 Nov". The server sends the exact due back moment,
-// and this turns it into the day on my own calendar
-function dueBackDay(dueBack) {
+// a short day, like "16 Nov", for when a book is due back, was lent, or came back.
+// The server sends the exact moment, and this turns it into the day on my own calendar
+function shortDay(dueBack) {
   return new Date(dueBack).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 }
 
@@ -27,6 +27,48 @@ function fillList(result, list, setList, setListErrors) {
   }
 }
 
+// one friend's loans, in a box under the Friends list: how many they have, what they have now, and what they had before.
+// loans is null while the server hasn't answered yet
+function FriendPanel({ friend, loans, onClose }) {
+  return (
+    <section aria-labelledby="friend-panel-title">
+      <h3 id="friend-panel-title">{friend.name}'s loans</h3>
+      {!loans && <p>Loading…</p>} {/* Sam's loans are still on the way */}
+      <ErrorMessage message={loans?.error} />
+      {loans && !loans.error && <FriendLoans loans={loans} />}
+      <button onClick={onClose}>Close</button>
+    </section>
+  );
+}
+
+// what's inside the panel once the server has sent Sam's loans
+function FriendLoans({ loans }) {
+  return (
+    <>
+      <p>{loans.active.length} of {loans.limit} books</p>
+      <h4 id="friend-has-now">Has now</h4>
+      {loans.active.length === 0 && <p>Nothing right now</p>}
+      <ul aria-labelledby="friend-has-now">
+        {loans.active.map((loan) => (
+          <li key={loan._id} className={loan.overdue ? 'overdue' : undefined}>
+            {bookName(loan.book)}, due back {shortDay(loan.dueBack)}
+            {loan.overdue && ' · overdue'}
+          </li>
+        ))}
+      </ul>
+      <h4 id="friend-past-loans">Past loans</h4>
+      {loans.returned.length === 0 && <p>No past loans yet</p>}
+      <ul aria-labelledby="friend-past-loans"> {/* newest first, the order the server sends */}
+        {loans.returned.map((loan) => (
+          <li key={loan._id}>
+            {bookName(loan.book)}, lent {shortDay(loan.lentAt)}, returned {shortDay(loan.returnedAt)}
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
 function App() { //these are memory boxes 
   const[books, setBooks] = useState([]);
   const[title, setTitle] = useState('');
@@ -35,6 +77,10 @@ function App() { //these are memory boxes
   const[editingId, setEditingId] = useState(''); // the book in the form for editing, or '' when the form adds a new book
   const[friends, setFriends] = useState([]);
   const[name, setName] = useState('');
+  const[openFriend, setOpenFriend] = useState(null); // the friend whose panel is open, or null when it's closed
+  const[friendLoans, setFriendLoans] = useState(null); // that friend's loans, once the server answers
+  // the friend I last asked the server about. A ref, not useState, because the page doesn't show it
+  const askedFriendId = useRef(null);
   const[loans, setLoans] = useState([]);
   const[bookId, setBookId] = useState('');
   const[friendId, setFriendId] = useState('');
@@ -97,6 +143,26 @@ function App() { //these are memory boxes
     loadFriends();
   }
 
+  // ask the server for Sam's loans, and put them in Sam's panel
+  async function loadFriendLoans(friend) {
+    askedFriendId.current = friend._id;
+    const result = await getFriendLoans(friend._id);
+    // clicked Alex while Sam's answer was on the way? Then Sam's late answer is thrown away
+    if (askedFriendId.current === friend._id) setFriendLoans(result);
+  }
+
+  // clicking Sam's name opens Sam's panel, and asks the server for Sam's loans
+  function openFriendPanel(friend) {
+    setOpenFriend(friend);
+    setFriendLoans(null); // don't show someone else's loans while Sam's are on the way
+    loadFriendLoans(friend);
+  }
+
+  function closeFriendPanel() {
+    setOpenFriend(null);
+    setFriendLoans(null);
+  }
+
   function loadLoans() {
     return getLoans().then((result) => fillList(result, 'loans', setLoans, setListErrors));
   }
@@ -110,12 +176,14 @@ function App() { //these are memory boxes
       setLoanError('');
     }
     loadLoans();
+    if (openFriend) loadFriendLoans(openFriend); // Sam's panel is open? Then it shows the new loan too
   }
 
   async function handleReturn(id) {
     const result = await returnLoan(id);
     setLoanError(result.error || '');
     loadLoans();
+    if (openFriend) loadFriendLoans(openFriend); // Sam's panel is open? Then it shows the book came back
   }
 
 
@@ -165,9 +233,10 @@ return (
      <ErrorMessage message={friendError} />
      <ul>
       {friends.map((friend) => (
-        <li key={friend._id}>{friend.name}</li>
+        <li key={friend._id}><button onClick={() => openFriendPanel(friend)}>{friend.name}</button></li>
       ))}
      </ul>
+     {openFriend && <FriendPanel friend={openFriend} loans={friendLoans} onClose={closeFriendPanel} />}
     </section>
     <section>
     <h2>Loans</h2>
@@ -193,7 +262,7 @@ return (
 {loans.map((loan) => (
   <li key={loan._id} className={loan.overdue ? 'overdue' : undefined}>
     {bookName(loan.book)} → {loan.friend.name}
-    {loan.dueBack && `, due back ${dueBackDay(loan.dueBack)}`}
+    {loan.dueBack && `, due back ${shortDay(loan.dueBack)}`}
     {loan.overdue && ' · overdue'}{' '}
     {loan.returnedAt ? '(returned)' : <button onClick={() => handleReturn(loan._id)}>Return</button>}
   </li>

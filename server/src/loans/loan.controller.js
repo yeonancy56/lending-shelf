@@ -6,6 +6,13 @@ async function list (req, res) {
     res.json(loans);
 }
 
+// Sam's panel asks this, through /friends/:id/loans
+async function listForFriend(req, res) {
+    const loans = await loanService.listFriendLoans(req.params.id);
+    if (!loans) return res.status(404).json({ error: 'Friend not found' });
+    res.json(loans);
+}
+
 async function lend(req, res) {
     const { bookId, friendId } = req.body;
     // nothing picked? Answer straight away, no need to ask the service
@@ -29,4 +36,4 @@ async function returnLoan(req, res) {
     }
 }
 
-module.exports = {list, lend, returnLoan}; 
+module.exports = {list, listForFriend, lend, returnLoan}; 

@@ -27,6 +27,18 @@ async function listLoans() {
     return loans.map(withDueBack);
 }
 
+// Sam's panel: what Sam has now, what Sam had before, and the 3-book limit, so the page never has to know it.
+// Gives back nothing when there's no such friend, so the controller can say "Friend not found"
+async function listFriendLoans(friendId) {
+    if (!(await friendDao.exists(friendId))) return null;
+    const loans = await loanDao.findByFriend(friendId);
+    return {
+        active: loans.filter((loan) => !loan.returnedAt).map(withDueBack),
+        returned: loans.filter((loan) => loan.returnedAt).map(withDueBack),
+        limit: MAX_LOANS,
+    };
+}
+
 async function lendBook(bookId, friendId) {
     // first: do this book and friend exist? No point checking the rules otherwise
     if (!(await bookDao.exists(bookId))) throw badRequest('That book does not exist');
@@ -56,4 +68,4 @@ async function returnBook(loanId) {
     return loanDao.markReturned(loanId);
 }
 
-module.exports = {listLoans, lendBook, returnBook}
+module.exports = {listLoans, listFriendLoans, lendBook, returnBook}
