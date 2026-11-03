@@ -678,3 +678,8 @@ Why: same idea as "spaces aren't a real author". Sam would otherwise see an empt
 Chose: every requests address now lives in requests/request.routes.js, each one still marked as mine or Sam's. Sam's shelf view and Sam's loans moved out of app.js the same way, into the books and loans folders. The addresses didn't change
 Other option: keep listing them one by one in app.js
 Why: app.js should only plug the folders in. When I work on requests, all of it is in one folder, like we chose when we sorted the server by feature
+
+## 2026-11-02 — Leave the rare "approved with no loan" gap for now
+Chose: leave it, and say so in the pull request. While I approve Sam's request for Dune, there's a split second where Dune isn't "asked for". If Alex asks right then and saving the loan also fails, Sam's request stays "approved" with no loan
+Other option: keep Dune "asked for" for the whole approve, or decline Sam's request by itself if this happens
+Why: it needs a click and a broken database in the same fraction of a second. Keeping Dune asked for is more code to get right, and an automatic decline would tell Sam no when I never said it
