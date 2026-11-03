@@ -718,3 +718,8 @@ Why: every other message starts with a capital, like "This book is already lent 
 Chose: take out the stray space at the end of "Loan not found", and add tests that check the exact words when returning a loan that isn't there
 Other option: just remove the space, with no new test
 Why: no test looked at the words, which is how the space slipped in unnoticed. Now a test would catch it if it came back
+
+## 2026-11-03 — The server gets the lint check too, set up like the page's
+Chose: the server now has the lint check too, with the same basic rules the page (client) uses. It runs on every push, and if it finds a mistake, the pull request can't be merged. It knows test files may use Jest's words, like "test" and "expect"
+Other option: a stricter rule set, or no checker and rely on tests and review
+Why: it catches small slips, like a leftover variable or a name used without being brought in, before they reach Sam. Using the same rules as the page keeps both halves of the app checked the same way. The server code already passed, so no rules had to be switched off
