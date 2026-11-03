@@ -200,7 +200,7 @@ function FriendPage({ name, onSignOut }) {
   return (
     <div>
       <h1>Lending Shelf</h1>
-      <BookCount books={shelf} arrived={listErrors.shelf === ''} />
+      <BookCount books={shelf} arrived={listErrors.shelf === ''} /> {/* '' means the shelf arrived with no error */}
       <h2>Hi, {name}</h2>
       <button onClick={onSignOut}>Sign out</button>
       <ErrorMessage message={listError} />

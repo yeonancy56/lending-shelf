@@ -786,6 +786,7 @@ Why: the review can't sign in with my Google account, so it couldn't see the rea
 Chose: my shelf is every book I own, whether it's at home or lent out. If Dune is with Sam, it's still on my shelf
 Other option: the shelf is only the books at home right now
 Why: the glossary used "on my shelf" both ways, which was confusing. Owning a book doesn't stop when I lend it. A request still only works for a book that isn't lent out, and the glossary now says that plainly
+This changes the earlier choice of words: two entries from 2 November ("Sam can only ask for books on the shelf" and "After a no, Sam can ask again any time") say "on the shelf" to mean at home. Those choices still stand, only the word changed. Sam's page still labels a book at home "on the shelf". That label becomes "at home" in its own ticket
 
 ## 2026-11-03 — Show "12 books" under the title
 Chose: a small soft-brown line under the Lending Shelf title says how many books are on my shelf, lent out ones too. It says "1 book" for one and "0 books" for none. Friends like Sam see it on their page too

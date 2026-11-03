@@ -1132,6 +1132,7 @@ test('adding Matilda makes the count go up', async () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByText('1 book');
+    expect(screen.queryByText('2 books')).not.toBeInTheDocument(); // not yet, so the click is what changes it
 
     api.getBooks.mockResolvedValue([DUNE, MATILDA]); // the shelf the server sends after adding
     await user.type(screen.getByPlaceholderText('Title'), 'Matilda');
@@ -1161,4 +1162,24 @@ test('while the shelf is on the way to Sam\'s page, there\'s no count', async ()
     await screen.findByText('No requests yet'); // Sam's requests have loaded, but the shelf hasn't
 
     expect(screen.queryByText(BOOK_COUNT)).not.toBeInTheDocument();
+});
+
+test('when the shelf can\'t load on Sam\'s page, there\'s no count, only the red message', async () => {
+    signedInAsSam();
+    api.getShelf.mockResolvedValue({ error: 'Something went wrong. Try again.' });
+
+    render(<App />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong. Try again.');
+    expect(screen.queryByText(BOOK_COUNT)).not.toBeInTheDocument();
+});
+
+test('two copies of Dune count as 2 books', async () => {
+    api.getBooks.mockResolvedValue([DUNE, { ...DUNE, _id: 'signed-dune-id', copyNote: 'signed' }]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+
+    render(<App />);
+
+    expect(await screen.findByText('2 books')).toBeInTheDocument();
 });
