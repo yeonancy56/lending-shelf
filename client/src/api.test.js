@@ -1,7 +1,7 @@
 // Tests how api.js reads the server's answer. No server needed:
 // fetch (the browser's way of calling the server) is swapped for a fake one.
 import { afterEach, expect, test, vi } from 'vitest';
-import { addBook, addFriend, updateFriend, getBooks, getFriends, getLoans, getShelf, getMyLoans, getMyRequests, askForBook, cancelRequest, getWaitingRequests, approveRequest, getFriendRequests, whoAmI, isSignedIn, lendBook, returnLoan, saveSignIn, signOut, whenSignedOut } from './api';
+import { addBook, addFriend, updateFriend, getBooks, getFriends, getLoans, getShelf, getMyLoans, getMyRequests, askForBook, cancelRequest, getWaitingRequests, approveRequest, declineRequest, getFriendRequests, whoAmI, isSignedIn, lendBook, returnLoan, saveSignIn, signOut, whenSignedOut } from './api';
 
 const DUNE = { title: 'Dune', author: 'Frank Herbert' };
 
@@ -125,6 +125,16 @@ test('approving sends the request\'s id in the address', async () => {
     await approveRequest('request-id');
 
     expect(fetch).toHaveBeenCalledWith('/api/requests/request-id/approve', expect.objectContaining({ method: 'POST' }));
+});
+
+test('declining sends the request\'s id in the address and my note in the body', async () => {
+    const fetch = vi.fn().mockResolvedValue(answer(200, JSON.stringify({ _id: 'request-id', status: 'declined' })));
+    vi.stubGlobal('fetch', fetch);
+
+    await declineRequest('request-id', "I'm rereading it this week");
+
+    expect(fetch).toHaveBeenCalledWith('/api/requests/request-id/decline', expect.objectContaining({ method: 'POST' }));
+    expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({ note: "I'm rereading it this week" });
 });
 
 test('my Requests list and Sam\'s panel ask the right addresses', async () => {

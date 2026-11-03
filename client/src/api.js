@@ -94,7 +94,7 @@ export async function getMyLoans() {
     return send('/me/loans');
 }
 
-// the friend page: Sam's own requests, newest first, each "waiting", "approved" or "cancelled"
+// the friend page: Sam's own requests, newest first, each "waiting", "approved", "declined" (with my note) or "cancelled"
 export async function getMyRequests() {
     return send('/me/requests');
 }
@@ -124,6 +124,15 @@ export async function getWaitingRequests() {
 export async function approveRequest(id) {
     return send('/requests/' + id + '/approve', {
         method: 'POST',
+    });
+}
+
+// I say no to Sam's request, with a short note Sam will read (or an empty one). The ID goes in the address, like approveRequest
+export async function declineRequest(id, note) {
+    return send('/requests/' + id + '/decline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note: note }),
     });
 }
 

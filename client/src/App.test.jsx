@@ -928,6 +928,60 @@ test('when a lending rule says no to Approve, I see the red message and the requ
     expect(screen.getByRole('list', { name: 'Requests' })).toHaveTextContent('Sam asked for Dune');
 });
 
+test('Decline with a note on Sam\'s request for Dune: the note is sent, the request leaves the list, and nothing is lent', async () => {
+    myShelf();
+    api.getWaitingRequests.mockResolvedValue([
+        { _id: 'request-1', book: MATILDA, friend: { _id: 'alex-id', name: 'Alex' }, status: 'waiting' },
+        { _id: 'request-2', book: DUNE, friend: SAM, status: 'waiting' },
+    ]);
+    api.declineRequest.mockResolvedValue({ _id: 'request-2', status: 'declined', note: "I'm rereading it this week" });
+
+    const user = userEvent.setup();
+    render(<App />);
+    const items = await within(await screen.findByRole('list', { name: 'Requests' })).findAllByRole('listitem');
+    // the note box is already there, next to Approve and Decline: no extra click to open it
+    await user.type(within(items[1]).getByRole('textbox', { name: 'Note for Sam (optional)' }), "I'm rereading it this week");
+    // what the "server" says once Sam's request is declined: only Alex's is still waiting
+    api.getWaitingRequests.mockResolvedValue([{ _id: 'request-1', book: MATILDA, friend: { _id: 'alex-id', name: 'Alex' }, status: 'waiting' }]);
+    await user.click(within(items[1]).getByRole('button', { name: 'Decline' }));
+
+    expect(api.declineRequest).toHaveBeenCalledWith('request-2', "I'm rereading it this week");
+    await vi.waitFor(() => expect(screen.getByRole('list', { name: 'Requests' })).not.toHaveTextContent('Sam asked for Dune'));
+    expect(screen.getByRole('list', { name: 'Requests' })).toHaveTextContent('Alex asked for Matilda');
+    expect(api.approveRequest).not.toHaveBeenCalled();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+});
+
+test('Decline with an empty note box sends an empty note', async () => {
+    myShelf();
+    api.getWaitingRequests.mockResolvedValue([{ _id: 'request-2', book: DUNE, friend: SAM, status: 'waiting' }]);
+    api.declineRequest.mockResolvedValue({ _id: 'request-2', status: 'declined', note: '' });
+
+    const user = userEvent.setup();
+    render(<App />);
+    const decline = await screen.findByRole('button', { name: 'Decline' });
+    api.getWaitingRequests.mockResolvedValue([]);
+    await user.click(decline);
+
+    expect(api.declineRequest).toHaveBeenCalledWith('request-2', '');
+    expect(await screen.findByText('No requests waiting')).toBeInTheDocument();
+});
+
+test('when Decline is refused, like a note that\'s too long, I see the red message and the request stays in the list', async () => {
+    myShelf();
+    api.getWaitingRequests.mockResolvedValue([{ _id: 'request-2', book: DUNE, friend: SAM, status: 'waiting' }]);
+    api.declineRequest.mockResolvedValue({ error: 'Keep the note to 200 characters or fewer.' });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.type(await screen.findByRole('textbox', { name: 'Note for Sam (optional)' }), 'Not now');
+    await user.click(screen.getByRole('button', { name: 'Decline' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Keep the note to 200 characters or fewer.');
+    expect(screen.getByRole('list', { name: 'Requests' })).toHaveTextContent('Sam asked for Dune');
+    expect(screen.getByRole('textbox', { name: 'Note for Sam (optional)' })).toHaveValue('Not now'); // what I typed stays
+});
+
 test('Sam\'s panel shows Sam\'s requests with their status, next to Sam\'s loans', async () => {
     myShelf();
     api.getFriendLoans.mockResolvedValue({ active: [], returned: [], limit: 3 });
@@ -944,6 +998,51 @@ test('Sam\'s panel shows Sam\'s requests with their status, next to Sam\'s loans
     const items = await within(await screen.findByRole('list', { name: "Sam's requests" })).findAllByRole('listitem');
     expect(items[0]).toHaveTextContent('Dune · approved');
     expect(items[1]).toHaveTextContent('Matilda · cancelled');
+});
+
+test('Sam sees a declined request as declined, with my note, and no Cancel button', async () => {
+    signedInAsSam({ myRequests: [
+        { _id: 'request-2', book: DUNE, status: 'declined', note: "I'm rereading it this week", askedAt: '2026-11-02T10:00:00Z' },
+        { _id: 'request-1', book: MATILDA, status: 'declined', note: '', askedAt: '2026-11-01T10:00:00Z' },
+    ] });
+
+    render(<App />);
+
+    const items = await within(await screen.findByRole('list', { name: 'My requests' })).findAllByRole('listitem');
+    expect(items[0]).toHaveTextContent("Dune · declined · “I'm rereading it this week”");
+    expect(items[1]).toHaveTextContent(/^Matilda · declined$/); // no note, so nothing after "declined"
+    expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument();
+});
+
+test('Sam\'s panel on my page shows a declined request with my note', async () => {
+    myShelf();
+    api.getFriendLoans.mockResolvedValue({ active: [], returned: [], limit: 3 });
+    api.getFriendRequests.mockResolvedValue([{ _id: 'request-2', book: DUNE, status: 'declined', note: "I'm rereading it this week" }]);
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Sam' }));
+
+    const items = await within(await screen.findByRole('list', { name: "Sam's requests" })).findAllByRole('listitem');
+    expect(items[0]).toHaveTextContent("Dune · declined · “I'm rereading it this week”");
+});
+
+test('declining while Sam\'s panel is open shows the declined request and my note there', async () => {
+    myShelf();
+    api.getWaitingRequests.mockResolvedValue([{ _id: 'request-2', book: DUNE, friend: SAM, status: 'waiting' }]);
+    api.getFriendLoans.mockResolvedValue({ active: [], returned: [], limit: 3 });
+    api.getFriendRequests.mockResolvedValue([{ _id: 'request-2', book: DUNE, status: 'waiting' }]);
+    api.declineRequest.mockResolvedValue({ _id: 'request-2', status: 'declined', note: 'Not this week' });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Sam' }));
+    await user.type(await screen.findByRole('textbox', { name: 'Note for Sam (optional)' }), 'Not this week');
+    api.getWaitingRequests.mockResolvedValue([]);
+    api.getFriendRequests.mockResolvedValue([{ _id: 'request-2', book: DUNE, status: 'declined', note: 'Not this week' }]);
+    await user.click(screen.getByRole('button', { name: 'Decline' }));
+
+    expect(await within(screen.getByRole('list', { name: "Sam's requests" })).findByText(/declined/)).toHaveTextContent('Dune · declined · “Not this week”');
 });
 
 test('Sam sees an approved request as approved, with no Cancel button', async () => {

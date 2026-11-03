@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'; //useState = memory, what should the page remember, useEffect = do something at a certain time
-import { getBooks, addBook, updateBook, getFriends, addFriend, updateFriend, getFriendLoans, getFriendRequests, getWaitingRequests, approveRequest, getLoans, lendBook, returnLoan, getShelf, getMyLoans, getMyRequests, askForBook, cancelRequest, whoAmI, isSignedIn, saveSignIn, signOut, whenSignedOut } from './api';
+import { getBooks, addBook, updateBook, getFriends, addFriend, updateFriend, getFriendLoans, getFriendRequests, getWaitingRequests, approveRequest, declineRequest, getLoans, lendBook, returnLoan, getShelf, getMyLoans, getMyRequests, askForBook, cancelRequest, whoAmI, isSignedIn, saveSignIn, signOut, whenSignedOut } from './api';
 import GoogleSignIn from './GoogleSignIn';
 
 // a book's name on the page: "Dune (signed)" when it has a copy note, just "Dune" when it doesn't
@@ -35,6 +35,12 @@ function fillList(result, list, setList, setListErrors) {
   }
 }
 
+// one request's line, like "Dune · declined · “I'm rereading it this week”". The note only shows when I wrote one
+function requestLine(request) {
+  const line = `${bookName(request.book)} · ${request.status}`;
+  return request.note ? `${line} · “${request.note}”` : line;
+}
+
 // one friend's loans, in a box under the Friends list: how many they have, what they have now, what they had before,
 // and every request they made. loans and requests are null while the server hasn't answered yet
 function FriendPanel({ friend, loans, requests, onEdit, onClose }) {
@@ -49,7 +55,7 @@ function FriendPanel({ friend, loans, requests, onEdit, onClose }) {
       {requests && !requests.error && requests.length === 0 && <p>No requests yet</p>}
       <ul aria-label={`${friend.name}'s requests`}> {/* newest first, the order the server sends */}
         {requests && !requests.error && requests.map((request) => (
-          <li key={request._id}>{bookName(request.book)} · {request.status}</li>
+          <li key={request._id}>{requestLine(request)}</li>
         ))}
       </ul>
       <button onClick={onEdit}>Edit</button> {/* puts Sam's name and email in the friend form */}
@@ -222,7 +228,7 @@ function FriendPage({ name, onSignOut }) {
         <ul aria-labelledby="my-requests"> {/* newest first, the order the server sends */}
           {myRequests && !myRequests.error && myRequests.map((request) => (
             <li key={request._id}>
-              {bookName(request.book)} · {request.status}
+              {requestLine(request)}
               {request.status === 'waiting' && <button onClick={() => handleCancel(request._id)}>Cancel</button>}
             </li>
           ))}
@@ -247,7 +253,8 @@ function Shelf({ onSignOut }) { //these are memory boxes
   const[friendLoans, setFriendLoans] = useState(null); // that friend's loans, once the server answers
   const[friendRequests, setFriendRequests] = useState(null); // that friend's requests, once the server answers
   const[waitingRequests, setWaitingRequests] = useState([]); // my Requests list: what still needs an answer from me
-  const[requestError, setRequestError] = useState(''); // the red message for Approve
+  const[declineNotes, setDeclineNotes] = useState({}); // what I typed in each request's note box, like { 'request-2': 'Not this week' }
+  const[requestError, setRequestError] = useState(''); // the red message for Approve and Decline
   // the friend I last asked the server about. A ref, not useState, because the page doesn't show it
   const askedFriendId = useRef(null);
   const[loans, setLoans] = useState([]);
@@ -378,6 +385,17 @@ function Shelf({ onSignOut }) { //these are memory boxes
     if (openFriend) loadFriendLoans(openFriend); // Sam's panel is open? Then it shows the new loan and the approved request
   }
 
+  // Decline on Sam's request for Dune, with whatever is in its note box (maybe nothing). Nothing is lent.
+  // If the server says no (like a note that's too long), I see why, and the request and my note stay
+  async function handleDecline(id) {
+    const result = await declineRequest(id, declineNotes[id] || '');
+    setRequestError(result.error || '');
+    if (result.error) return;
+    setDeclineNotes((notes) => ({ ...notes, [id]: '' })); // that note is sent, so its box is done
+    loadRequests();
+    if (openFriend) loadFriendLoans(openFriend); // Sam's panel is open? Then it shows the declined request and my note
+  }
+
   async function handleAddLoan(e) {
     e.preventDefault();
     const results = await lendBook(bookId, friendId);
@@ -418,6 +436,14 @@ return (
           <li key={request._id}>
             {request.friend.name} asked for {bookName(request.book)}{' '}
             <button onClick={() => handleApprove(request._id)}>Approve</button>
+            {/* the note box is always there, so declining is one click */}
+            <input
+              aria-label={`Note for ${request.friend.name} (optional)`}
+              placeholder="Note (optional)"
+              value={declineNotes[request._id] || ''}
+              onChange={(e) => setDeclineNotes((notes) => ({ ...notes, [request._id]: e.target.value }))}
+            />
+            <button onClick={() => handleDecline(request._id)}>Decline</button>
           </li>
         ))}
       </ul>

@@ -643,3 +643,13 @@ Why: an approved request always comes with a loan, so the loan message covers it
 Chose: Sam's panel asks the server twice: once for Sam's loans (like today) and once for Sam's requests
 Other option: one answer with both loans and requests in it
 Why: loans and requests live in different folders on the server. Asking twice keeps each folder in charge of its own things, and the loans answer stays the same as before
+
+## 2026-11-02 — My decline note is optional, and short
+Chose: when I say no to Sam, I can write a note of up to 200 letters and spaces, or nothing at all. A longer note is turned away with a plain message, and Sam's request keeps waiting. No note is saved as an empty note
+Other option: make a note required, or let it be as long as I like
+Why: sometimes "no" needs no reason. 200 is plenty for "I'm rereading it this week", and it keeps the note a few words, not a letter
+
+## 2026-11-02 — Declining is one click, with the note box always showing
+Chose: each waiting request in my Requests list has its note box out all the time, next to Approve and Decline. I type a note if I want, then click Decline. No "are you sure?" step
+Other option: click Decline first to open the note box, or ask me to confirm
+Why: it's the quickest way to answer Sam. A decline lends nothing and Sam can ask again straight away, so a slip is easy to fix

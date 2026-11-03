@@ -52,4 +52,16 @@ async function approve(req, res) {
     }
 }
 
-module.exports = { ask, listMine, cancel, listWaiting, approve, listForFriend };
+// I decline, through POST /requests/:id/decline, with an optional note for Sam in the body
+async function decline(req, res) {
+    const { note } = req.body ?? {};
+    try {
+        const request = await requestService.declineRequest(req.params.id, note);
+        if (!request) return res.status(404).json({ error: 'Request not found' });
+        res.json(request);
+    } catch (err) {
+        answerKnownMistake(res, err);
+    }
+}
+
+module.exports = { ask, listMine, cancel, listWaiting, approve, decline, listForFriend };
