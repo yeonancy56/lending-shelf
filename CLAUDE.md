@@ -21,15 +21,16 @@ A MERN app for tracking books I lend to friends.
 
 1. **Claude writes the code using /implement.** After each ticket, explain
    every changed file in one plain sentence so I can understand it.
-2. **Before each ticket**, ask me to explain my plan in my own words. Then ask
-   2–3 questions, one at a time, until the plan is clear.
-3. **After each ticket**, run /code-review, then ask me 1–2 questions to check
-   I understand the change.
+2. **Before each ticket**, offer to hear my plan in my own words ("want to
+   explain your plan, or skip?"). If I explain it, ask 2–3 questions, one at a
+   time, until the plan is clear.
+3. **After each ticket**, run /code-review, then offer 1–2 questions to check
+   I understand the change ("want a quick question, or skip?").
 4. **Every decision goes in DECISIONS.md.** Claude writes the entry in plain,
    everyday language — short sentences, no jargon, as if explaining to a friend
    who doesn't code.
-5. **Start each session** by asking 2–3 quick review questions about earlier
-   tickets.
+5. **Start each session** by offering 2–3 quick review questions about earlier
+   tickets ("want some review questions, or skip?").
 6. When you explain something, connect it to this app (Dune, Sam, loans), not
    to abstract examples.
 7. **Every ticket gets its own branch and a pull request.** Use the pr skill
