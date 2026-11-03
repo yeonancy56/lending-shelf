@@ -266,3 +266,10 @@ test('DELETE /friends/:id for a friend who isn\'t there says so (404)', async ()
     expect(res.status).toBe(404);
     expect(res.body.error).toBe('Friend not found');
 });
+
+test('DELETE /friends/:id with an ID in the wrong shape says the friend isn\'t there (404)', async () => {
+    const res = await owner.delete('/friends/abc');
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe('Friend not found');
+});
