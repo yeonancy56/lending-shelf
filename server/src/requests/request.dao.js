@@ -60,24 +60,10 @@ function markIfWaiting(id, changes, friendId = null) {
     return Request.findOneAndUpdate(filter, changes, { returnDocument: 'after' });
 }
 
-// approve broke before Dune was lent: undo the yes, so the request waits for my answer again
-function putBackToWaiting(id) {
-    return Request.findOneAndUpdate(
-        { _id: id, status: STATUS.APPROVED, loan: null },
-        { status: STATUS.WAITING, answeredAt: null },
-        { returnDocument: 'after' },
-    );
-}
-
 // one request, whoever made it, for my Approve and Decline buttons.
 // An ID in the wrong shape, like "abc", can't belong to any request, so there's nothing to find
 function findById(id) {
     return mongoose.isValidObjectId(id) ? Request.findById(id) : null;
 }
 
-// an approved request points to the loan it started, so the two stay connected
-function linkLoan(id, loanId) {
-    return Request.findByIdAndUpdate(id, { loan: loanId }, { returnDocument: 'after' });
-}
-
-module.exports = { create, findWaitingByBook, countWaitingByFriend, findAskedForBookIds, hasEverBeenAskedFor, hasEverAsked, findByFriend, findByIdForFriend, findWaiting, markIfWaiting, putBackToWaiting, linkLoan, findById };
+module.exports = { create, findWaitingByBook, countWaitingByFriend, findAskedForBookIds, hasEverBeenAskedFor, hasEverAsked, findByFriend, findByIdForFriend, findWaiting, markIfWaiting, findById };

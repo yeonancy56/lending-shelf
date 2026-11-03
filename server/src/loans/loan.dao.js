@@ -47,4 +47,9 @@ function markReturned(id) {
     return Loan.findByIdAndUpdate(id, { returnedAt: new Date() }, { returnDocument: 'after' });
 }
 
-module.exports = {findAll, findById, create, findActiveByBook, hasEverBeenLent, findLentOutBookIds, hasEverBorrowed, countActiveByFriend, findActiveByFriend, findByFriend, markReturned}
+// remove a loan completely, for a loan that never really happened
+function remove(id) {
+    return Loan.findByIdAndDelete(id);
+}
+
+module.exports = {findAll, findById, create, remove, findActiveByBook, hasEverBeenLent, findLentOutBookIds, hasEverBorrowed, countActiveByFriend, findActiveByFriend, findByFriend, markReturned}
