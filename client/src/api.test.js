@@ -1,7 +1,7 @@
 // Tests how api.js reads the server's answer. No server needed:
 // fetch (the browser's way of calling the server) is swapped for a fake one.
 import { afterEach, expect, test, vi } from 'vitest';
-import { addBook, addFriend, updateFriend, getBooks, getFriends, getLoans, getShelf, getMyLoans, getMyRequests, askForBook, cancelRequest, whoAmI, isSignedIn, lendBook, returnLoan, saveSignIn, signOut, whenSignedOut } from './api';
+import { addBook, addFriend, updateFriend, getBooks, getFriends, getLoans, getShelf, getMyLoans, getMyRequests, askForBook, cancelRequest, getWaitingRequests, approveRequest, getFriendRequests, whoAmI, isSignedIn, lendBook, returnLoan, saveSignIn, signOut, whenSignedOut } from './api';
 
 const DUNE = { title: 'Dune', author: 'Frank Herbert' };
 
@@ -116,6 +116,25 @@ test('cancelling sends the request\'s id in the address', async () => {
     await cancelRequest('request-id');
 
     expect(fetch).toHaveBeenCalledWith('/api/requests/request-id/cancel', expect.objectContaining({ method: 'POST' }));
+});
+
+test('approving sends the request\'s id in the address', async () => {
+    const fetch = vi.fn().mockResolvedValue(answer(200, JSON.stringify({ _id: 'request-id', status: 'approved' })));
+    vi.stubGlobal('fetch', fetch);
+
+    await approveRequest('request-id');
+
+    expect(fetch).toHaveBeenCalledWith('/api/requests/request-id/approve', expect.objectContaining({ method: 'POST' }));
+});
+
+test('my Requests list and Sam\'s panel ask the right addresses', async () => {
+    const fetch = vi.fn().mockImplementation(() => Promise.resolve(answer(200, '[]')));
+    vi.stubGlobal('fetch', fetch);
+
+    await getWaitingRequests();
+    await getFriendRequests('sam-id');
+
+    expect(fetch.mock.calls.map((call) => call[0])).toEqual(['/api/requests', '/api/friends/sam-id/requests']);
 });
 
 test('sends my Google sign-in with every request, so the server knows it\'s me', async () => {

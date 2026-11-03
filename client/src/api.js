@@ -94,7 +94,7 @@ export async function getMyLoans() {
     return send('/me/loans');
 }
 
-// the friend page: Sam's own requests, newest first, each "waiting" or "cancelled"
+// the friend page: Sam's own requests, newest first, each "waiting", "approved" or "cancelled"
 export async function getMyRequests() {
     return send('/me/requests');
 }
@@ -111,6 +111,18 @@ export async function askForBook(bookId) {
 // the friend page: Sam takes back a waiting request. The ID goes in the address, like returnLoan
 export async function cancelRequest(id) {
     return send('/requests/' + id + '/cancel', {
+        method: 'POST',
+    });
+}
+
+// my Requests list: every waiting request, oldest first, with who asked for what
+export async function getWaitingRequests() {
+    return send('/requests');
+}
+
+// I say yes to Sam's request: the server lends Dune to Sam straight away. The ID goes in the address, like cancelRequest
+export async function approveRequest(id) {
+    return send('/requests/' + id + '/approve', {
         method: 'POST',
     });
 }
@@ -162,6 +174,11 @@ export async function updateFriend(id, friend) {
 // Sam's panel: what Sam has now, Sam's past loans, and the 3-book limit
 export async function getFriendLoans(friendId) {
     return send('/friends/' + friendId + '/loans');
+}
+
+// Sam's panel: every request Sam ever made, newest first
+export async function getFriendRequests(friendId) {
+    return send('/friends/' + friendId + '/requests');
 }
 
 //Loans in api.js
