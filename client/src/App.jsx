@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'; //useState = memory, what should the page remember, useEffect = do something at a certain time
 import { getBooks, addBook, updateBook, getFriends, addFriend, updateFriend, getFriendLoans, getFriendRequests, getWaitingRequests, approveRequest, declineRequest, getLoans, lendBook, returnLoan, getShelf, getMyLoans, getMyRequests, askForBook, cancelRequest, whoAmI, isSignedIn, saveSignIn, signOut, whenSignedOut } from './api';
 import GoogleSignIn from './GoogleSignIn';
+import ErrorMessage from './ErrorMessage';
 
 // a book's name on the page: "Dune (signed)" when it has a copy note, just "Dune" when it doesn't
 function bookName(book) {
@@ -18,12 +19,6 @@ function shortDay(dueBack) {
 function matchesSearch(book, search) {
   const typed = search.trim().toLowerCase();
   return book.title.toLowerCase().includes(typed) || book.author.toLowerCase().includes(typed);
-}
-
-// a red message, like "This book is already lent out". Marked as an alert so a screen reader
-// reads it out loud right away. Shows nothing when there's no message
-function ErrorMessage({ message }) {
-  return message ? <p className="error" role="alert">{message}</p> : null;
 }
 
 // fill a list with the server's answer, and remember whether that list broke,
