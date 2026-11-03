@@ -35,7 +35,7 @@ async function lend(req, res) {
 async function returnLoan(req, res) {
     try{
         const loan = await loanService.returnBook(req.params.id);
-        if (!loan) return res.status (404).json({ error: 'Loan not found '});
+        if (!loan) return res.status(404).json({ error: 'Loan not found' });
         res.json(loan);
     } catch (err) {
         answerKnownMistake(res, err);

@@ -713,3 +713,8 @@ Why: the lookup already gives back "nothing" when there's no such book or friend
 Chose: "This friend already has 3 books", with a capital T, like the other red messages
 Other option: leave it lowercase
 Why: every other message starts with a capital, like "This book is already lent out". The lowercase one looked like a typo
+
+## 2026-11-03 — "Loan not found" loses its extra space, and gets a test
+Chose: take out the stray space at the end of "Loan not found", and add tests that check the exact words when returning a loan that isn't there
+Other option: just remove the space, with no new test
+Why: no test looked at the words, which is how the space slipped in unnoticed. Now a test would catch it if it came back
