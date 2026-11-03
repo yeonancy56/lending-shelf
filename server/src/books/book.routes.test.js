@@ -318,8 +318,8 @@ test('DELETE /books/:id refuses to delete Dune after Sam gave it back, because t
 });
 
 // requests are kept forever, so a book anyone ever asked for stays, whatever happened to the request.
-// These are the statuses a request can have today; approved and declined join this list when they exist
-const REQUEST_STATUSES = ['waiting', 'cancelled'];
+// These are the statuses a request can have today; declined joins this list when it exists
+const REQUEST_STATUSES = ['waiting', 'approved', 'cancelled'];
 
 test.each(REQUEST_STATUSES)('DELETE /books/:id refuses to delete Dune after Sam asked for it, even when the request is %s (409)', async (status) => {
     const dune = await Book.create(DUNE);

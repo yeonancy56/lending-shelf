@@ -17,6 +17,9 @@ vi.mock('./GoogleSignIn', () => ({
 beforeEach(() => {
     api.isSignedIn.mockReturnValue(true);
     api.whoAmI.mockResolvedValue({ who: 'owner' });
+    // no one has asked for anything, unless a test says so
+    api.getWaitingRequests.mockResolvedValue([]);
+    api.getFriendRequests.mockResolvedValue([]);
 });
 
 const DUNE = { _id: 'dune-id', title: 'Dune', author: 'Frank Herbert' };
@@ -861,4 +864,93 @@ test('when "who am I?" breaks, the page says something went wrong and still lets
     expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong. Try again.');
     await user.click(screen.getByRole('button', { name: 'Sign out' }));
     expect(screen.getByRole('button', { name: 'Sign in with Google' })).toBeInTheDocument();
+});
+
+// my page, with Dune and Matilda, Sam and Alex, and no loans yet
+function myShelf() {
+    api.getBooks.mockResolvedValue([DUNE, MATILDA]);
+    api.getFriends.mockResolvedValue([SAM, { _id: 'alex-id', name: 'Alex' }]);
+    api.getLoans.mockResolvedValue([]);
+}
+
+test('my Requests list shows who asked for what, in the server\'s order (oldest first), each with Approve', async () => {
+    myShelf();
+    api.getWaitingRequests.mockResolvedValue([
+        { _id: 'request-1', book: MATILDA, friend: { _id: 'alex-id', name: 'Alex' }, status: 'waiting' },
+        { _id: 'request-2', book: DUNE, friend: SAM, status: 'waiting' },
+    ]);
+
+    render(<App />);
+
+    const items = await within(await screen.findByRole('list', { name: 'Requests' })).findAllByRole('listitem');
+    expect(items[0]).toHaveTextContent('Alex asked for Matilda');
+    expect(items[1]).toHaveTextContent('Sam asked for Dune');
+    expect(within(items[1]).getByRole('button', { name: 'Approve' })).toBeInTheDocument();
+});
+
+test('my Requests list says so when nothing is waiting', async () => {
+    myShelf();
+
+    render(<App />);
+
+    expect(await screen.findByText('No requests waiting')).toBeInTheDocument();
+});
+
+test('Approve on Sam\'s request for Dune: it\'s sent, the request leaves the list, and the loan shows up', async () => {
+    myShelf();
+    api.getWaitingRequests.mockResolvedValue([{ _id: 'request-2', book: DUNE, friend: SAM, status: 'waiting' }]);
+    api.approveRequest.mockResolvedValue({ _id: 'request-2', status: 'approved', loan: 'loan-1' });
+
+    const user = userEvent.setup();
+    render(<App />);
+    const approve = await screen.findByRole('button', { name: 'Approve' });
+    // what the "server" says once Dune is lent to Sam
+    api.getWaitingRequests.mockResolvedValue([]);
+    api.getLoans.mockResolvedValue([{ _id: 'loan-1', book: DUNE, friend: SAM, dueBack: '2026-11-16T12:00:00.000Z', overdue: false }]);
+    await user.click(approve);
+
+    expect(api.approveRequest).toHaveBeenCalledWith('request-2');
+    expect(await screen.findByText('No requests waiting')).toBeInTheDocument();
+    expect(await screen.findByText(/Dune → Sam/)).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+});
+
+test('when a lending rule says no to Approve, I see the red message and the request stays in the list', async () => {
+    myShelf();
+    api.getWaitingRequests.mockResolvedValue([{ _id: 'request-2', book: DUNE, friend: SAM, status: 'waiting' }]);
+    api.approveRequest.mockResolvedValue({ error: 'This friend has an overdue book' });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Approve' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('This friend has an overdue book');
+    expect(screen.getByRole('list', { name: 'Requests' })).toHaveTextContent('Sam asked for Dune');
+});
+
+test('Sam\'s panel shows Sam\'s requests with their status, next to Sam\'s loans', async () => {
+    myShelf();
+    api.getFriendLoans.mockResolvedValue({ active: [], returned: [], limit: 3 });
+    api.getFriendRequests.mockResolvedValue([
+        { _id: 'request-2', book: DUNE, status: 'approved' },
+        { _id: 'request-1', book: MATILDA, status: 'cancelled' },
+    ]);
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Sam' }));
+
+    expect(api.getFriendRequests).toHaveBeenCalledWith('sam-id');
+    const items = await within(await screen.findByRole('list', { name: "Sam's requests" })).findAllByRole('listitem');
+    expect(items[0]).toHaveTextContent('Dune · approved');
+    expect(items[1]).toHaveTextContent('Matilda · cancelled');
+});
+
+test('Sam sees an approved request as approved, with no Cancel button', async () => {
+    signedInAsSam({ myRequests: [{ _id: 'request-1', book: DUNE, status: 'approved', askedAt: '2026-11-02T10:00:00Z' }] });
+
+    render(<App />);
+
+    expect(await screen.findByText('Dune · approved')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument();
 });

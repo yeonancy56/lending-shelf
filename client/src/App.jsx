@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'; //useState = memory, what should the page remember, useEffect = do something at a certain time
-import { getBooks, addBook, updateBook, getFriends, addFriend, updateFriend, getFriendLoans, getLoans, lendBook, returnLoan, getShelf, getMyLoans, getMyRequests, askForBook, cancelRequest, whoAmI, isSignedIn, saveSignIn, signOut, whenSignedOut } from './api';
+import { getBooks, addBook, updateBook, getFriends, addFriend, updateFriend, getFriendLoans, getFriendRequests, getWaitingRequests, approveRequest, getLoans, lendBook, returnLoan, getShelf, getMyLoans, getMyRequests, askForBook, cancelRequest, whoAmI, isSignedIn, saveSignIn, signOut, whenSignedOut } from './api';
 import GoogleSignIn from './GoogleSignIn';
 
 // a book's name on the page: "Dune (signed)" when it has a copy note, just "Dune" when it doesn't
@@ -35,15 +35,23 @@ function fillList(result, list, setList, setListErrors) {
   }
 }
 
-// one friend's loans, in a box under the Friends list: how many they have, what they have now, and what they had before.
-// loans is null while the server hasn't answered yet
-function FriendPanel({ friend, loans, onEdit, onClose }) {
+// one friend's loans, in a box under the Friends list: how many they have, what they have now, what they had before,
+// and every request they made. loans and requests are null while the server hasn't answered yet
+function FriendPanel({ friend, loans, requests, onEdit, onClose }) {
   return (
     <section aria-labelledby="friend-panel-title">
       <h3 id="friend-panel-title">{friend.name}'s loans</h3>
       {!loans && <p>Loading…</p>} {/* Sam's loans are still on the way */}
       <ErrorMessage message={loans?.error} />
       {loans && !loans.error && <FriendLoans loans={loans} />}
+      <h4>Requests</h4>
+      <ErrorMessage message={requests?.error} />
+      {requests && !requests.error && requests.length === 0 && <p>No requests yet</p>}
+      <ul aria-label={`${friend.name}'s requests`}> {/* newest first, the order the server sends */}
+        {requests && !requests.error && requests.map((request) => (
+          <li key={request._id}>{bookName(request.book)} · {request.status}</li>
+        ))}
+      </ul>
       <button onClick={onEdit}>Edit</button> {/* puts Sam's name and email in the friend form */}
       <button onClick={onClose}>Close</button>
     </section>
@@ -237,6 +245,9 @@ function Shelf({ onSignOut }) { //these are memory boxes
   const[editingFriendId, setEditingFriendId] = useState(''); // the friend in the form for editing, or '' when the form adds a new friend
   const[openFriend, setOpenFriend] = useState(null); // the friend whose panel is open, or null when it's closed
   const[friendLoans, setFriendLoans] = useState(null); // that friend's loans, once the server answers
+  const[friendRequests, setFriendRequests] = useState(null); // that friend's requests, once the server answers
+  const[waitingRequests, setWaitingRequests] = useState([]); // my Requests list: what still needs an answer from me
+  const[requestError, setRequestError] = useState(''); // the red message for Approve
   // the friend I last asked the server about. A ref, not useState, because the page doesn't show it
   const askedFriendId = useRef(null);
   const[loans, setLoans] = useState([]);
@@ -323,28 +334,48 @@ function Shelf({ onSignOut }) { //these are memory boxes
     setFriendError('');
   }
 
-  // ask the server for Sam's loans, and put them in Sam's panel
+  // ask the server for Sam's loans and requests, and put them in Sam's panel
   async function loadFriendLoans(friend) {
     askedFriendId.current = friend._id;
-    const result = await getFriendLoans(friend._id);
+    const [loans, requests] = await Promise.all([getFriendLoans(friend._id), getFriendRequests(friend._id)]);
     // clicked Alex while Sam's answer was on the way? Then Sam's late answer is thrown away
-    if (askedFriendId.current === friend._id) setFriendLoans(result);
+    if (askedFriendId.current === friend._id) {
+      setFriendLoans(loans);
+      setFriendRequests(requests);
+    }
   }
 
   // clicking Sam's name opens Sam's panel, and asks the server for Sam's loans
   function openFriendPanel(friend) {
     setOpenFriend(friend);
     setFriendLoans(null); // don't show someone else's loans while Sam's are on the way
+    setFriendRequests(null);
     loadFriendLoans(friend);
   }
 
   function closeFriendPanel() {
     setOpenFriend(null);
     setFriendLoans(null);
+    setFriendRequests(null);
   }
 
   function loadLoans() {
     return getLoans().then((result) => fillList(result, 'loans', setLoans, setListErrors));
+  }
+
+  function loadRequests() {
+    return getWaitingRequests().then((result) => fillList(result, 'requests', setWaitingRequests, setListErrors));
+  }
+
+  // Approve on Sam's request for Dune: the server lends Dune to Sam right away.
+  // If a lending rule says no (like Sam's loan going overdue), I see why and the request stays in the list
+  async function handleApprove(id) {
+    const result = await approveRequest(id);
+    setRequestError(result.error || '');
+    if (result.error) return;
+    loadRequests();
+    loadLoans();
+    if (openFriend) loadFriendLoans(openFriend); // Sam's panel is open? Then it shows the new loan and the approved request
   }
 
   async function handleAddLoan(e) {
@@ -367,7 +398,8 @@ function Shelf({ onSignOut }) { //these are memory boxes
   }
 
 
-useEffect(() => { // when the page opens, fill in all three lists
+useEffect(() => { // when the page opens, fill in all four lists
+  loadRequests();
   loadBooks();
   loadFriends();
   loadLoans();
@@ -378,6 +410,19 @@ return (
     <h1>Lending Shelf</h1>
     <button onClick={onSignOut}>Sign out</button>
     <ErrorMessage message={listError} />
+    <section>
+      <h2 id="requests">Requests</h2> {/* at the top, so I see them as soon as I sign in */}
+      {waitingRequests.length === 0 && <p>No requests waiting</p>}
+      <ul aria-labelledby="requests"> {/* oldest first, the order the server sends, so I answer them in the order they came */}
+        {waitingRequests.map((request) => (
+          <li key={request._id}>
+            {request.friend.name} asked for {bookName(request.book)}{' '}
+            <button onClick={() => handleApprove(request._id)}>Approve</button>
+          </li>
+        ))}
+      </ul>
+      <ErrorMessage message={requestError} />
+    </section>
     <section>
      <h2>Books</h2>
       <form onSubmit={handleSaveBook}>
@@ -430,7 +475,7 @@ return (
         <li key={friend._id}><button onClick={() => openFriendPanel(friend)}>{friend.name}</button></li>
       ))}
      </ul>
-     {openFriend && <FriendPanel friend={openFriend} loans={friendLoans} onEdit={() => startEditingFriend(openFriend)} onClose={closeFriendPanel} />}
+     {openFriend && <FriendPanel friend={openFriend} loans={friendLoans} requests={friendRequests} onEdit={() => startEditingFriend(openFriend)} onClose={closeFriendPanel} />}
     </section>
     <section>
     <h2>Loans</h2>

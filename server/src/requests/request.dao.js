@@ -9,8 +9,11 @@ function findWaitingByBook(bookId) {
 }
 
 // the 3-book limit: how many requests is this friend still waiting on?
-function countWaitingByFriend(friendId) {
-    return Request.countDocuments({ friend: friendId, status: 'waiting' });
+// Leaves out the one I'm approving (leaveOutId), if any, so it doesn't count against itself
+function countWaitingByFriend(friendId, leaveOutId = null) {
+    const filter = { friend: friendId, status: 'waiting' };
+    if (leaveOutId) filter._id = { $ne: leaveOutId };
+    return Request.countDocuments(filter);
 }
 
 // the friend shelf view: which books are asked for right now? Only the books' ids, never who asked
@@ -39,6 +42,11 @@ function findByIdForFriend(id, friendId) {
     return mongoose.isValidObjectId(id) ? Request.findOne({ _id: id, friend: friendId }) : null;
 }
 
+// my Requests list: every request still waiting on me, the oldest first, with the book's and the friend's names
+function findWaiting() {
+    return Request.find({ status: 'waiting' }).sort({ askedAt: 1 }).populate('book').populate('friend');
+}
+
 // cancel: only if it's this friend's and still waiting, in one step, so two clicks can't both cancel it.
 // Gives back nothing when there was nothing to cancel
 function markCancelled(id, friendId) {
@@ -50,4 +58,25 @@ function markCancelled(id, friendId) {
     );
 }
 
-module.exports = { create, findWaitingByBook, countWaitingByFriend, findAskedForBookIds, hasEverBeenAskedFor, hasEverAsked, findByFriend, findByIdForFriend, markCancelled };
+// approve: only if it's still waiting, in one step, so two clicks can't both say yes.
+// Gives back nothing when it wasn't waiting any more
+function markApproved(id) {
+    return Request.findOneAndUpdate(
+        { _id: id, status: 'waiting' },
+        { status: 'approved', answeredAt: new Date() },
+        { returnDocument: 'after' },
+    );
+}
+
+// one request, whoever made it, for my Approve button.
+// An ID in the wrong shape, like "abc", can't belong to any request, so there's nothing to find
+function findById(id) {
+    return mongoose.isValidObjectId(id) ? Request.findById(id) : null;
+}
+
+// an approved request points to the loan it started, so the two stay connected
+function linkLoan(id, loanId) {
+    return Request.findByIdAndUpdate(id, { loan: loanId }, { returnDocument: 'after' });
+}
+
+module.exports = { create, findWaitingByBook, countWaitingByFriend, findAskedForBookIds, hasEverBeenAskedFor, hasEverAsked, findByFriend, findByIdForFriend, markCancelled, findWaiting, markApproved, linkLoan, findById };

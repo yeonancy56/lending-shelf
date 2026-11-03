@@ -36,4 +36,7 @@ app.use('/friends', onlyOwner, friendRoutes);
 const loanRoutes = require('./loans/loan.routes');
 app.use('/loans', onlyOwner, loanRoutes);
 
+app.get('/requests', onlyOwner, requestController.listWaiting); // my Requests list: waiting requests, oldest first
+app.post('/requests/:id/approve', onlyOwner, requestController.approve); // I say yes, and the book is lent right away
+
 module.exports = app;                // sharing the app

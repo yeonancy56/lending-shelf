@@ -199,8 +199,8 @@ test('DELETE /friends/:id refuses to delete Sam after Sam gave Dune back, becaus
 });
 
 // requests are kept forever, so a friend who ever asked for a book stays, whatever happened to the request.
-// These are the statuses a request can have today; approved and declined join this list when they exist
-const REQUEST_STATUSES = ['waiting', 'cancelled'];
+// These are the statuses a request can have today; declined joins this list when it exists
+const REQUEST_STATUSES = ['waiting', 'approved', 'cancelled'];
 
 test.each(REQUEST_STATUSES)('DELETE /friends/:id refuses to delete Sam after Sam asked for Dune, even when the request is %s (409)', async (status) => {
     const sam = await Friend.create({ name: 'Sam' });
