@@ -776,3 +776,8 @@ Why: if I change a spine color later, the test tells me right away when a name l
 Chose: in the styles file, the button color is called "button" instead of "green", and the words on it "on button" instead of "on green". The three spine colors are called "spine green", "spine rust" and "spine gold" instead of "spine 1, 2, 3"
 Other option: only rename the button color, and keep the spines numbered with a note next to each one saying its color
 Why: a name like "green" doesn't say it's for buttons, and "spine 2" doesn't say it's rust. Now the name alone tells me, with no note to read. The spine test finds the spines by name now, not by number
+
+## 2026-11-03 — The review takes a phone-size picture when the look changes
+Chose: a "picture mode" that only runs on my computer. It shows my shelf with pretend books, friends and loans, including one book with a very long name, so no Google sign-in or database is needed. A /phone page shows the shelf exactly as wide as a phone. When a ticket changes how the page looks, the review takes a picture of it and shows me
+Other option: the review stops and asks me to take the picture myself
+Why: the review can't sign in with my Google account, so it couldn't see the real page. With pretend answers it can look on its own every time. The long name is there on purpose, to catch a title that gets cut off or spills past the edge. The real app never uses picture mode
