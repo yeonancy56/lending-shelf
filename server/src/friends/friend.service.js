@@ -7,8 +7,10 @@ const { badRequest, ruleBroken, DUPLICATE_KEY } = require('../errors');
 function listFriends()             { return friendDao.findAll(); }
 function getFriend(id)             { return friendDao.findById(id); }
 
-// a friend who's borrowed or asked can't be deleted, because their loans and requests are kept forever and still need them
+// a friend who's borrowed or asked can't be deleted, because their loans and requests are kept forever and still need them.
+// Gives back nothing when there's no such friend, so the controller can say "Friend not found"
 async function deleteFriend(id) {
+    if (!(await friendDao.exists(id))) return null;
     if (await loanDao.hasEverBorrowed(id)) {
         throw ruleBroken("This friend has borrowed before, so they can't be deleted. Their loans need them.");
     }

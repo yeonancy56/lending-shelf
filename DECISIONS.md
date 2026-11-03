@@ -698,3 +698,8 @@ Why: this changes the earlier choice to keep it in App.jsx. That made sense whil
 Chose: before a ticket, after a ticket, and at the start of a session, Claude offers its questions, and I can say "skip"
 Other option: keep asking every time, as before
 Why: I was skipping most of them, often because we had already talked the plan through. An offer still keeps the questions there for when I want them
+
+## 2026-11-03 — Deleting a friend first checks the friend is there
+Chose: before deleting, the server checks the friend exists, the same check editing a friend uses. An address like /friends/abc now gets "Friend not found" instead of a crash
+Other option: catch the crash and turn it into "Friend not found"
+Why: this is the same fix books got in #62, so deleting a book and deleting a friend now work the same way
