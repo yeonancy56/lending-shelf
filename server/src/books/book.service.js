@@ -55,10 +55,13 @@ async function updateBook(id, data) {
     return bookDao.update(id, data);
 }
 
-// a book that's been lent can't be deleted, because its loans (out now or returned) still need it
+// a book that's been lent or asked for can't be deleted, because its loans and requests are kept forever and still need it
 async function deleteBook(id) {
     if (await loanDao.hasEverBeenLent(id)) {
         throw ruleBroken("This book has been lent before, so it can't be deleted. Its loans need it.");
+    }
+    if (await requestDao.hasEverBeenAskedFor(id)) {
+        throw ruleBroken("This book has been asked for before, so it can't be deleted. Its requests need it.");
     }
     return bookDao.remove(id);
 }

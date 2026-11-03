@@ -8,6 +8,7 @@ const owner = request.agent(app).set('Authorization', 'Bearer owner-sign-in');
 const Friend = require('./friend.model');
 const Book = require('../books/book.model');
 const Loan = require('../loans/loan.model');
+const Request = require('../requests/request.model');
 const testDb = require('../../test-db');
 
 beforeAll(testDb.start, 60000); // the first run downloads the pretend database, so allow up to a minute
@@ -197,14 +198,35 @@ test('DELETE /friends/:id refuses to delete Sam after Sam gave Dune back, becaus
     expect(friends.body).toHaveLength(1); // Sam is still on the list
 });
 
-test('DELETE /friends/:id deletes Alex, who never borrowed (204)', async () => {
+// requests are kept forever, so a friend who ever asked for a book stays, whatever happened to the request.
+// These are the statuses a request can have today; approved and declined join this list when they exist
+const REQUEST_STATUSES = ['waiting', 'cancelled'];
+
+test.each(REQUEST_STATUSES)('DELETE /friends/:id refuses to delete Sam after Sam asked for Dune, even when the request is %s (409)', async (status) => {
+    const sam = await Friend.create({ name: 'Sam' });
+    const dune = await Book.create({ title: 'Dune', author: 'Frank Herbert' });
+    await Request.create({ book: dune._id, friend: sam._id, status });
+
+    const res = await owner.delete(`/friends/${sam._id}`);
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toBe("This friend has asked for a book before, so they can't be deleted. Their requests need them.");
+    const friends = await owner.get('/friends');
+    expect(friends.body).toHaveLength(1); // Sam is still on the list
+});
+
+test('DELETE /friends/:id deletes Alex, who never borrowed or asked (204)', async () => {
     const alex = await Friend.create({ name: 'Alex' });
+    // Sam asked for Dune, not Alex, so that request doesn't hold Alex back
+    const sam = await Friend.create({ name: 'Sam' });
+    const dune = await Book.create({ title: 'Dune', author: 'Frank Herbert' });
+    await Request.create({ book: dune._id, friend: sam._id });
 
     const res = await owner.delete(`/friends/${alex._id}`);
 
     expect(res.status).toBe(204);
     const friends = await owner.get('/friends');
-    expect(friends.body).toHaveLength(0); // Alex is gone
+    expect(friends.body).toHaveLength(1); // Alex is gone, only Sam is left
 });
 
 test('DELETE /friends/:id for a friend who isn\'t there says so (404)', async () => {
