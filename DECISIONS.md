@@ -295,7 +295,7 @@ Other option: leave them and add the new look on top
 Why: old rules that do nothing would sit next to the new ones, and I'd have a hard time telling which ones matter
 
 ## 2026-11-02 — The look lives in one plain styles file
-Chose: write all the colors, fonts and spacing myself in one styles file (the file that tells the browser how the page should look), index.css, which the app already uses
+Chose: write all the colors, fonts and spacing myself in one styles file, index.css, which the app already uses. A styles file tells the browser how the page should look
 Other option: add an extra add-on that comes with ready-made styles
 Why: the app is one page, and writing the styles myself is the basic thing to learn first. An add-on would mean more to learn without making the page better
 
@@ -330,13 +330,13 @@ Other option: do it all in one ticket
 Why: ticket 1 is small and changes almost nothing I can see, so ticket 2 only has the new look in it and is easier to follow
 
 ## 2026-11-02 — Tests check that a message is marked as an error, not its exact red
-Chose: each red message gets an alert mark, a hidden tag that says "this is an alert", and the tests check for that mark
+Chose: each red message gets an alert mark, a hidden sign that says "this is an alert", and the tests check for that mark
 Other option: make the tests check the exact new red, or stop checking at all
 Why: the tests can't see colors from the styles file. Checking for the alert mark is what really matters. Also, for people who can't see the screen and have the computer read the page out loud, an alert gets read out right away
 
 ## 2026-11-02 — Boxes for typing get their own solid color in dark mode
 Chose: the boxes are a soft cream in light mode and a dark brown in dark mode. In dark mode, their edge is a lighter brown
-Other option: one see-through white for both, with the same wood-brown edge, like in the quick try-out version of the look I made first
+Other option: one see-through white for both, with the same wood-brown edge, like in my first try-out of the look
 Why: in dark mode, see-through white turns the boxes grey, and my light words on grey were hard to read. The darker edge almost disappeared against the dark page, so I couldn't see where a box was
 
 ## 2026-11-02 — CI runs the lint check too
