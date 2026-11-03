@@ -119,3 +119,29 @@ test('a 401 that isn\'t data still sends the page back to sign in', async () => 
     expect(signedOut).toHaveBeenCalledWith('Please sign in.');
     expect(isSignedIn()).toBe(false);
 });
+
+test('signed out, sends no sign-in at all', async () => {
+    const fetch = vi.fn().mockResolvedValue(answer(200, '[]'));
+    vi.stubGlobal('fetch', fetch);
+
+    await getBooks();
+
+    expect(fetch.mock.calls[0][1].headers.Authorization).toBeUndefined(); // not the word "null"
+});
+
+test('a late 401 for an old sign-in doesn\'t sign out the new one', async () => {
+    // the old sign-in's answer is slow, and I sign in again before it arrives
+    let answerOldRequest;
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(new Promise((resolve) => { answerOldRequest = resolve; })));
+    const signedOut = vi.fn();
+    whenSignedOut(signedOut);
+    saveSignIn('old-sign-in');
+    const oldRequest = getBooks();
+
+    saveSignIn('new-sign-in');
+    answerOldRequest(answer(401, JSON.stringify({ error: 'Please sign in.' })));
+    await oldRequest;
+
+    expect(isSignedIn()).toBe(true); // still signed in with the new one
+    expect(signedOut).not.toHaveBeenCalled();
+});

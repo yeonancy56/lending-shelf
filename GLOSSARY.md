@@ -18,6 +18,18 @@ _Avoid_: note, label, tag, edition, nickname
 Someone I lend books to, like Sam.
 _Avoid_: borrower, user, member
 
+**Owner**:
+Me. The one Google email that can do everything: lend, return, add, edit and delete. It's set in the server's settings, not in the code.
+_Avoid_: admin, user
+
+**Stranger**:
+Someone who signs in with a real Google account whose email isn't on the list. They're told "You're not on the list." and see nothing.
+_Avoid_: guest, unknown user
+
+**Sign-in**:
+What Google hands the page after someone clicks "Sign in with Google": a code with their email inside, checked by Google. The page sends it with every request. It runs out after about an hour.
+_Avoid_: token, login, session
+
 ## Lending
 
 **Loan**:

@@ -8,7 +8,7 @@ app.get ('/health', (req,res) => {       // health route, open to anyone, so Ren
 });
 
 // every address below this line needs the owner's sign-in
-const onlyOwner = require('./auth/sign-in');
+const onlyOwner = require('./auth/only-owner');
 app.use(onlyOwner);
 
 const bookRoutes = require('./books/book.routes');

@@ -32,16 +32,19 @@ export function whenSignedOut(listener) {
     signedOutListener = listener;
 }
 
-// the server said 401: a stranger, or a sign-in that's too old. Forget it, and tell the page why
-async function signedOutByServer(res) {
+// the server said 401 to the sign-in we sent: a stranger, or one that's too old. Forget it, and tell the page why
+async function signedOutByServer(res, sentSignIn) {
     let message = NOT_SIGNED_IN;
     try {
         message = (await res.json()).error || NOT_SIGNED_IN;
     } catch {
         // no words in the answer, so use our own
     }
-    signOut();
-    signedOutListener(message);
+    // signed in again while this answer was on the way? Then it's about the old sign-in, so keep the new one
+    if (localStorage.getItem(SIGN_IN_KEY) === sentSignIn) {
+        signOut();
+        signedOutListener(message);
+    }
     return { error: message };
 }
 
@@ -55,14 +58,15 @@ const SOMETHING_WENT_WRONG = { error: 'Something went wrong. Try again.' };
 // so the page gets one plain message instead. send always hands back an answer, it never crashes the page.
 async function send(path, options = {}) {
     const signIn = localStorage.getItem(SIGN_IN_KEY);
-    const headers = { ...options.headers, Authorization: 'Bearer ' + signIn }; // keep the Content-Type, and add who I am
+    const headers = { ...options.headers }; // keep the Content-Type, if there is one
+    if (signIn) headers.Authorization = 'Bearer ' + signIn; // and add who I am
     let res;
     try {
         res = await fetch(API + path, { ...options, headers });
     } catch {
         return SOMETHING_WENT_WRONG;
     }
-    if (res.status === 401) return signedOutByServer(res);
+    if (res.status === 401) return signedOutByServer(res, signIn);
     if (res.ok || KNOWN_MISTAKES.includes(res.status)) {
         try {
             return await res.json();

@@ -591,8 +591,8 @@ Why: each ticket works on its own. Locking my side first means the app is never 
 
 ## 2026-11-02 — The page shows the Google button, and sends the sign-in with every request
 Chose: Google gives the page a sign-in after I click its button. The page keeps it in the browser and sends it along every time it talks to the server. The server asks Google "is this real, and whose is it?"
-Other option: the server remembers me after the first sign-in, with a cookie
-Why: the server doesn't have to remember anyone, and Google does the hard checking. A cookie means more setup, because the page and server live at different addresses
+Other option: the server remembers me after the first sign-in, like a shop that stamps your hand at the door
+Why: the server doesn't have to remember anyone, and Google does the hard checking. Hand-stamping is more setup, because the page (on Vercel) and the server (on Render) are two separate places
 
 ## 2026-11-02 — A sign-in lasts about an hour
 Chose: Google's sign-in runs out after about an hour. After that, the server says "I don't know you" and the page goes back to the Google button
@@ -604,7 +604,17 @@ Chose: the server tells apart "a real Google sign-in, but not on the list" and "
 Other option: one message for both
 Why: if my own sign-in runs out, I shouldn't be told I'm not on the list. That would be scary and wrong
 
-## 2026-11-02 — Every address is locked, except the health check
-Chose: one gatekeeper stands in front of every address. Only /health stays open
-Other option: lock each address one by one
-Why: a new address is locked by itself, so I can't forget one. /health stays open so Render can check the server is awake
+## 2026-11-02 — Everything is locked, except the health check
+Chose: one gatekeeper stands in front of everything the server does. Only the health check stays open
+Other option: lock each part (books, friends, loans) one by one
+Why: anything new I add is locked by itself, so I can't forget one. The health check is a tiny "are you awake?" question Render asks the server. It shows no books, so it can stay open
+
+## 2026-11-02 — Sign-in gets its own folder, without the usual layers
+Chose: a new "auth" folder on the server holds the gatekeeper and the part that asks Google "who is this?"
+Other option: put sign-in inside the books, friends or loans folder, or give it all four layers like the others
+Why: sign-in isn't about books, friends or loans. It stands in front of all of them. It doesn't store anything, so it has no use for the layers that save and load data
+
+## 2026-11-02 — The server won't let anyone in if a setting is missing
+Chose: if my owner email or the Google client id is missing from the server's settings, nobody gets in, not even me
+Other option: carry on without it
+Why: without the client id, Google's checker skips "was this sign-in made for my app?". Then a sign-in made for some other website could get into my shelf

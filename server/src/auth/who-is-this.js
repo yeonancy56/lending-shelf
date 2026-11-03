@@ -13,8 +13,13 @@ function tidyEmail(email) {
 // Asks Google whether this sign-in is real, recent, and made for my app (the client id).
 // Hands back the email Google checked, or '' if Google says no
 async function checkedEmail(signIn) {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    if (!clientId) return ''; // without it, Google's library skips the "made for my app?" check, so let no one in
+    // Google's keys for checking sign-ins. If Google can't be reached, that's a real breakdown,
+    // so it isn't caught here: Express answers it, and the page says "Something went wrong" instead of signing me out
+    await google.getFederatedSignonCertsAsync();
     try {
-        const ticket = await google.verifyIdToken({ idToken: signIn, audience: process.env.GOOGLE_CLIENT_ID });
+        const ticket = await google.verifyIdToken({ idToken: signIn, audience: clientId });
         const { email, email_verified } = ticket.getPayload();
         return email_verified ? tidyEmail(email) : ''; // an email Google hasn't checked could belong to anyone
     } catch {

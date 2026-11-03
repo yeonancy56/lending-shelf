@@ -71,3 +71,21 @@ test('with no owner email in the settings, nobody is the owner', async () => {
 
     expect(await whoIsThis('a-sign-in')).toEqual({ who: 'stranger' });
 });
+
+test('with no client id in the settings, nobody gets in, not even me', async () => {
+    // without it, Google's library skips the "made for my app?" check,
+    // so a sign-in made for some other website would work here too
+    delete process.env.GOOGLE_CLIENT_ID;
+    googleSays = googleChecked('nancy@gmail.com');
+
+    expect(await whoIsThis('a-sign-in')).toEqual({ who: 'nobody' });
+});
+
+test('when Google can\'t be reached, it\'s a real breakdown, not a sign-out', async () => {
+    // like a wifi hiccup on Render: the page should say "Something went wrong", not send me back to the button
+    OAuth2Client.prototype.getFederatedSignonCertsAsync = jest.fn().mockRejectedValue(new Error('getaddrinfo ENOTFOUND'));
+    googleSays = googleChecked('nancy@gmail.com');
+
+    await expect(whoIsThis('a-sign-in')).rejects.toThrow('ENOTFOUND');
+    OAuth2Client.prototype.getFederatedSignonCertsAsync = jest.fn(); // Google is back for the other tests
+});
