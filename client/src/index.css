@@ -14,6 +14,7 @@
   --button: #4f7a4a;
   --on-button: #fff;
   --error: #b0402b; /* the one shared red for every error message */
+  --quiet: #76604b; /* soft brown for small side notes, like the book count */
   /* spines: dark enough that the cream and gold words are easy to read */
   --spine-green: #3f6a3a;
   --spine-rust: #7a3f2e;
@@ -42,6 +43,7 @@
     --button: #8fb886;
     --on-button: #17120e;
     --error: #f2907c; /* lighter, so it's still easy to read on the dark page */
+    --quiet: #b3a08a;
     --spine-green: #3c5a38;
     --spine-rust: #6e3a2c;
   }
@@ -88,6 +90,14 @@ h2 {
 
 p {
   margin: 0;
+}
+
+/* "12 books", tucked just under the wooden band */
+.book-count {
+  color: var(--quiet);
+  font-size: 15px;
+  text-align: center;
+  margin: -16px 0 20px;
 }
 
 /* ---------- forms ---------- */

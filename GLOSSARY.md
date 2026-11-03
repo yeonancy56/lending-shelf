@@ -8,6 +8,10 @@ The words this app uses for keeping track of which books I've lent to which frie
 One physical copy on my shelf, with a title and an author. If I own two copies of Dune, those are two books, and each can be lent on its own. Two books count as the same book when the title and author match, ignoring capital letters and extra spaces.
 _Avoid_: title, copy, item
 
+**Shelf**:
+Every book I own, whether it's at home or lent out. If I own 12 books and Dune is with Sam, my shelf still has 12 books.
+_Avoid_: library, collection
+
 **Copy note**:
 A few words I write to describe one copy of a book, like "signed" or "Mum's copy", so I can tell two Dunes apart. It's optional, but every copy of the same book needs a different one.
 _Avoid_: note, label, tag, edition, nickname
@@ -57,7 +61,7 @@ The day an active loan should come back: 14 days after it was lent. Lent Monday 
 _Avoid_: due date, deadline, return date (that's when it actually came back)
 
 **Request**:
-When a friend asks to borrow a book that's on my shelf, like Sam asking for Dune. It waits until I approve or decline it. Only one friend can ask for a book at a time.
+When a friend asks to borrow a book on my shelf that isn't lent out, like Sam asking for Dune. It waits until I approve or decline it. Only one friend can ask for a book at a time.
 _Avoid_: borrow request, hold, reservation
 
 **Waiting request**:
