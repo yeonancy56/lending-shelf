@@ -286,3 +286,49 @@ test('PUT /books/:id with an ID in the wrong shape says the book isn\'t there (4
     expect(res.status).toBe(404);
     expect(res.body.error).toBe('Book not found');
 });
+
+test('DELETE /books/:id refuses to delete Dune while Sam has it (409)', async () => {
+    const dune = await Book.create(DUNE);
+    const sam = await Friend.create({ name: 'Sam' });
+    await Loan.create({ book: dune._id, friend: sam._id });
+
+    const res = await request(app).delete(`/books/${dune._id}`);
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toBe("This book has been lent before, so it can't be deleted. Its loans need it.");
+    const shelf = await request(app).get('/books');
+    expect(shelf.body).toHaveLength(1); // Dune is still on the shelf
+});
+
+test('DELETE /books/:id refuses to delete Dune after Sam gave it back, because the past loan needs it (409)', async () => {
+    const dune = await Book.create(DUNE);
+    const sam = await Friend.create({ name: 'Sam' });
+    await Loan.create({ book: dune._id, friend: sam._id, returnedAt: new Date() });
+
+    const res = await request(app).delete(`/books/${dune._id}`);
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toBe("This book has been lent before, so it can't be deleted. Its loans need it.");
+    const shelf = await request(app).get('/books');
+    expect(shelf.body).toHaveLength(1); // Dune is still on the shelf
+});
+
+test('DELETE /books/:id deletes Matilda, who was never lent (204)', async () => {
+    const matilda = await Book.create({ title: 'Matilda', author: 'Roald Dahl' });
+
+    const res = await request(app).delete(`/books/${matilda._id}`);
+
+    expect(res.status).toBe(204);
+    const shelf = await request(app).get('/books');
+    expect(shelf.body).toHaveLength(0); // Matilda is gone
+});
+
+test('DELETE /books/:id for a book that isn\'t there says so (404)', async () => {
+    const gone = await Book.create(DUNE);
+    await Book.findByIdAndDelete(gone._id);
+
+    const res = await request(app).delete(`/books/${gone._id}`);
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe('Book not found');
+});

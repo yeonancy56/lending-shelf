@@ -12,6 +12,11 @@ function findActiveByBook(bookId) {
     return Loan.findOne({ book: bookId, returnedAt: null });
 }
 
+// has this book ever been lent? Counts loans that are out now and ones that came back
+async function hasEverBeenLent(bookId) {
+    return (await Loan.exists({ book: bookId })) !== null;
+}
+
 // rule 2: how mayn books does this friend out?
 function countActiveByFriend(friendId) {
     return Loan.countDocuments({ friend: friendId, returnedAt: null });
@@ -32,4 +37,4 @@ function markReturned(id) {
     return Loan.findByIdAndUpdate(id, { returnedAt: new Date() }, { returnDocument: 'after' });
 }
 
-module.exports = {findAll, findById, create, findActiveByBook, countActiveByFriend, findActiveByFriend, findByFriend, markReturned}
+module.exports = {findAll, findById, create, findActiveByBook, hasEverBeenLent, countActiveByFriend, findActiveByFriend, findByFriend, markReturned}

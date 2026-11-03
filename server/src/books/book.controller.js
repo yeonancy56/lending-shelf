@@ -59,9 +59,13 @@ async function update(req, res) {
 }
 
 async function remove(req, res) {
-    const book = await bookService.deleteBook(req.params.id);
-    if (!book) return res.status(404).json({error: 'Book not found'});
-    res.status(204).end()
+    try {
+        const book = await bookService.deleteBook(req.params.id);
+        if (!book) return res.status(404).json({error: 'Book not found'});
+        res.status(204).end()
+    } catch (err) {
+        answerKnownMistake(res, err);
+    }
 }
 
 module.exports = {list, getOne, create, update, remove}
