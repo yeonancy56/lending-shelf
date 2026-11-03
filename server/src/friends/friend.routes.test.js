@@ -1,7 +1,10 @@
 // Tests the whole trip for friends: request -> route -> controller -> service -> DAO -> database, and back.
 // Uses the pretend database from test-db.js, so real friends are never touched.
+jest.mock('../auth/who-is-this'); // the pretend "who is this?", so Google is never asked
 const request = require('supertest');
 const app = require('../app');
+// every request in this file is sent signed in as the owner, like me using the page
+const owner = request.agent(app).set('Authorization', 'Bearer owner-sign-in');
 const Friend = require('./friend.model');
 const testDb = require('../../test-db');
 
@@ -10,7 +13,7 @@ beforeEach(testDb.clear);         // every test starts with an empty friends lis
 afterAll(testDb.stop);
 
 test('POST /friends adds Sam', async () => {
-    const res = await request(app).post('/friends').send({ name: 'Sam' });
+    const res = await owner.post('/friends').send({ name: 'Sam' });
 
     expect(res.status).toBe(201);
     expect(res.body.name).toBe('Sam');
@@ -18,7 +21,7 @@ test('POST /friends adds Sam', async () => {
 });
 
 test('POST /friends without a name asks for one (400)', async () => {
-    const res = await request(app).post('/friends').send({});
+    const res = await owner.post('/friends').send({});
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe("Every friend needs a name");
@@ -26,14 +29,14 @@ test('POST /friends without a name asks for one (400)', async () => {
 });
 
 test('POST /friends with nothing sent at all still gets a clear message (400)', async () => {
-    const res = await request(app).post('/friends'); // no form at all, not even an empty one
+    const res = await owner.post('/friends'); // no form at all, not even an empty one
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe("Every friend needs a name");
 });
 
 test('POST /friends with only spaces as the name asks for one (400)', async () => {
-    const res = await request(app).post('/friends').send({ name: '   ' });
+    const res = await owner.post('/friends').send({ name: '   ' });
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe("Every friend needs a name");

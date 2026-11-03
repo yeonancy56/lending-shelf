@@ -8,6 +8,43 @@ const API = '/api';
 // 409 = a lending rule says no, like Dune already being with Sam
 const KNOWN_MISTAKES = [400, 404, 409];
 
+// The Google sign-in, kept in the browser so a reload stays signed in.
+// It goes with every request, and the server checks it's really me.
+const SIGN_IN_KEY = 'signIn';
+const NOT_SIGNED_IN = 'Please sign in.'; // the server's own words, for when its 401 has none
+
+// after the Google button: remember who signed in
+export function saveSignIn(signIn) {
+    localStorage.setItem(SIGN_IN_KEY, signIn);
+}
+
+export function isSignedIn() {
+    return Boolean(localStorage.getItem(SIGN_IN_KEY));
+}
+
+export function signOut() {
+    localStorage.removeItem(SIGN_IN_KEY);
+}
+
+// what the page does when the server says "I don't know you" (401): go back to the sign-in button
+let signedOutListener = () => {};
+export function whenSignedOut(listener) {
+    signedOutListener = listener;
+}
+
+// the server said 401: a stranger, or a sign-in that's too old. Forget it, and tell the page why
+async function signedOutByServer(res) {
+    let message = NOT_SIGNED_IN;
+    try {
+        message = (await res.json()).error || NOT_SIGNED_IN;
+    } catch {
+        // no words in the answer, so use our own
+    }
+    signOut();
+    signedOutListener(message);
+    return { error: message };
+}
+
 // what the page shows when the server really breaks, or can't be reached at all
 const SOMETHING_WENT_WRONG = { error: 'Something went wrong. Try again.' };
 
@@ -16,13 +53,16 @@ const SOMETHING_WENT_WRONG = { error: 'Something went wrong. Try again.' };
 // Anything else that fails, no answer at all (wifi down), or an answer that isn't data
 // (like a web page sent back by mistake) is a real breakdown,
 // so the page gets one plain message instead. send always hands back an answer, it never crashes the page.
-async function send(path, options) {
+async function send(path, options = {}) {
+    const signIn = localStorage.getItem(SIGN_IN_KEY);
+    const headers = { ...options.headers, Authorization: 'Bearer ' + signIn }; // keep the Content-Type, and add who I am
     let res;
     try {
-        res = await fetch(API + path, options);
+        res = await fetch(API + path, { ...options, headers });
     } catch {
         return SOMETHING_WENT_WRONG;
     }
+    if (res.status === 401) return signedOutByServer(res);
     if (res.ok || KNOWN_MISTAKES.includes(res.status)) {
         try {
             return await res.json();

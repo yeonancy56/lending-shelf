@@ -1,7 +1,7 @@
 // Tests how api.js reads the server's answer. No server needed:
 // fetch (the browser's way of calling the server) is swapped for a fake one.
 import { afterEach, expect, test, vi } from 'vitest';
-import { addBook, addFriend, getBooks, getFriends, getLoans, lendBook, returnLoan } from './api';
+import { addBook, addFriend, getBooks, getFriends, getLoans, isSignedIn, lendBook, returnLoan, saveSignIn, signOut, whenSignedOut } from './api';
 
 const DUNE = { title: 'Dune', author: 'Frank Herbert' };
 
@@ -12,6 +12,7 @@ function answer(status, body) {
 
 afterEach(() => {
     vi.unstubAllGlobals();
+    signOut(); // each test starts signed out
 });
 
 test('keeps the server\'s own words for a known mistake, like a second Dune with no note', async () => {
@@ -70,4 +71,51 @@ test('says something went wrong when a lending rule says no but the answer isn\'
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(answer(409, '<!doctype html><html></html>')));
 
     expect(await lendBook('dune-id', 'sam-id')).toEqual({ error: 'Something went wrong. Try again.' });
+});
+
+test('sends my Google sign-in with every request, so the server knows it\'s me', async () => {
+    const fetch = vi.fn().mockResolvedValue(answer(201, JSON.stringify(DUNE)));
+    vi.stubGlobal('fetch', fetch);
+    saveSignIn('my-sign-in');
+
+    await addBook(DUNE);
+
+    const sent = fetch.mock.calls[0][1];
+    expect(sent.headers.Authorization).toBe('Bearer my-sign-in');
+    expect(sent.headers['Content-Type']).toBe('application/json'); // still says it's sending data
+});
+
+test('remembers the sign-in, like after a reload, until I sign out', () => {
+    expect(isSignedIn()).toBe(false);
+
+    saveSignIn('my-sign-in');
+    expect(isSignedIn()).toBe(true);
+
+    signOut();
+    expect(isSignedIn()).toBe(false);
+});
+
+test('when the server says "not on the list" (401), forgets the sign-in and tells the page', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(answer(401, JSON.stringify({ error: "You're not on the list." }))));
+    const signedOut = vi.fn();
+    whenSignedOut(signedOut);
+    saveSignIn('a-stranger-sign-in');
+
+    const result = await getBooks();
+
+    expect(signedOut).toHaveBeenCalledWith("You're not on the list.");
+    expect(isSignedIn()).toBe(false);
+    expect(result).toEqual({ error: "You're not on the list." }); // no books, so the page has nothing to show
+});
+
+test('a 401 that isn\'t data still sends the page back to sign in', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(answer(401, 'Unauthorized')));
+    const signedOut = vi.fn();
+    whenSignedOut(signedOut);
+    saveSignIn('an-old-sign-in');
+
+    await getBooks();
+
+    expect(signedOut).toHaveBeenCalledWith('Please sign in.');
+    expect(isSignedIn()).toBe(false);
 });

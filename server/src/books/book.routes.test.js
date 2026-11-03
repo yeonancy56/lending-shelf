@@ -1,7 +1,10 @@
 // Tests the whole trip for books: request -> route -> controller -> service -> DAO -> database, and back.
 // Uses the pretend database from test-db.js, so real books are never touched.
+jest.mock('../auth/who-is-this'); // the pretend "who is this?", so Google is never asked
 const request = require('supertest');
 const app = require('../app');
+// every request in this file is sent signed in as the owner, like me using the page
+const owner = request.agent(app).set('Authorization', 'Bearer owner-sign-in');
 const Book = require('./book.model');
 const Friend = require('../friends/friend.model');
 const Loan = require('../loans/loan.model');
@@ -14,7 +17,7 @@ beforeEach(testDb.clear);         // every test starts with an empty shelf
 afterAll(testDb.stop);
 
 test('POST /books adds Dune', async () => {
-    const res = await request(app).post('/books').send(DUNE);
+    const res = await owner.post('/books').send(DUNE);
 
     expect(res.status).toBe(201);
     const saved = await Book.findOne({ title: 'Dune' });
@@ -26,7 +29,7 @@ test('POST /books adds Dune', async () => {
 test('GET /books lists Dune', async () => {
     await Book.create(DUNE); // put Dune straight on the shelf, so this test doesn't depend on POST working
 
-    const res = await request(app).get('/books');
+    const res = await owner.get('/books');
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(1);
@@ -34,7 +37,7 @@ test('GET /books lists Dune', async () => {
 });
 
 test('POST /books without an author asks for one (400)', async () => {
-    const res = await request(app).post('/books').send({ title: 'Matilda' });
+    const res = await owner.post('/books').send({ title: 'Matilda' });
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('Please fill in the title and author');
@@ -42,7 +45,7 @@ test('POST /books without an author asks for one (400)', async () => {
 });
 
 test('POST /books without a title asks for one (400)', async () => {
-    const res = await request(app).post('/books').send({ author: 'Roald Dahl' });
+    const res = await owner.post('/books').send({ author: 'Roald Dahl' });
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('Please fill in the title and author');
@@ -50,14 +53,14 @@ test('POST /books without a title asks for one (400)', async () => {
 });
 
 test('POST /books with nothing sent at all still gets a clear message (400)', async () => {
-    const res = await request(app).post('/books'); // no form at all, not even an empty one
+    const res = await owner.post('/books'); // no form at all, not even an empty one
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('Please fill in the title and author');
 });
 
 test('POST /books with only spaces as the author asks for one (400)', async () => {
-    const res = await request(app).post('/books').send({ title: 'Matilda', author: '   ' }); // spaces aren't a real author
+    const res = await owner.post('/books').send({ title: 'Matilda', author: '   ' }); // spaces aren't a real author
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('Please fill in the title and author');
@@ -65,7 +68,7 @@ test('POST /books with only spaces as the author asks for one (400)', async () =
 });
 
 test('POST /books saves a copy note, without the spaces around it', async () => {
-    const res = await request(app).post('/books').send({ ...DUNE, copyNote: ' signed ' });
+    const res = await owner.post('/books').send({ ...DUNE, copyNote: ' signed ' });
 
     expect(res.status).toBe(201);
     expect(res.body.copyNote).toBe('signed');
@@ -74,7 +77,7 @@ test('POST /books saves a copy note, without the spaces around it', async () => 
 });
 
 test('POST /books treats a copy note of only spaces as no copy note', async () => {
-    const res = await request(app).post('/books').send({ ...DUNE, copyNote: '   ' });
+    const res = await owner.post('/books').send({ ...DUNE, copyNote: '   ' });
 
     expect(res.status).toBe(201);
     const saved = await Book.findById(res.body._id);
@@ -82,7 +85,7 @@ test('POST /books treats a copy note of only spaces as no copy note', async () =
 });
 
 test('POST /books refuses a copy note longer than 30 letters (400)', async () => {
-    const res = await request(app).post('/books').send({ ...DUNE, copyNote: 'the one Mum gave me for my birthday' }); // 35 letters
+    const res = await owner.post('/books').send({ ...DUNE, copyNote: 'the one Mum gave me for my birthday' }); // 35 letters
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('Keep the note short (30 letters or fewer).');
@@ -90,7 +93,7 @@ test('POST /books refuses a copy note longer than 30 letters (400)', async () =>
 });
 
 test('POST /books allows a copy note of exactly 30 letters', async () => {
-    const res = await request(app).post('/books').send({ ...DUNE, copyNote: 'a'.repeat(30) }); // right on the limit
+    const res = await owner.post('/books').send({ ...DUNE, copyNote: 'a'.repeat(30) }); // right on the limit
 
     expect(res.status).toBe(201);
     expect(res.body.copyNote).toBe('a'.repeat(30));
@@ -99,7 +102,7 @@ test('POST /books allows a copy note of exactly 30 letters', async () => {
 test('POST /books refuses a second Dune with no copy note (400)', async () => {
     await Book.create(DUNE);
 
-    const res = await request(app).post('/books').send(DUNE);
+    const res = await owner.post('/books').send(DUNE);
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe("You already have Dune. Add a note, like 'signed', to tell them apart.");
@@ -110,7 +113,7 @@ test('POST /books refuses a Dune whose copy note matches one I already have (400
     await Book.create(DUNE);
     await Book.create({ ...DUNE, copyNote: 'paperback' });
 
-    const res = await request(app).post('/books').send({ ...DUNE, copyNote: ' Paperback ' }); // capitals and spaces don't make it different
+    const res = await owner.post('/books').send({ ...DUNE, copyNote: ' Paperback ' }); // capitals and spaces don't make it different
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('You already have Dune (paperback). Use a different note.');
@@ -120,7 +123,7 @@ test('POST /books refuses a Dune whose copy note matches one I already have (400
 test('POST /books counts "dune" by "frank herbert " as the same book as Dune by Frank Herbert (400)', async () => {
     await Book.create(DUNE);
 
-    const res = await request(app).post('/books').send({ title: 'dune', author: 'frank herbert ' });
+    const res = await owner.post('/books').send({ title: 'dune', author: 'frank herbert ' });
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe("You already have Dune. Add a note, like 'signed', to tell them apart.");
@@ -130,7 +133,7 @@ test('POST /books counts "dune" by "frank herbert " as the same book as Dune by 
 test('POST /books adds a second Dune with a different copy note', async () => {
     await Book.create(DUNE);
 
-    const res = await request(app).post('/books').send({ ...DUNE, copyNote: 'signed' });
+    const res = await owner.post('/books').send({ ...DUNE, copyNote: 'signed' });
 
     expect(res.status).toBe(201);
     expect(await Book.countDocuments()).toBe(2);
@@ -140,8 +143,8 @@ test('POST /books needs a third Dune to have a copy note different from both oth
     await Book.create(DUNE);
     await Book.create({ ...DUNE, copyNote: 'signed' });
 
-    const sameAsSecond = await request(app).post('/books').send({ ...DUNE, copyNote: 'signed' });
-    const different = await request(app).post('/books').send({ ...DUNE, copyNote: 'paperback' });
+    const sameAsSecond = await owner.post('/books').send({ ...DUNE, copyNote: 'signed' });
+    const different = await owner.post('/books').send({ ...DUNE, copyNote: 'paperback' });
 
     expect(sameAsSecond.status).toBe(400);
     expect(sameAsSecond.body.error).toBe('You already have Dune (signed). Use a different note.');
@@ -152,7 +155,7 @@ test('POST /books needs a third Dune to have a copy note different from both oth
 test('POST /books adds a book with the same title but a different author, with no copy note', async () => {
     await Book.create(DUNE);
 
-    const res = await request(app).post('/books').send({ title: 'Dune', author: 'Someone Else' });
+    const res = await owner.post('/books').send({ title: 'Dune', author: 'Someone Else' });
 
     expect(res.status).toBe(201);
     expect(res.body.copyNote).toBeUndefined();
@@ -163,7 +166,7 @@ test('POST /books counts a lent-out Dune too', async () => {
     const sam = await Friend.create({ name: 'Sam' });
     await Loan.create({ book: lentDune._id, friend: sam._id }); // Sam has my only Dune right now
 
-    const res = await request(app).post('/books').send(DUNE);
+    const res = await owner.post('/books').send(DUNE);
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe("You already have Dune. Add a note, like 'signed', to tell them apart.");
@@ -173,7 +176,7 @@ test('POST /books counts a lent-out Dune too', async () => {
 test('POST /books treats a title with search symbols as plain letters', async () => {
     await Book.create({ title: 'Why', author: 'Ann' });
 
-    const res = await request(app).post('/books').send({ title: 'Why?', author: 'Ann' }); // "Why?" isn't the same book as "Why"
+    const res = await owner.post('/books').send({ title: 'Why?', author: 'Ann' }); // "Why?" isn't the same book as "Why"
 
     expect(res.status).toBe(201);
 });
@@ -181,7 +184,7 @@ test('POST /books treats a title with search symbols as plain letters', async ()
 test('PUT /books/:id fixes a spelling mistake in the author', async () => {
     const dune = await Book.create({ title: 'Dune', author: 'Frank Hebert' });
 
-    const res = await request(app).put(`/books/${dune._id}`).send(DUNE);
+    const res = await owner.put(`/books/${dune._id}`).send(DUNE);
 
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject(DUNE);
@@ -192,7 +195,7 @@ test('PUT /books/:id fixes a spelling mistake in the author', async () => {
 test('PUT /books/:id with only spaces as the author asks for one (400)', async () => {
     const dune = await Book.create(DUNE);
 
-    const res = await request(app).put(`/books/${dune._id}`).send({ title: 'Dune', author: '   ' });
+    const res = await owner.put(`/books/${dune._id}`).send({ title: 'Dune', author: '   ' });
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('Please fill in the title and author');
@@ -202,7 +205,7 @@ test('PUT /books/:id with only spaces as the author asks for one (400)', async (
 test('PUT /books/:id with a blank title asks for one (400)', async () => {
     const dune = await Book.create(DUNE);
 
-    const res = await request(app).put(`/books/${dune._id}`).send({ title: '', author: 'Frank Herbert' });
+    const res = await owner.put(`/books/${dune._id}`).send({ title: '', author: 'Frank Herbert' });
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('Please fill in the title and author');
@@ -212,7 +215,7 @@ test('PUT /books/:id with a blank title asks for one (400)', async () => {
 test('PUT /books/:id refuses a copy note longer than 30 letters (400)', async () => {
     const dune = await Book.create(DUNE);
 
-    const res = await request(app).put(`/books/${dune._id}`).send({ ...DUNE, copyNote: 'the one Mum gave me for my birthday' }); // 35 letters
+    const res = await owner.put(`/books/${dune._id}`).send({ ...DUNE, copyNote: 'the one Mum gave me for my birthday' }); // 35 letters
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('Keep the note short (30 letters or fewer).');
@@ -223,7 +226,7 @@ test('PUT /books/:id refuses to rename a book into a second Dune with no copy no
     await Book.create(DUNE);
     const typo = await Book.create({ title: 'Dun', author: 'Frank Herbert' }); // a typo, so it didn't clash when it was added
 
-    const res = await request(app).put(`/books/${typo._id}`).send(DUNE);
+    const res = await owner.put(`/books/${typo._id}`).send(DUNE);
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe("You already have Dune. Add a note, like 'signed', to tell them apart.");
@@ -234,7 +237,7 @@ test('PUT /books/:id refuses to give a Dune the same copy note as another Dune (
     await Book.create({ ...DUNE, copyNote: 'paperback' });
     const signed = await Book.create({ ...DUNE, copyNote: 'signed' });
 
-    const res = await request(app).put(`/books/${signed._id}`).send({ ...DUNE, copyNote: 'Paperback' });
+    const res = await owner.put(`/books/${signed._id}`).send({ ...DUNE, copyNote: 'Paperback' });
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('You already have Dune (paperback). Use a different note.');
@@ -244,7 +247,7 @@ test('PUT /books/:id refuses to give a Dune the same copy note as another Dune (
 test('PUT /books/:id saves a Dune with no changes, because it doesn\'t clash with itself', async () => {
     const dune = await Book.create(DUNE); // my only Dune, with no copy note
 
-    const res = await request(app).put(`/books/${dune._id}`).send(DUNE);
+    const res = await owner.put(`/books/${dune._id}`).send(DUNE);
 
     expect(res.status).toBe(200);
 });
@@ -252,7 +255,7 @@ test('PUT /books/:id saves a Dune with no changes, because it doesn\'t clash wit
 test('PUT /books/:id takes the copy note away when I empty the note box', async () => {
     const dune = await Book.create({ ...DUNE, copyNote: 'signed' });
 
-    const res = await request(app).put(`/books/${dune._id}`).send({ ...DUNE, copyNote: '' });
+    const res = await owner.put(`/books/${dune._id}`).send({ ...DUNE, copyNote: '' });
 
     expect(res.status).toBe(200);
     expect((await Book.findById(dune._id)).copyNote).toBeUndefined(); // so the page shows "Dune", not "Dune ()"
@@ -263,10 +266,10 @@ test('PUT /books/:id edits a Dune that Sam has, and the loan shows the fixed nam
     const sam = await Friend.create({ name: 'Sam' });
     await Loan.create({ book: dune._id, friend: sam._id });
 
-    const res = await request(app).put(`/books/${dune._id}`).send(DUNE);
+    const res = await owner.put(`/books/${dune._id}`).send(DUNE);
 
     expect(res.status).toBe(200);
-    const loans = await request(app).get('/loans');
+    const loans = await owner.get('/loans');
     expect(loans.body[0].book.author).toBe('Frank Herbert');
 });
 
@@ -274,14 +277,14 @@ test('PUT /books/:id for a book that isn\'t there says so (404)', async () => {
     const gone = await Book.create(DUNE);
     await Book.findByIdAndDelete(gone._id);
 
-    const res = await request(app).put(`/books/${gone._id}`).send(DUNE);
+    const res = await owner.put(`/books/${gone._id}`).send(DUNE);
 
     expect(res.status).toBe(404);
     expect(res.body.error).toBe('Book not found');
 });
 
 test('PUT /books/:id with an ID in the wrong shape says the book isn\'t there (404)', async () => {
-    const res = await request(app).put('/books/abc').send(DUNE);
+    const res = await owner.put('/books/abc').send(DUNE);
 
     expect(res.status).toBe(404);
     expect(res.body.error).toBe('Book not found');
@@ -292,11 +295,11 @@ test('DELETE /books/:id refuses to delete Dune while Sam has it (409)', async ()
     const sam = await Friend.create({ name: 'Sam' });
     await Loan.create({ book: dune._id, friend: sam._id });
 
-    const res = await request(app).delete(`/books/${dune._id}`);
+    const res = await owner.delete(`/books/${dune._id}`);
 
     expect(res.status).toBe(409);
     expect(res.body.error).toBe("This book has been lent before, so it can't be deleted. Its loans need it.");
-    const shelf = await request(app).get('/books');
+    const shelf = await owner.get('/books');
     expect(shelf.body).toHaveLength(1); // Dune is still on the shelf
 });
 
@@ -305,21 +308,21 @@ test('DELETE /books/:id refuses to delete Dune after Sam gave it back, because t
     const sam = await Friend.create({ name: 'Sam' });
     await Loan.create({ book: dune._id, friend: sam._id, returnedAt: new Date() });
 
-    const res = await request(app).delete(`/books/${dune._id}`);
+    const res = await owner.delete(`/books/${dune._id}`);
 
     expect(res.status).toBe(409);
     expect(res.body.error).toBe("This book has been lent before, so it can't be deleted. Its loans need it.");
-    const shelf = await request(app).get('/books');
+    const shelf = await owner.get('/books');
     expect(shelf.body).toHaveLength(1); // Dune is still on the shelf
 });
 
 test('DELETE /books/:id deletes Matilda, who was never lent (204)', async () => {
     const matilda = await Book.create({ title: 'Matilda', author: 'Roald Dahl' });
 
-    const res = await request(app).delete(`/books/${matilda._id}`);
+    const res = await owner.delete(`/books/${matilda._id}`);
 
     expect(res.status).toBe(204);
-    const shelf = await request(app).get('/books');
+    const shelf = await owner.get('/books');
     expect(shelf.body).toHaveLength(0); // Matilda is gone
 });
 
@@ -327,7 +330,7 @@ test('DELETE /books/:id for a book that isn\'t there says so (404)', async () =>
     const gone = await Book.create(DUNE);
     await Book.findByIdAndDelete(gone._id);
 
-    const res = await request(app).delete(`/books/${gone._id}`);
+    const res = await owner.delete(`/books/${gone._id}`);
 
     expect(res.status).toBe(404);
     expect(res.body.error).toBe('Book not found');
