@@ -3,7 +3,7 @@ const Book = require('../src/books/book.model');
 const Friend = require('../src/friends/friend.model');
 const Loan = require('../src/loans/loan.model');
 const testDb = require('../test-db');
-const { findDuplicates, findRulesSwitchedOn } = require('./check-duplicates');
+const { findDuplicates, checkDatabaseRules } = require('./check-duplicates');
 
 // The pretend database switches on the two database rules, so it would refuse the duplicates these tests need.
 // Switch them off, like a live database where they couldn't be set up
@@ -21,7 +21,7 @@ beforeAll(async () => {
 beforeEach(testDb.clear);
 afterAll(testDb.stop);
 
-test('finds Dune when it has two loans still out', async () => {
+test('finds Dune when it has two active loans', async () => {
     const dune = await Book.create({ title: 'Dune', author: 'Frank Herbert' });
     const sam = await Friend.create({ name: 'Sam' });
     const alex = await Friend.create({ name: 'Alex' });
@@ -31,6 +31,21 @@ test('finds Dune when it has two loans still out', async () => {
     const { books } = await findDuplicates();
 
     expect(books).toEqual([{ title: 'Dune', friends: ['Sam', 'Alex'] }]);
+});
+
+// before 2 November the app let me delete a book that was still lent out, so a live loan can point at a book that's gone.
+// The database rule still counts those loans, so the check must still find them
+test('finds a deleted book that still has two active loans', async () => {
+    const dune = await Book.create({ title: 'Dune', author: 'Frank Herbert' });
+    const sam = await Friend.create({ name: 'Sam' });
+    const alex = await Friend.create({ name: 'Alex' });
+    await Loan.create({ book: dune._id, friend: sam._id, lentAt: new Date('2026-10-01') });
+    await Loan.create({ book: dune._id, friend: alex._id, lentAt: new Date('2026-10-02') });
+    await Book.deleteOne({ _id: dune._id });
+
+    const { books } = await findDuplicates();
+
+    expect(books).toEqual([{ title: `(deleted book ${dune._id})`, friends: ['Sam', 'Alex'] }]);
 });
 
 test("doesn't count a loan that came back", async () => {
@@ -51,7 +66,10 @@ test('finds two friends with the same email, even written differently', async ()
 
     const { emails } = await findDuplicates();
 
-    expect(emails).toEqual([{ email: 'sam@gmail.com', friends: ['Sam', 'Sammy'] }]);
+    expect(emails).toEqual([{
+        email: 'sam@gmail.com',
+        friends: [{ name: 'Sam', savedAs: 'sam@gmail.com' }, { name: 'Sammy', savedAs: ' Sam@Gmail.com' }],
+    }]);
 });
 
 test("doesn't count friends with no email", async () => {
@@ -70,15 +88,15 @@ test('finds two friends saved with an empty email', async () => {
 
     const { emails } = await findDuplicates();
 
-    expect(emails).toEqual([{ email: '', friends: ['Gran', 'Grandad'] }]);
+    expect(emails).toEqual([{ email: '', friends: [{ name: 'Gran', savedAs: '' }, { name: 'Grandad', savedAs: '' }] }]);
 });
 
 test('tells whether each database rule is switched on', async () => {
-    expect(await findRulesSwitchedOn()).toEqual({ oneLoanPerBook: false, oneFriendPerEmail: false });
+    expect(await checkDatabaseRules()).toEqual({ oneLoanPerBook: false, oneFriendPerEmail: false });
 
     await Loan.syncIndexes();   // switch the rules back on, like a database where they were set up
     await Friend.syncIndexes();
-    expect(await findRulesSwitchedOn()).toEqual({ oneLoanPerBook: true, oneFriendPerEmail: true });
+    expect(await checkDatabaseRules()).toEqual({ oneLoanPerBook: true, oneFriendPerEmail: true });
 
     await switchRulesOff(); // so a test added below this one starts the same as the others
 });
