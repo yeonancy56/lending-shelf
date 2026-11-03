@@ -25,12 +25,16 @@ const samsPastLoans = [
   { _id: 'loan-3', book: matilda, lentAt: '2026-08-01T12:00:00.000Z', returnedAt: '2026-08-12T12:00:00.000Z' },
 ];
 
+// the averages: the long book has 2 ratings (Sam's 4 and someone's 5), Dune has 1, and Matilda has none
+const longBookAverage = { averageStars: 4.5, ratingCount: 2 };
+const duneAverage = { averageStars: 3, ratingCount: 1 };
+
 // what the server would say to each question a page asks: mine (owner), or Sam's (friend).
 // Anything else gets "not found"
 const ANSWERS = {
   owner: {
     '/me': { who: 'owner' },
-    '/books': [longBook, dune, matilda],
+    '/books': [{ ...longBook, ...longBookAverage }, { ...dune, ...duneAverage }, matilda],
     '/friends': [sam, ana],
     '/loans': [samsLoan],
     '/requests': [anasRequest],
@@ -38,8 +42,8 @@ const ANSWERS = {
   friend: {
     '/me': { who: 'friend', name: 'Sam' },
     '/shelf': [
-      { ...longBook, state: 'at home', canRate: true, myStars: 4 },
-      { ...dune, state: 'asked for' },
+      { ...longBook, state: 'at home', canRate: true, myStars: 4, ...longBookAverage },
+      { ...dune, state: 'asked for', ...duneAverage },
       { ...matilda, state: 'at home', canRate: true },
     ],
     '/me/loans': { active: [], returned: samsPastLoans, limit: 3 },

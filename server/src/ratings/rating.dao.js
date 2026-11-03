@@ -17,4 +17,12 @@ function findByFriend(friendId) {
     return Rating.find({ friend: friendId });
 }
 
-module.exports = { setStars, findByFriend };
+// for each copy someone rated: the average of every friend's stars, and how many friends rated it.
+// Only the totals come back, never who gave what. Each friend has one rating per copy, so Sam counts once
+function findAverageStarsByBook() {
+    return Rating.aggregate([
+        { $group: { _id: '$book', averageStars: { $avg: '$stars' }, ratingCount: { $sum: 1 } } },
+    ]);
+}
+
+module.exports = { setStars, findByFriend, findAverageStarsByBook };

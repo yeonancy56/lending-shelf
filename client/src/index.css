@@ -235,8 +235,17 @@ li .star {
   font-weight: 600;
 }
 
-.book-author {
+/* the small gold words on a spine: the author, and the average rating under it */
+.book-author,
+.books-list .average-rating {
   display: block;
   color: var(--spine-author);
   font-size: 12px;
+}
+
+/* the average rating, "★ 4.5 · 2 ratings", on its own line: under the author on my spines,
+   and above "your stars" on Sam's page, so the two are never read as one */
+.average-rating {
+  display: block;
+  font-size: 14px;
 }

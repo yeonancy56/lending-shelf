@@ -127,7 +127,7 @@ describe('Sam\'s stars on the shelf', () => {
         const res = await asSam.get('/shelf');
 
         expect(res.body).toEqual([
-            { _id: dune.id, title: 'Dune', author: 'Frank Herbert', copyNote: 'signed', state: 'at home', canRate: true, myStars: 4 },
+            { _id: dune.id, title: 'Dune', author: 'Frank Herbert', copyNote: 'signed', state: 'at home', canRate: true, myStars: 4, averageStars: 4, ratingCount: 1 },
             { _id: mumsDune.id, title: 'Dune', author: 'Frank Herbert', copyNote: "Mum's copy", state: 'at home', canRate: true },
             { _id: matilda.id, title: 'Matilda', author: 'Roald Dahl', state: 'at home' },
         ]);
@@ -170,5 +170,76 @@ describe('Sam\'s stars on the shelf', () => {
         expect(samsShelf.body[0].myStars).toBe(4);
         expect(alexsShelf.body[0].myStars).toBe(1);
         expect(JSON.stringify(samsShelf.body)).not.toContain(alex.id);
+    });
+});
+
+// every friend's stars for one copy, averaged, with how many rated it. On Sam's shelf (GET /shelf) and on mine (GET /books)
+describe('the average rating', () => {
+    const asOwner = request.agent(app).set('Authorization', 'Bearer owner-sign-in');
+
+    // Alex has returned this copy too, and can rate it
+    async function alexReturned(book) {
+        const alex = await Friend.create({ name: 'Alex', email: 'alex@gmail.com' });
+        await Loan.create({ book: book.id, friend: alex.id, returnedAt: new Date() });
+        return request.agent(app).set('Authorization', 'Bearer ' + friendSignIn('alex@gmail.com'));
+    }
+
+    test('Sam gives the signed Dune 4 and Alex gives it 5: both shelves say 4.5 from 2 ratings', async () => {
+        const { dune } = await samReturnedDune();
+        const asAlex = await alexReturned(dune);
+        await asSam.put('/me/ratings/' + dune.id).send({ stars: 4 });
+        await asAlex.put('/me/ratings/' + dune.id).send({ stars: 5 });
+
+        const samsShelf = await asSam.get('/shelf');
+        const myShelf = await asOwner.get('/books');
+
+        expect(samsShelf.body[0]).toMatchObject({ myStars: 4, averageStars: 4.5, ratingCount: 2 });
+        expect(myShelf.body[0]).toMatchObject({ averageStars: 4.5, ratingCount: 2 });
+    });
+
+    test('a copy no one has rated has no average and no count, not 0', async () => {
+        await samReturnedDune();
+
+        const samsShelf = await asSam.get('/shelf');
+        const myShelf = await asOwner.get('/books');
+
+        expect(samsShelf.body[0]).not.toHaveProperty('averageStars');
+        expect(samsShelf.body[0]).not.toHaveProperty('ratingCount');
+        expect(myShelf.body[0]).not.toHaveProperty('averageStars');
+        expect(myShelf.body[0]).not.toHaveProperty('ratingCount');
+    });
+
+    test('the signed Dune and Mum\'s copy each have their own average', async () => {
+        const { sam, dune } = await samReturnedDune();
+        const mumsDune = await Book.create({ title: 'Dune', author: 'Frank Herbert', copyNote: "Mum's copy" });
+        await Loan.create({ book: mumsDune.id, friend: sam.id, returnedAt: new Date() });
+        await asSam.put('/me/ratings/' + dune.id).send({ stars: 5 });
+        await asSam.put('/me/ratings/' + mumsDune.id).send({ stars: 2 });
+
+        const res = await asOwner.get('/books');
+
+        expect(res.body.map((book) => [book.averageStars, book.ratingCount])).toEqual([[5, 1], [2, 1]]);
+    });
+
+    test('Sam changes his 3 stars to 5: the average uses the 5, and he still counts once', async () => {
+        const { dune } = await samReturnedDune();
+        const asAlex = await alexReturned(dune);
+        await asAlex.put('/me/ratings/' + dune.id).send({ stars: 4 });
+        await asSam.put('/me/ratings/' + dune.id).send({ stars: 3 });
+        await asSam.put('/me/ratings/' + dune.id).send({ stars: 5 });
+
+        const res = await asOwner.get('/books');
+
+        expect(res.body[0]).toMatchObject({ averageStars: 4.5, ratingCount: 2 });
+    });
+
+    test('my shelf shows only the average and count, never who gave what', async () => {
+        const { sam, dune } = await samReturnedDune();
+        await asSam.put('/me/ratings/' + dune.id).send({ stars: 4 });
+
+        const res = await asOwner.get('/books');
+
+        expect(res.body[0]).not.toHaveProperty('myStars');
+        expect(JSON.stringify(res.body)).not.toContain(sam.id);
     });
 });

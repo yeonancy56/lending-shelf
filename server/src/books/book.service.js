@@ -6,19 +6,33 @@ const { badRequest, ruleBroken } = require('../errors');
 const { isSameText } = require('./book.same-text');
 const SHELF_STATE = require('./book.shelf-state');
 
-function listBooks()          { return bookDao.findAll(); }
+// every book on my shelf, each with its average rating if friends have rated it
+async function listBooks() {
+    const books = await bookDao.findAll();
+    const averages = await ratingDao.findAverageStarsByBook();
+    return books.map((book) => ({ ...book.toObject(), ...averageOf(book, averages) }));
+}
+
+// a copy's average stars and how many rated it, like { averageStars: 4.5, ratingCount: 2 }.
+// Left out when no one has rated it, so the page shows nothing rather than "0 stars"
+function averageOf(book, averages) {
+    const found = averages.find((average) => average._id.equals(book._id));
+    return found ? { averageStars: found.averageStars, ratingCount: found.ratingCount } : {};
+}
+
 function getBook(id)          { return bookDao.findById(id); }
 
 // the friend shelf view: every book, and whether it's "at home", "lent out" or "asked for".
 // Only the book's own details are copied over, so who has Dune, or who asked for it, can never slip into Sam's page.
 // For the friend looking (friendId), a copy they've returned also says they can rate it, with their own stars once they have.
-// Never anyone else's stars
+// Never anyone else's stars, only the average of everyone's
 async function listShelf(friendId) {
     const books = await bookDao.findAll();
     const lentOutIds = await loanDao.findLentOutBookIds();
     const askedForIds = await requestDao.findAskedForBookIds();
     const returnedIds = await loanDao.findReturnedBookIds(friendId);
     const myRatings = await ratingDao.findByFriend(friendId);
+    const averages = await ratingDao.findAverageStarsByBook();
     const isIn = (ids, book) => ids.some((id) => id.equals(book._id));
     function stateOf(book) {
         if (isIn(lentOutIds, book)) return SHELF_STATE.LENT_OUT;
@@ -38,6 +52,7 @@ async function listShelf(friendId) {
         copyNote: book.copyNote,
         state: stateOf(book),
         ...starsOf(book),
+        ...averageOf(book, averages),
     }));
 }
 
