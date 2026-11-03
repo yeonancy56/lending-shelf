@@ -683,3 +683,8 @@ Why: app.js should only plug the folders in. When I work on requests, all of it 
 Chose: leave it, and say so in the pull request. While I approve Sam's request for Dune, there's a split second where Dune isn't "asked for". If Alex asks right then and saving the loan also fails, Sam's request stays "approved" with no loan
 Other option: keep Dune "asked for" for the whole approve, or decline Sam's request by itself if this happens
 Why: it needs a click and a broken database in the same fraction of a second. Keeping Dune asked for is more code to get right, and an automatic decline would tell Sam no when I never said it
+
+## 2026-11-03 — Deleting a book first checks the book is there
+Chose: before deleting, the server checks the book exists, the same check editing uses. An address like /books/abc now gets "Book not found" instead of a crash
+Other option: catch the crash and turn it into "Book not found"
+Why: editing and deleting a friend already work this way, so all three match. Checking first is plainer than waiting for something to break

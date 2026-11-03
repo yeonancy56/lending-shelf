@@ -357,3 +357,10 @@ test('DELETE /books/:id for a book that isn\'t there says so (404)', async () =>
     expect(res.status).toBe(404);
     expect(res.body.error).toBe('Book not found');
 });
+
+test('DELETE /books/:id with an ID in the wrong shape says the book isn\'t there (404)', async () => {
+    const res = await owner.delete('/books/abc');
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe('Book not found');
+});
