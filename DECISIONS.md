@@ -212,6 +212,7 @@ Why: the "Pick a book" list is where I choose which copy goes to Sam, and the lo
 Chose: the note box is on the add-book form only
 Other option: also let me edit a book's note later
 Why: there's no way to edit a book at all yet. That's a whole feature of its own, so it can wait for its own ticket
+Replaced by: "Editing a book follows the same checks as adding one" (2026-11-02). Now I can change a note when I edit a book
 
 ## 2026-10-30 — Call it a "copy note"
 Chose: "copy note" in the glossary and the code. The box on the page just says "Note (optional, like 'signed')"
@@ -389,7 +390,7 @@ Other option: keep asking the database "does Sam have a book out longer than 14 
 Why: two checks could slowly drift apart, so Dune might look fine in the list while the rules say Sam is overdue. Sam has 3 books at most, so fetching them all costs nothing
 
 ## 2026-11-02 — Editing a book follows the same checks as adding one
-Chose: no blank title or author, the note is 30 letters at most, and every Dune still needs its own note. The book I'm editing doesn't count as a clash with itself
+Chose: no blank title or author, the note is 30 letters at most, and a second Dune needs its own note. The book I'm editing doesn't count as a clash with itself
 Other option: only check for blanks when editing
 Why: otherwise an edit could sneak in the mix-ups adding stops, like two "Dune (paperback)"s
 

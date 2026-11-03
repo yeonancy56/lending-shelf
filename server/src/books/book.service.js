@@ -11,7 +11,7 @@ function deleteBook(id)       { return bookDao.remove(id); }
 // When editing, the book being edited is left out, so it never clashes with itself
 async function checkOtherCopies(data, editingId) {
     const sameBooks = await bookDao.findSameBooks(data.title, data.author);
-    const otherCopies = sameBooks.filter((book) => !book._id.equals(editingId));
+    const otherCopies = editingId ? sameBooks.filter((book) => !book._id.equals(editingId)) : sameBooks;
     if (otherCopies.length > 0 && !data.copyNote) {
         throw badRequest(`You already have ${otherCopies[0].title.trim()}. Add a note, like 'signed', to tell them apart.`);
     }

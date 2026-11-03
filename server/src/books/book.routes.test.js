@@ -199,6 +199,37 @@ test('PUT /books/:id with only spaces as the author asks for one (400)', async (
     expect((await Book.findById(dune._id)).author).toBe('Frank Herbert'); // Dune didn't change
 });
 
+test('PUT /books/:id with a blank title asks for one (400)', async () => {
+    const dune = await Book.create(DUNE);
+
+    const res = await request(app).put(`/books/${dune._id}`).send({ title: '', author: 'Frank Herbert' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Please fill in the title and author');
+    expect((await Book.findById(dune._id)).title).toBe('Dune');
+});
+
+test('PUT /books/:id refuses a copy note longer than 30 letters (400)', async () => {
+    const dune = await Book.create(DUNE);
+
+    const res = await request(app).put(`/books/${dune._id}`).send({ ...DUNE, copyNote: 'the one Mum gave me for my birthday' }); // 35 letters
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Keep the note short (30 letters or fewer).');
+    expect((await Book.findById(dune._id)).copyNote).toBeUndefined(); // the long note didn't get saved
+});
+
+test('PUT /books/:id refuses to rename a book into a second Dune with no copy note (400)', async () => {
+    await Book.create(DUNE);
+    const typo = await Book.create({ title: 'Dun', author: 'Frank Herbert' }); // a typo, so it didn't clash when it was added
+
+    const res = await request(app).put(`/books/${typo._id}`).send(DUNE);
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe("You already have Dune. Add a note, like 'signed', to tell them apart.");
+    expect((await Book.findById(typo._id)).title).toBe('Dun'); // still the typo
+});
+
 test('PUT /books/:id refuses to give a Dune the same copy note as another Dune (400)', async () => {
     await Book.create({ ...DUNE, copyNote: 'paperback' });
     const signed = await Book.create({ ...DUNE, copyNote: 'signed' });
