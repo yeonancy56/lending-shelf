@@ -68,11 +68,19 @@ const PHONE_HEIGHT = 2400; // keep in step with --window-size in CLAUDE.md rule 
 const phonePage = (search) => `<!doctype html><title>Phone width</title>
 <body style="margin:0"><iframe src="/${search}" width="${PHONE_WIDTH}" height="${PHONE_HEIGHT}" style="border:0;display:block"></iframe></body>`;
 
+// picture mode's own door. The browser keeps each door's saved things apart, so the pretend sign-in
+// stays here and the real app on 5173 (Vite's usual door) never sees it. Keep in step with CLAUDE.md rule 6
+const PICTURE_PORT = 5174;
+
 // the Vite plugin: answers /api with the pretend answers, and starts the page already signed in
 export function pictureMode() {
   return {
     name: 'picture-mode',
     apply: 'serve', // only while running on my computer, never in the built app
+    // strictPort: stop if the door is busy, instead of quietly using another one the review won't look at
+    config() {
+      return { server: { port: PICTURE_PORT, strictPort: true } };
+    },
     configureServer(server) {
       server.middlewares.use('/phone', (req, res) => {
         res.setHeader('Content-Type', 'text/html');

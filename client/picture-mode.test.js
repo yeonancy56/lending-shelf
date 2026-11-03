@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { pictureAnswer } from './picture-mode';
+import { pictureAnswer, pictureMode } from './picture-mode';
 
 describe('picture mode', () => {
   it('says I am the owner, so the page shows my shelf', () => {
@@ -38,6 +38,12 @@ describe('picture mode', () => {
     for (const books of [pictureAnswer('/books').body, pictureAnswer('/shelf', 'friend').body]) {
       expect(books.map((book) => book.ratingCount)).toEqual([2, 1, undefined]);
     }
+  });
+
+  it('runs on its own door, not the real app\'s 5173, so its pretend sign-in stays out of the real app', () => {
+    const { server } = pictureMode().config();
+    expect(server.port).toBe(5174);
+    expect(server.strictPort).toBe(true); // stops if 5174 is busy, instead of wandering to another door
   });
 
   it('says "not found" to anything else', () => {
