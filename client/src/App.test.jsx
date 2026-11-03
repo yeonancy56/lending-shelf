@@ -2,11 +2,21 @@
 // the real api.js is swapped for a fake one, and the test tells the fake what to answer.
 import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 import App from './App';
 import * as api from './api';
 
 vi.mock('./api');
+// Google's real button can't run in a test, so a plain button stands in for it.
+// Clicking it is like signing in with Google: the page gets back a sign-in
+vi.mock('./GoogleSignIn', () => ({
+    default: ({ onSignIn }) => <button onClick={() => onSignIn('a-google-sign-in')}>Sign in with Google</button>,
+}));
+
+// most tests are about the shelf, so they start signed in as me
+beforeEach(() => {
+    api.isSignedIn.mockReturnValue(true);
+});
 
 const DUNE = { _id: 'dune-id', title: 'Dune', author: 'Frank Herbert' };
 const SAM = { _id: 'sam-id', name: 'Sam' };
@@ -457,4 +467,70 @@ test('adding a book empties the search box, so the new book shows on the shelf',
 
     expect(await screen.findByRole('button', { name: 'Matilda by Roald Dahl' })).toBeInTheDocument();
     expect(search).toHaveValue('');
+});
+
+test('signed out, the page shows only the sign-in button and asks the server for nothing', async () => {
+    api.isSignedIn.mockReturnValue(false);
+    api.getBooks.mockClear();
+    api.getFriends.mockClear();
+    api.getLoans.mockClear();
+
+    render(<App />);
+
+    expect(screen.getByRole('button', { name: 'Sign in with Google' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Books' })).not.toBeInTheDocument();
+    expect(api.getBooks).not.toHaveBeenCalled();
+    expect(api.getFriends).not.toHaveBeenCalled();
+    expect(api.getLoans).not.toHaveBeenCalled();
+});
+
+test('signing in with my Google account shows my shelf', async () => {
+    api.isSignedIn.mockReturnValue(false);
+    api.getBooks.mockResolvedValue([DUNE]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole('button', { name: 'Sign in with Google' }));
+
+    expect(api.saveSignIn).toHaveBeenCalledWith('a-google-sign-in'); // kept, so a reload stays signed in
+    expect(await screen.findByRole('button', { name: /Dune/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Sign in with Google' })).not.toBeInTheDocument();
+});
+
+test('signing in with someone else\'s Google account says they\'re not on the list, and shows no books', async () => {
+    api.isSignedIn.mockReturnValue(false);
+    // the server says 401 to a stranger, and api.js tells the page (api.test.js checks that part)
+    const notOnTheList = async () => {
+        const tellThePage = api.whenSignedOut.mock.lastCall[0];
+        tellThePage("You're not on the list.");
+        return { error: "You're not on the list." };
+    };
+    api.getBooks.mockImplementation(notOnTheList);
+    api.getFriends.mockImplementation(notOnTheList);
+    api.getLoans.mockImplementation(notOnTheList);
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole('button', { name: 'Sign in with Google' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent("You're not on the list.");
+    expect(screen.getByRole('button', { name: 'Sign in with Google' })).toBeInTheDocument(); // back to the sign-in button
+    expect(screen.queryByRole('heading', { name: 'Books' })).not.toBeInTheDocument();
+});
+
+test('Sign out forgets me and goes back to the sign-in button', async () => {
+    api.getBooks.mockResolvedValue([DUNE]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByRole('button', { name: /Dune/ });
+    await user.click(screen.getByRole('button', { name: 'Sign out' }));
+
+    expect(api.signOut).toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Sign in with Google' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Dune/ })).not.toBeInTheDocument();
 });

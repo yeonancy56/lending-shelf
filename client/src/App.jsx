@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react'; //useState = memory, what should the page remember, useEffect = do something at a certain time
-import { getBooks, addBook, updateBook, getFriends, addFriend, getFriendLoans, getLoans, lendBook, returnLoan} from './api';
+import { useState, useEffect, useRef, useCallback } from 'react'; //useState = memory, what should the page remember, useEffect = do something at a certain time
+import { getBooks, addBook, updateBook, getFriends, addFriend, getFriendLoans, getLoans, lendBook, returnLoan, isSignedIn, saveSignIn, signOut, whenSignedOut } from './api';
+import GoogleSignIn from './GoogleSignIn';
 
 // a book's name on the page: "Dune (signed)" when it has a copy note, just "Dune" when it doesn't
 function bookName(book) {
@@ -76,7 +77,48 @@ function FriendLoans({ loans }) {
   );
 }
 
-function App() { //these are memory boxes 
+// what a signed-out visitor sees: the name, the Google button, and why they were sent back here (if they were)
+function SignInScreen({ message, onSignIn }) {
+  return (
+    <div>
+      <h1>Lending Shelf</h1>
+      <ErrorMessage message={message} /> {/* like "You're not on the list." */}
+      <GoogleSignIn onSignIn={onSignIn} />
+    </div>
+  );
+}
+
+// The whole page: the sign-in screen until I sign in, then my shelf.
+// Nothing is asked from the server until I'm signed in, so a stranger sees no books, friends or loans
+function App() {
+  const [signedIn, setSignedIn] = useState(isSignedIn); // already signed in from before a reload?
+  const [signInMessage, setSignInMessage] = useState('');
+
+  // the server says it doesn't know me (a stranger, or a sign-in that's too old): back to the sign-in button
+  useEffect(() => {
+    whenSignedOut((message) => {
+      setSignInMessage(message);
+      setSignedIn(false);
+    });
+  }, []);
+
+  // useCallback keeps this the same function every time, so Google's button isn't drawn again on every change
+  const handleSignIn = useCallback((signIn) => {
+    saveSignIn(signIn);
+    setSignInMessage('');
+    setSignedIn(true);
+  }, []);
+
+  function handleSignOut() {
+    signOut();
+    setSignedIn(false);
+  }
+
+  if (!signedIn) return <SignInScreen message={signInMessage} onSignIn={handleSignIn} />;
+  return <Shelf onSignOut={handleSignOut} />;
+}
+
+function Shelf({ onSignOut }) { //these are memory boxes 
   const[books, setBooks] = useState([]);
   const[title, setTitle] = useState('');
   const[author, setAuthor] = useState('');
@@ -206,6 +248,7 @@ useEffect(() => { // when the page opens, fill in all three lists
 return (
   <div>
     <h1>Lending Shelf</h1>
+    <button onClick={onSignOut}>Sign out</button>
     <ErrorMessage message={listError} />
     <section>
      <h2>Books</h2>

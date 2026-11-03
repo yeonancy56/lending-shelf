@@ -3,6 +3,14 @@ const app = express();               // make the app
 const cors = require('cors');
 app.use(cors());
 
+app.get ('/health', (req,res) => {       // health route, open to anyone, so Render can check the server is awake
+   res.send('ok')
+});
+
+// every address below this line needs the owner's sign-in
+const onlyOwner = require('./auth/only-owner');
+app.use(onlyOwner);
+
 const bookRoutes = require('./books/book.routes');
 
 app.use(express.json());
@@ -13,9 +21,5 @@ app.use('/friends', friendRoutes);
 
 const loanRoutes = require('./loans/loan.routes');
 app.use('/loans', loanRoutes);
-
-app.get ('/health', (req,res) => {       // health route 
-   res.send('ok')
-});
 
 module.exports = app;                // sharing the app 
