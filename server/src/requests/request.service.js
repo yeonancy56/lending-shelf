@@ -1,7 +1,9 @@
 const requestDao = require('./request.dao');
+const STATUS = require('./request.status');
 const bookDao = require('../books/book.dao');
 const loanService = require('../loans/loan.service');
 const friendDao = require('../friends/friend.dao');
+const ROLE = require('../auth/role');
 const { badRequest, ruleBroken, DUPLICATE_KEY } = require('../errors');
 
 const NOTE_LIMIT = 200; // a decline note is a few words, not a letter
@@ -10,7 +12,7 @@ const NOTE_LIMIT = 200; // a decline note is a few words, not a letter
 // The same lending rules as my lend form run straight away, so Sam hears "no" now, not after waiting for me
 async function askForBook(bookId, friendId) {
     if (!(await bookDao.exists(bookId))) throw badRequest('That book does not exist');
-    await loanService.checkLendingRules(bookId, friendId, 'friend');
+    await loanService.checkLendingRules(bookId, friendId, ROLE.FRIEND);
     try {
         return await requestDao.create({ book: bookId, friend: friendId });
     } catch (err) {
@@ -31,7 +33,7 @@ async function listRequestsForPanel(friendId) {
 
 // why a request that isn't waiting any more can't be cancelled, approved or declined again
 function notWaiting(request) {
-    if (request.status === 'cancelled') return ruleBroken('This request was cancelled');
+    if (request.status === STATUS.CANCELLED) return ruleBroken('This request was cancelled');
     return ruleBroken('This request has already been answered'); // approved or declined
 }
 
@@ -41,7 +43,7 @@ function listWaitingRequests() { return requestDao.findWaiting(); }
 // Sam takes back Sam's own waiting request. Dune is free again, and it stops counting toward Sam's 3.
 // Gives back nothing when Sam has no such request, so the controller can say "Request not found"
 async function cancelRequest(requestId, friendId) {
-    const cancelled = await requestDao.markCancelled(requestId, friendId);
+    const cancelled = await requestDao.markIfWaiting(requestId, { status: STATUS.CANCELLED, cancelledAt: new Date() }, friendId);
     if (cancelled) return cancelled;
     // nothing was cancelled: either it isn't Sam's (or isn't there at all), or it's not waiting any more
     const request = await requestDao.findByIdForFriend(requestId, friendId);
@@ -54,11 +56,11 @@ async function cancelRequest(requestId, friendId) {
 async function approveRequest(requestId) {
     const request = await requestDao.findById(requestId);
     if (!request) return null;
-    if (request.status !== 'waiting') throw notWaiting(request);
+    if (request.status !== STATUS.WAITING) throw notWaiting(request);
     // the rules again, in case something changed since Sam asked, like Sam's loan going overdue
-    await loanService.checkLendingRules(request.book, request.friend, 'owner', request._id);
+    await loanService.checkLendingRules(request.book, request.friend, ROLE.OWNER, request._id);
     // say yes first, in one step: if I clicked twice, only one click gets this far, so Dune is lent only once
-    const approved = await requestDao.markApproved(requestId);
+    const approved = await requestDao.markIfWaiting(requestId, { status: STATUS.APPROVED, answeredAt: new Date() });
     if (!approved) throw notWaiting(await requestDao.findById(requestId));
     let loan;
     try {
@@ -80,7 +82,7 @@ async function declineRequest(requestId, note) {
     if (note.length > NOTE_LIMIT) throw badRequest(`Keep the note to ${NOTE_LIMIT} characters or fewer.`);
     const request = await requestDao.findById(requestId);
     if (!request) return null;
-    const declined = await requestDao.markDeclined(requestId, note);
+    const declined = await requestDao.markIfWaiting(requestId, { status: STATUS.DECLINED, answeredAt: new Date(), note });
     if (!declined) throw notWaiting(await requestDao.findById(requestId));
     return declined;
 }

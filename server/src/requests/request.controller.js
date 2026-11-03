@@ -18,15 +18,22 @@ async function listMine(req, res) {
     res.json(await requestService.listFriendRequests(req.who.friendId));
 }
 
-// Sam cancels, through POST /requests/:id/cancel. Only Sam's own request: Alex's is "not found" for Sam
-async function cancel(req, res) {
+// cancel, approve and decline all answer the same way: the request as it is now,
+// "Request not found" when there's no such request, or the red message when a rule says no.
+// changeRequest is the service step to run, like cancelling Sam's request
+async function answerWithRequest(res, changeRequest) {
     try {
-        const request = await requestService.cancelRequest(req.params.id, req.who.friendId);
+        const request = await changeRequest();
         if (!request) return res.status(404).json({ error: 'Request not found' });
         res.json(request);
     } catch (err) {
         answerKnownMistake(res, err);
     }
+}
+
+// Sam cancels, through POST /requests/:id/cancel. Only Sam's own request: Alex's is "not found" for Sam
+async function cancel(req, res) {
+    await answerWithRequest(res, () => requestService.cancelRequest(req.params.id, req.who.friendId));
 }
 
 // Sam's panel on my page, through /friends/:id/requests
@@ -43,25 +50,13 @@ async function listWaiting(req, res) {
 
 // I approve, through POST /requests/:id/approve. If a lending rule says no, I see why, and the request keeps waiting
 async function approve(req, res) {
-    try {
-        const request = await requestService.approveRequest(req.params.id);
-        if (!request) return res.status(404).json({ error: 'Request not found' });
-        res.json(request);
-    } catch (err) {
-        answerKnownMistake(res, err);
-    }
+    await answerWithRequest(res, () => requestService.approveRequest(req.params.id));
 }
 
 // I decline, through POST /requests/:id/decline, with an optional note for Sam in the body
 async function decline(req, res) {
     const { note } = req.body ?? {};
-    try {
-        const request = await requestService.declineRequest(req.params.id, note);
-        if (!request) return res.status(404).json({ error: 'Request not found' });
-        res.json(request);
-    } catch (err) {
-        answerKnownMistake(res, err);
-    }
+    await answerWithRequest(res, () => requestService.declineRequest(req.params.id, note));
 }
 
 module.exports = { ask, listMine, cancel, listWaiting, approve, decline, listForFriend };
