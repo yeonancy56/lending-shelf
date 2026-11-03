@@ -4,9 +4,10 @@ const API = '/api';
 
 // The server's known mistakes, each with its own red message. Keep in step with server/src/errors.js:
 // 400 = a mistake in the form, like a second Dune with no note
+// 403 = that's not yours to do, like Sam trying to lend a book. Keep in step with server/src/auth/gatekeeper.js
 // 404 = it doesn't exist (any more), like returning a loan that's gone
 // 409 = a lending rule says no, like Dune already being with Sam
-const KNOWN_MISTAKES = [400, 404, 409];
+const KNOWN_MISTAKES = [400, 403, 404, 409];
 
 // The Google sign-in, kept in the browser so a reload stays signed in.
 // It goes with every request, and the server checks it's really me.
@@ -75,6 +76,22 @@ async function send(path, options = {}) {
         }
     }
     return SOMETHING_WENT_WRONG;
+}
+
+// "who am I?": after sign-in, the server says { who: 'owner' } or { who: 'friend', name: 'Sam' },
+// so the page knows whether to show my page or the friend page
+export async function whoAmI() {
+    return send('/me');
+}
+
+// the friend page: every book, each "on the shelf" or "lent out", never who has it
+export async function getShelf() {
+    return send('/shelf');
+}
+
+// the friend page: Sam's own loans. The server knows it's Sam from the sign-in
+export async function getMyLoans() {
+    return send('/me/loans');
 }
 
 //GET: look at all books (like curl with no -X):

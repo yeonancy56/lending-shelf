@@ -16,6 +16,7 @@ vi.mock('./GoogleSignIn', () => ({
 // most tests are about the shelf, so they start signed in as me
 beforeEach(() => {
     api.isSignedIn.mockReturnValue(true);
+    api.whoAmI.mockResolvedValue({ who: 'owner' });
 });
 
 const DUNE = { _id: 'dune-id', title: 'Dune', author: 'Frank Herbert' };
@@ -34,7 +35,7 @@ test('marks the message as an error when lending Dune fails', async () => {
     render(<App />);
 
     // pick Dune and Sam (findBy waits for the lists to arrive, like the real page does)
-    await user.selectOptions(screen.getByDisplayValue('Pick a book'), await screen.findByRole('option', { name: 'Dune' }));
+    await user.selectOptions(await screen.findByDisplayValue('Pick a book'), await screen.findByRole('option', { name: 'Dune' }));
     await user.selectOptions(screen.getByDisplayValue('Pick a friend'), await screen.findByRole('option', { name: 'Sam' }));
 
     // no message yet, so whatever shows up next was caused by clicking Lend
@@ -71,7 +72,7 @@ test('marks the message as an error when adding a second Dune fails, and keeps w
     const user = userEvent.setup();
     render(<App />);
 
-    await user.type(screen.getByPlaceholderText('Title'), 'Dune');
+    await user.type(await screen.findByPlaceholderText('Title'), 'Dune');
     await user.type(screen.getByPlaceholderText('Author'), 'Frank Herbert');
     await user.type(screen.getByPlaceholderText("Note (optional, like 'signed')"), 'paperback');
     await user.click(screen.getByRole('button', { name: 'Add book' }));
@@ -546,7 +547,7 @@ test('adding Sam sends the Google email I typed, then empties the form', async (
     const user = userEvent.setup();
     render(<App />);
 
-    await user.type(screen.getByPlaceholderText('Name'), 'Sam');
+    await user.type(await screen.findByPlaceholderText('Name'), 'Sam');
     await user.type(screen.getByPlaceholderText(EMAIL_BOX), 'Sam@Gmail.com');
     await user.click(screen.getByRole('button', { name: 'Add Friend' }));
 
@@ -564,7 +565,7 @@ test('an email another friend already has shows the red message, and keeps what 
     const user = userEvent.setup();
     render(<App />);
 
-    await user.type(screen.getByPlaceholderText('Name'), 'Alex');
+    await user.type(await screen.findByPlaceholderText('Name'), 'Alex');
     await user.type(screen.getByPlaceholderText(EMAIL_BOX), 'sam@gmail.com');
     await user.click(screen.getByRole('button', { name: 'Add Friend' }));
 
@@ -658,4 +659,104 @@ test('Cancel empties the friend form without saving', async () => {
     expect(screen.getByPlaceholderText(EMAIL_BOX)).toHaveValue('');
     expect(screen.getByRole('button', { name: 'Add Friend' })).toBeInTheDocument();
     expect(api.updateFriend).not.toHaveBeenCalled();
+});
+
+// Sam is signed in. The "server" says who Sam is, what's on the shelf, and Sam's own loans
+function signedInAsSam({ shelf = [], myLoans = { active: [], returned: [], limit: 3 } } = {}) {
+    api.whoAmI.mockResolvedValue({ who: 'friend', name: 'Sam' });
+    api.getShelf.mockResolvedValue(shelf);
+    api.getMyLoans.mockResolvedValue(myLoans);
+}
+
+test('signing in with Sam\'s Google account shows the friend page, not mine', async () => {
+    api.isSignedIn.mockReturnValue(false);
+    signedInAsSam();
+    api.getBooks.mockClear();
+    api.getFriends.mockClear();
+    api.getLoans.mockClear();
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole('button', { name: 'Sign in with Google' }));
+
+    expect(await screen.findByRole('heading', { name: 'Hi, Sam' })).toBeInTheDocument();
+    expect(api.whoAmI).toHaveBeenCalled();
+    // my lists hold every friend's name, so the friend page never asks for them
+    expect(api.getBooks).not.toHaveBeenCalled();
+    expect(api.getFriends).not.toHaveBeenCalled();
+    expect(api.getLoans).not.toHaveBeenCalled();
+});
+
+test('the friend page shows every book as "lent out" or "on the shelf", and never who has it', async () => {
+    signedInAsSam({ shelf: [
+        { ...DUNE, copyNote: 'signed', state: 'lent out' },
+        { ...MATILDA, state: 'on the shelf' },
+    ] });
+
+    render(<App />);
+
+    const shelf = await screen.findByRole('list', { name: 'Books' });
+    const books = await within(shelf).findAllByRole('listitem');
+    expect(books[0]).toHaveTextContent('Dune (signed) by Frank Herbert · lent out');
+    expect(books[1]).toHaveTextContent('Matilda by Roald Dahl · on the shelf');
+    expect(shelf).not.toHaveTextContent('Alex'); // no "→ Alex" like on my Loans list
+    expect(shelf).not.toHaveTextContent('→');
+});
+
+test('the friend page shows none of my buttons or boxes: no lend, return, add, edit or delete', async () => {
+    signedInAsSam({
+        shelf: [{ ...DUNE, state: 'lent out' }],
+        myLoans: { active: [{ _id: 'loan-1', book: DUNE, lentAt: '2026-11-01T10:00:00Z', dueBack: '2026-11-15T10:00:00Z', overdue: false }], returned: [], limit: 3 },
+    });
+
+    render(<App />);
+    await screen.findByRole('heading', { name: 'Hi, Sam' });
+    await screen.findByText(/due back/);
+
+    // Sign out is the only button, and there's nothing to type in
+    expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual(['Sign out']);
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument(); // no "Pick a book" or "Pick a friend"
+});
+
+test('Sam sees Dune with its due back day and overdue, and Matilda as a past loan', async () => {
+    signedInAsSam({ myLoans: {
+        active: [{ _id: 'loan-1', book: DUNE, lentAt: '2026-10-01T10:00:00Z', dueBack: '2026-10-15T10:00:00Z', overdue: true }],
+        returned: [{ _id: 'loan-2', book: MATILDA, lentAt: '2026-09-01T10:00:00Z', returnedAt: '2026-09-10T10:00:00Z', overdue: false }],
+        limit: 3,
+    } });
+
+    render(<App />);
+
+    const myLoans = await screen.findByRole('region', { name: 'My loans' });
+    expect(await within(myLoans).findByText('1 of 3 books')).toBeInTheDocument();
+    expect(within(myLoans).getByRole('list', { name: 'Has now' })).toHaveTextContent('Dune, due back 15 Oct · overdue');
+    expect(within(myLoans).getByRole('list', { name: 'Past loans' })).toHaveTextContent('Matilda, lent 1 Sept, returned 10 Sept');
+});
+
+test('signing in as me still shows my page', async () => {
+    api.isSignedIn.mockReturnValue(false);
+    api.getBooks.mockResolvedValue([DUNE]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+    api.getShelf.mockClear();
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole('button', { name: 'Sign in with Google' }));
+
+    expect(await screen.findByRole('button', { name: 'Lend' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Hi, Sam' })).not.toBeInTheDocument();
+    expect(api.getShelf).not.toHaveBeenCalled();
+});
+
+test('when "who am I?" breaks, the page says something went wrong and still lets me sign out', async () => {
+    api.whoAmI.mockResolvedValue({ error: 'Something went wrong. Try again.' });
+
+    const user = userEvent.setup();
+    render(<App />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong. Try again.');
+    await user.click(screen.getByRole('button', { name: 'Sign out' }));
+    expect(screen.getByRole('button', { name: 'Sign in with Google' })).toBeInTheDocument();
 });
