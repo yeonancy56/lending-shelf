@@ -438,3 +438,18 @@ Why: the address reads like "Sam's loans", which is what it is. And the loans co
 Chose: Sam's past loans are sorted by the day each book was lent, newest at the top
 Other option: sort by the day each book came back
 Why: lending is where every loan starts, so it's the simplest order to explain. Usually the two orders are the same anyway
+
+## 2026-11-02 — Search filters the shelf as I type, right on the page
+Chose: a search box above the shelf. As I type, only matching books stay. "dune" or "herb" both find "Dune by Frank Herbert", because capitals don't matter and part of a word is enough. The page does this with the books it already has
+Other option: the server does the search, or I press a "Search" button
+Why: it's instant and the simplest way. A home shelf is small enough to load all at once, and there's no rule here that could disagree with the server
+
+## 2026-11-02 — Search only changes the shelf, and only looks at title and author
+Chose: the "Pick a book" list in Loans always shows every book. If nothing matches, the shelf says "No books match 'xyz'". Copy notes aren't searched
+Other option: also filter "Pick a book", or also search copy notes like "signed"
+Why: if search quietly hid books in Loans, I could think a book was missing. Searching notes can be added later if I want it
+
+## 2026-11-02 — Adding or saving a book empties the search
+Chose: after I add or save a book, the search box empties and the whole shelf comes back
+Other option: keep the search, even if the book I just saved doesn't match it
+Why: if I've searched "herb" and add Matilda, she'd never show up, and I'd think adding her didn't work
