@@ -691,10 +691,10 @@ test('signing in with Sam\'s Google account shows the friend page, not mine', as
     expect(api.getLoans).not.toHaveBeenCalled();
 });
 
-test('the friend page shows every book as "lent out" or "on the shelf", and never who has it', async () => {
+test('the friend page shows every book as "lent out" or "at home", and never who has it', async () => {
     signedInAsSam({ shelf: [
         { ...DUNE, copyNote: 'signed', state: 'lent out' },
-        { ...MATILDA, state: 'on the shelf' },
+        { ...MATILDA, state: 'at home' },
     ] });
 
     render(<App />);
@@ -702,7 +702,7 @@ test('the friend page shows every book as "lent out" or "on the shelf", and neve
     const shelf = await screen.findByRole('list', { name: 'Books' });
     const books = await within(shelf).findAllByRole('listitem');
     expect(books[0]).toHaveTextContent('Dune (signed) by Frank Herbert · lent out');
-    expect(books[1]).toHaveTextContent('Matilda by Roald Dahl · on the shelf');
+    expect(books[1]).toHaveTextContent('Matilda by Roald Dahl · at home');
     expect(shelf).not.toHaveTextContent('Alex'); // no "→ Alex" like on my Loans list
     expect(shelf).not.toHaveTextContent('→');
 });
@@ -738,10 +738,10 @@ test('Sam sees Dune with its due back day and overdue, and Matilda as a past loa
     expect(within(myLoans).getByRole('list', { name: 'Past loans' })).toHaveTextContent('Matilda, lent 1 Sept, returned 10 Sept');
 });
 
-test('only books on the shelf get an Ask button: not "lent out" or "asked for" ones', async () => {
+test('only books at home get an Ask button: not "lent out" or "asked for" ones', async () => {
     signedInAsSam({ shelf: [
         { ...DUNE, state: 'lent out' },
-        { ...MATILDA, state: 'on the shelf' },
+        { ...MATILDA, state: 'at home' },
         { _id: 'emma-id', title: 'Emma', author: 'Jane Austen', state: 'asked for' },
     ] });
 
@@ -755,7 +755,7 @@ test('only books on the shelf get an Ask button: not "lent out" or "asked for" o
 });
 
 test('Sam clicks Ask on Matilda: it\'s sent, then Matilda says "asked for" and shows in My requests as waiting', async () => {
-    signedInAsSam({ shelf: [{ ...MATILDA, state: 'on the shelf' }] });
+    signedInAsSam({ shelf: [{ ...MATILDA, state: 'at home' }] });
     api.askForBook.mockResolvedValue({ _id: 'request-1', book: 'matilda-id', status: 'waiting' });
 
     const user = userEvent.setup();
@@ -774,7 +774,7 @@ test('Sam clicks Ask on Matilda: it\'s sent, then Matilda says "asked for" and s
 });
 
 test('when a lending rule says no to Sam\'s Ask, Sam sees the red message', async () => {
-    signedInAsSam({ shelf: [{ ...MATILDA, state: 'on the shelf' }] });
+    signedInAsSam({ shelf: [{ ...MATILDA, state: 'at home' }] });
     api.askForBook.mockResolvedValue({ error: 'You already have 3 books and requests' });
 
     const user = userEvent.setup();
@@ -808,7 +808,7 @@ test('My requests says so when Sam has never asked for anything', async () => {
     expect(await within(myRequests).findByText('No requests yet')).toBeInTheDocument();
 });
 
-test('Sam cancels the waiting request for Dune: it\'s sent, then it shows as cancelled and Dune is on the shelf again', async () => {
+test('Sam cancels the waiting request for Dune: it\'s sent, then it shows as cancelled and Dune is at home again', async () => {
     signedInAsSam({
         shelf: [{ ...DUNE, state: 'asked for' }],
         myRequests: [{ _id: 'request-1', book: DUNE, status: 'waiting', askedAt: '2026-11-02T10:00:00Z' }],
@@ -818,7 +818,7 @@ test('Sam cancels the waiting request for Dune: it\'s sent, then it shows as can
     const user = userEvent.setup();
     render(<App />);
     const cancel = await screen.findByRole('button', { name: 'Cancel' });
-    api.getShelf.mockResolvedValue([{ ...DUNE, state: 'on the shelf' }]);
+    api.getShelf.mockResolvedValue([{ ...DUNE, state: 'at home' }]);
     api.getMyRequests.mockResolvedValue([{ _id: 'request-1', book: DUNE, status: 'cancelled', askedAt: '2026-11-02T10:00:00Z', cancelledAt: '2026-11-02T11:00:00Z' }]);
     await user.click(cancel);
 
@@ -1146,7 +1146,7 @@ test('Sam\'s page says how many books are on the shelf too, lent out and asked f
     signedInAsSam({ shelf: [
         { ...DUNE, state: 'lent out' },
         { ...MATILDA, state: 'asked for' },
-        { _id: 'emma-id', title: 'Emma', author: 'Jane Austen', state: 'on the shelf' },
+        { _id: 'emma-id', title: 'Emma', author: 'Jane Austen', state: 'at home' },
     ] });
 
     render(<App />);

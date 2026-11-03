@@ -191,7 +191,7 @@ test('the loans list says when each book is due back, and which ones are overdue
     expect(loanOf('Dune').dueBack).toBe('2026-10-15T12:00:00.000Z'); // 14 days after it was lent
     expect(loanOf('Dune').overdue).toBe(true);
     expect(loanOf('Matilda').overdue).toBe(false);
-    expect(loanOf('Emma').dueBack).toBeUndefined(); // back on the shelf, so no due back day...
+    expect(loanOf('Emma').dueBack).toBeUndefined(); // back home, so no due back day...
     expect(loanOf('Emma').overdue).toBe(false); // ...and never overdue
 });
 

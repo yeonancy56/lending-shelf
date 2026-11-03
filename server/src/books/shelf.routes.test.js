@@ -17,14 +17,14 @@ beforeAll(testDb.start, 60000);
 beforeEach(testDb.clear);
 afterAll(testDb.stop);
 
-test('Sam sees every book, with "lent out" on Dune (out with Alex) and "on the shelf" on Matilda (200)', async () => {
+test('Sam sees every book, with "lent out" on Dune (out with Alex) and "at home" on Matilda (200)', async () => {
     const sam = await Friend.create({ name: 'Sam', email: 'sam@gmail.com' });
     const alex = await Friend.create({ name: 'Alex', email: 'alex@gmail.com' });
     const dune = await Book.create({ title: 'Dune', author: 'Frank Herbert', copyNote: 'signed' });
     const matilda = await Book.create({ title: 'Matilda', author: 'Roald Dahl' });
     const hobbit = await Book.create({ title: 'The Hobbit', author: 'J.R.R. Tolkien' });
     await Loan.create({ book: dune.id, friend: alex.id });
-    // Sam had The Hobbit once, but brought it back, so it's on the shelf again
+    // Sam had The Hobbit once, but brought it back, so it's at home again
     await Loan.create({ book: hobbit.id, friend: sam.id, returnedAt: new Date() });
 
     const res = await asSam.get('/shelf');
@@ -32,12 +32,12 @@ test('Sam sees every book, with "lent out" on Dune (out with Alex) and "on the s
     expect(res.status).toBe(200);
     expect(res.body).toEqual([
         { _id: dune.id, title: 'Dune', author: 'Frank Herbert', copyNote: 'signed', state: 'lent out' },
-        { _id: matilda.id, title: 'Matilda', author: 'Roald Dahl', state: 'on the shelf' },
-        { _id: hobbit.id, title: 'The Hobbit', author: 'J.R.R. Tolkien', state: 'on the shelf' },
+        { _id: matilda.id, title: 'Matilda', author: 'Roald Dahl', state: 'at home' },
+        { _id: hobbit.id, title: 'The Hobbit', author: 'J.R.R. Tolkien', state: 'at home' },
     ]);
 });
 
-test('Dune says "asked for" while Alex\'s request waits, and "on the shelf" again once it\'s cancelled', async () => {
+test('Dune says "asked for" while Alex\'s request waits, and "at home" again once it\'s cancelled', async () => {
     await Friend.create({ name: 'Sam', email: 'sam@gmail.com' });
     const alex = await Friend.create({ name: 'Alex', email: 'alex@gmail.com' });
     const dune = await Book.create({ title: 'Dune', author: 'Frank Herbert' });
@@ -50,7 +50,7 @@ test('Dune says "asked for" while Alex\'s request waits, and "on the shelf" agai
     expect(waiting.body[0].state).toBe('asked for');
     expect(JSON.stringify(waiting.body)).not.toContain('Alex');
     expect(JSON.stringify(waiting.body)).not.toContain(alex.id);
-    expect(cancelled.body[0].state).toBe('on the shelf');
+    expect(cancelled.body[0].state).toBe('at home');
 });
 
 test('the shelf never says who has a book: no friend names or ids anywhere in it', async () => {

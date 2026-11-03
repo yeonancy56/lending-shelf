@@ -162,7 +162,7 @@ function App() {
 }
 
 // Sam's page: every book on the shelf, Sam's own loans, and Sam's own requests.
-// Sam can ask for a book that's on the shelf, and cancel a waiting request. Nothing else,
+// Sam can ask for a book that's at home, and cancel a waiting request. Nothing else,
 // because lending, returning, adding and editing are only for me
 function FriendPage({ name, onSignOut }) {
   const [shelf, setShelf] = useState([]);
@@ -207,12 +207,12 @@ function FriendPage({ name, onSignOut }) {
       <ErrorMessage message={requestError} />
       <section>
         <h2 id="friend-shelf">Books</h2>
-        {/* each book says "on the shelf", "lent out" or "asked for", but never who: the server doesn't send that */}
+        {/* each book says "at home", "lent out" or "asked for", but never who: the server doesn't send that */}
         <ul aria-labelledby="friend-shelf">
           {shelf.map((book) => (
             <li key={book._id}>
               {bookName(book)} by {book.author} · {book.state}
-              {book.state === 'on the shelf' && <button onClick={() => handleAsk(book._id)}>Ask</button>}
+              {book.state === 'at home' && <button onClick={() => handleAsk(book._id)}>Ask</button>}
             </li>
           ))}
         </ul>
