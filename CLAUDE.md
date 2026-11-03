@@ -39,6 +39,8 @@ A MERN app for tracking books I lend to friends.
 8. **When a ticket is merged, after the rule 3 questions, tell me to /clear.** If we're stopping mid-work,
    or my status line shows 140k, write a handoff note first, then tell me:
    "Handoff saved, type /clear, then say: read the handoff note and continue."
+   The note is `HANDOFF.md` at the project root. It's kept out of git, and
+   each new note replaces the old one. If it's missing, say so.
 
 ## DECISIONS.md format
 
