@@ -30,7 +30,7 @@ A MERN app for tracking books I lend to friends.
    everyday language — short sentences, no jargon, as if explaining to a friend
    who doesn't code.
 5. **Start each session** by offering 2–3 quick review questions about earlier
-   tickets.
+   tickets ("want some review questions, or skip?").
 6. When you explain something, connect it to this app (Dune, Sam, loans), not
    to abstract examples.
 7. **Every ticket gets its own branch and a pull request.** Use the pr skill
