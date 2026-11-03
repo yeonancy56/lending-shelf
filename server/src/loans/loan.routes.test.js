@@ -120,6 +120,15 @@ test('does not lend Dune when Alex has asked for it, and says it was Alex (409)'
     expect(await Loan.countDocuments()).toBe(0);
 });
 
+test('does not lend Dune to Sam with the form while Sam\'s own request for it waits: I answer the request instead (409)', async () => {
+    await Request.create({ book: dune.id, friend: sam.id });
+
+    const res = await owner.post('/loans').send({ bookId: dune.id, friendId: sam.id });
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toBe('Sam has asked for this book');
+});
+
 test('lends Dune once Alex\'s request for it is cancelled (201)', async () => {
     const alex = await Friend.create({ name: 'Alex' });
     await Request.create({ book: dune.id, friend: alex.id, status: 'cancelled', cancelledAt: new Date() });

@@ -661,11 +661,12 @@ test('Cancel empties the friend form without saving', async () => {
     expect(api.updateFriend).not.toHaveBeenCalled();
 });
 
-// Sam is signed in. The "server" says who Sam is, what's on the shelf, and Sam's own loans
-function signedInAsSam({ shelf = [], myLoans = { active: [], returned: [], limit: 3 } } = {}) {
+// Sam is signed in. The "server" says who Sam is, what's on the shelf, and Sam's own loans and requests
+function signedInAsSam({ shelf = [], myLoans = { active: [], returned: [], limit: 3 }, myRequests = [] } = {}) {
     api.whoAmI.mockResolvedValue({ who: 'friend', name: 'Sam' });
     api.getShelf.mockResolvedValue(shelf);
     api.getMyLoans.mockResolvedValue(myLoans);
+    api.getMyRequests.mockResolvedValue(myRequests);
 }
 
 test('signing in with Sam\'s Google account shows the friend page, not mine', async () => {
@@ -732,6 +733,107 @@ test('Sam sees Dune with its due back day and overdue, and Matilda as a past loa
     expect(await within(myLoans).findByText('1 of 3 books')).toBeInTheDocument();
     expect(within(myLoans).getByRole('list', { name: 'Has now' })).toHaveTextContent('Dune, due back 15 Oct · overdue');
     expect(within(myLoans).getByRole('list', { name: 'Past loans' })).toHaveTextContent('Matilda, lent 1 Sept, returned 10 Sept');
+});
+
+test('only books on the shelf get an Ask button: not "lent out" or "asked for" ones', async () => {
+    signedInAsSam({ shelf: [
+        { ...DUNE, state: 'lent out' },
+        { ...MATILDA, state: 'on the shelf' },
+        { _id: 'emma-id', title: 'Emma', author: 'Jane Austen', state: 'asked for' },
+    ] });
+
+    render(<App />);
+
+    const books = await within(await screen.findByRole('list', { name: 'Books' })).findAllByRole('listitem');
+    expect(within(books[0]).queryByRole('button', { name: 'Ask' })).not.toBeInTheDocument();
+    expect(within(books[1]).getByRole('button', { name: 'Ask' })).toBeInTheDocument();
+    expect(books[2]).toHaveTextContent('Emma by Jane Austen · asked for');
+    expect(within(books[2]).queryByRole('button', { name: 'Ask' })).not.toBeInTheDocument();
+});
+
+test('Sam clicks Ask on Matilda: it\'s sent, then Matilda says "asked for" and shows in My requests as waiting', async () => {
+    signedInAsSam({ shelf: [{ ...MATILDA, state: 'on the shelf' }] });
+    api.askForBook.mockResolvedValue({ _id: 'request-1', book: 'matilda-id', status: 'waiting' });
+
+    const user = userEvent.setup();
+    render(<App />);
+    const ask = await screen.findByRole('button', { name: 'Ask' });
+    // what the "server" says once Sam's request is saved
+    api.getShelf.mockResolvedValue([{ ...MATILDA, state: 'asked for' }]);
+    api.getMyRequests.mockResolvedValue([{ _id: 'request-1', book: MATILDA, status: 'waiting', askedAt: '2026-11-02T10:00:00Z' }]);
+    await user.click(ask);
+
+    expect(api.askForBook).toHaveBeenCalledWith('matilda-id');
+    const myRequests = await screen.findByRole('list', { name: 'My requests' });
+    expect(await within(myRequests).findByText(/Matilda/)).toHaveTextContent('Matilda · waiting');
+    expect(screen.getByRole('list', { name: 'Books' })).toHaveTextContent('Matilda by Roald Dahl · asked for');
+    expect(screen.queryByRole('button', { name: 'Ask' })).not.toBeInTheDocument();
+});
+
+test('when a lending rule says no to Sam\'s Ask, Sam sees the red message', async () => {
+    signedInAsSam({ shelf: [{ ...MATILDA, state: 'on the shelf' }] });
+    api.askForBook.mockResolvedValue({ error: 'You already have 3 books and requests' });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Ask' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('You already have 3 books and requests');
+});
+
+test('My requests lists every request with its status, and only waiting ones get a Cancel button', async () => {
+    signedInAsSam({ myRequests: [
+        { _id: 'request-2', book: DUNE, status: 'waiting', askedAt: '2026-11-02T10:00:00Z' },
+        { _id: 'request-1', book: MATILDA, status: 'cancelled', askedAt: '2026-10-01T10:00:00Z', cancelledAt: '2026-10-02T10:00:00Z' },
+    ] });
+
+    render(<App />);
+
+    const items = await within(await screen.findByRole('list', { name: 'My requests' })).findAllByRole('listitem');
+    expect(items[0]).toHaveTextContent('Dune · waiting');
+    expect(within(items[0]).getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+    expect(items[1]).toHaveTextContent('Matilda · cancelled');
+    expect(within(items[1]).queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument();
+});
+
+test('My requests says so when Sam has never asked for anything', async () => {
+    signedInAsSam();
+
+    render(<App />);
+
+    const myRequests = await screen.findByRole('region', { name: 'My requests' });
+    expect(await within(myRequests).findByText('No requests yet')).toBeInTheDocument();
+});
+
+test('Sam cancels the waiting request for Dune: it\'s sent, then it shows as cancelled and Dune is on the shelf again', async () => {
+    signedInAsSam({
+        shelf: [{ ...DUNE, state: 'asked for' }],
+        myRequests: [{ _id: 'request-1', book: DUNE, status: 'waiting', askedAt: '2026-11-02T10:00:00Z' }],
+    });
+    api.cancelRequest.mockResolvedValue({ _id: 'request-1', status: 'cancelled' });
+
+    const user = userEvent.setup();
+    render(<App />);
+    const cancel = await screen.findByRole('button', { name: 'Cancel' });
+    api.getShelf.mockResolvedValue([{ ...DUNE, state: 'on the shelf' }]);
+    api.getMyRequests.mockResolvedValue([{ _id: 'request-1', book: DUNE, status: 'cancelled', askedAt: '2026-11-02T10:00:00Z', cancelledAt: '2026-11-02T11:00:00Z' }]);
+    await user.click(cancel);
+
+    expect(api.cancelRequest).toHaveBeenCalledWith('request-1');
+    expect(await screen.findByText('Dune · cancelled')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Ask' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument();
+});
+
+test('when Cancel fails, Sam sees the red message', async () => {
+    signedInAsSam({ myRequests: [{ _id: 'request-1', book: DUNE, status: 'waiting', askedAt: '2026-11-02T10:00:00Z' }] });
+    api.cancelRequest.mockResolvedValue({ error: 'This request was already cancelled' });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Cancel' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('This request was already cancelled');
 });
 
 test('signing in as me still shows my page', async () => {

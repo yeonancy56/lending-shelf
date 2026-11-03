@@ -1,7 +1,7 @@
 // Tests how api.js reads the server's answer. No server needed:
 // fetch (the browser's way of calling the server) is swapped for a fake one.
 import { afterEach, expect, test, vi } from 'vitest';
-import { addBook, addFriend, updateFriend, getBooks, getFriends, getLoans, getShelf, getMyLoans, whoAmI, isSignedIn, lendBook, returnLoan, saveSignIn, signOut, whenSignedOut } from './api';
+import { addBook, addFriend, updateFriend, getBooks, getFriends, getLoans, getShelf, getMyLoans, getMyRequests, askForBook, cancelRequest, whoAmI, isSignedIn, lendBook, returnLoan, saveSignIn, signOut, whenSignedOut } from './api';
 
 const DUNE = { title: 'Dune', author: 'Frank Herbert' };
 
@@ -38,6 +38,7 @@ test.each([
     ['"who am I?"', whoAmI, '/api/me'],
     ['the friend shelf view', getShelf, '/api/shelf'],
     ['Sam\'s own loans', getMyLoans, '/api/me/loans'],
+    ['Sam\'s own requests', getMyRequests, '/api/me/requests'],
 ])('asks the server for %s at its own address', async (_, ask, address) => {
     const fetch = vi.fn().mockResolvedValue(answer(200, JSON.stringify({ who: 'owner' })));
     vi.stubGlobal('fetch', fetch);
@@ -53,6 +54,8 @@ test.each([
     ['saving an edited friend', () => updateFriend('sam-id', { name: 'Sam', email: 'sam@gmail.com' })],
     ['lending Dune to Sam', () => lendBook('dune-id', 'sam-id')],
     ['returning a loan', () => returnLoan('loan-id')],
+    ['Sam asking for Dune', () => askForBook('dune-id')],
+    ['Sam cancelling a request', () => cancelRequest('request-id')],
 ])('says something went wrong when the server breaks while %s', async (_, click) => {
     // like the database being down: Express's own "500" page is HTML, not the { error } the page knows how to read
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(answer(500, '<pre>Internal Server Error</pre>')));
@@ -75,6 +78,7 @@ test.each([
     ['who am I', whoAmI],
     ['shelf', getShelf],
     ['my loans', getMyLoans],
+    ['my requests', getMyRequests],
 ])('says something went wrong when the %s list can\'t load', async (_, load) => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
 
@@ -93,6 +97,25 @@ test('says something went wrong when a lending rule says no but the answer isn\'
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(answer(409, '<!doctype html><html></html>')));
 
     expect(await lendBook('dune-id', 'sam-id')).toEqual({ error: 'Something went wrong. Try again.' });
+});
+
+test('asking for Dune sends only the book, never which friend: the server knows it\'s Sam from the sign-in', async () => {
+    const fetch = vi.fn().mockResolvedValue(answer(201, JSON.stringify({ _id: 'request-id', status: 'waiting' })));
+    vi.stubGlobal('fetch', fetch);
+
+    await askForBook('dune-id');
+
+    expect(fetch).toHaveBeenCalledWith('/api/requests', expect.objectContaining({ method: 'POST' }));
+    expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({ bookId: 'dune-id' });
+});
+
+test('cancelling sends the request\'s id in the address', async () => {
+    const fetch = vi.fn().mockResolvedValue(answer(200, JSON.stringify({ _id: 'request-id', status: 'cancelled' })));
+    vi.stubGlobal('fetch', fetch);
+
+    await cancelRequest('request-id');
+
+    expect(fetch).toHaveBeenCalledWith('/api/requests/request-id/cancel', expect.objectContaining({ method: 'POST' }));
 });
 
 test('sends my Google sign-in with every request, so the server knows it\'s me', async () => {

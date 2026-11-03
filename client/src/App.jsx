@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'; //useState = memory, what should the page remember, useEffect = do something at a certain time
-import { getBooks, addBook, updateBook, getFriends, addFriend, updateFriend, getFriendLoans, getLoans, lendBook, returnLoan, getShelf, getMyLoans, whoAmI, isSignedIn, saveSignIn, signOut, whenSignedOut } from './api';
+import { getBooks, addBook, updateBook, getFriends, addFriend, updateFriend, getFriendLoans, getLoans, lendBook, returnLoan, getShelf, getMyLoans, getMyRequests, askForBook, cancelRequest, whoAmI, isSignedIn, saveSignIn, signOut, whenSignedOut } from './api';
 import GoogleSignIn from './GoogleSignIn';
 
 // a book's name on the page: "Dune (signed)" when it has a copy note, just "Dune" when it doesn't
@@ -145,18 +145,41 @@ function App() {
   return <Shelf onSignOut={handleSignOut} />;
 }
 
-// Sam's page: every book on the shelf, and Sam's own loans. Nothing to click but Sign out,
+// Sam's page: every book on the shelf, Sam's own loans, and Sam's own requests.
+// Sam can ask for a book that's on the shelf, and cancel a waiting request. Nothing else,
 // because lending, returning, adding and editing are only for me
 function FriendPage({ name, onSignOut }) {
   const [shelf, setShelf] = useState([]);
   const [myLoans, setMyLoans] = useState(null); // null while the server hasn't answered yet
+  const [myRequests, setMyRequests] = useState(null); // null while the server hasn't answered yet
   const [listErrors, setListErrors] = useState({});
+  const [requestError, setRequestError] = useState(''); // the red message for Ask and Cancel
   const listError = Object.values(listErrors).find((error) => error);
 
-  useEffect(() => { // when the page opens, fill in the shelf and Sam's loans
+  // fill in (or fill in again) the shelf and Sam's requests: asking or cancelling changes both
+  function loadShelfAndRequests() {
     getShelf().then((result) => fillList(result, 'shelf', setShelf, setListErrors));
+    getMyRequests().then(setMyRequests);
+  }
+
+  useEffect(() => { // when the page opens, fill in the shelf, Sam's loans and Sam's requests
+    loadShelfAndRequests();
     getMyLoans().then(setMyLoans);
   }, []);
+
+  // Sam clicks Ask on Dune. If a lending rule says no (like already having 3), Sam sees why straight away
+  async function handleAsk(bookId) {
+    const result = await askForBook(bookId);
+    setRequestError(result.error || '');
+    if (!result.error) loadShelfAndRequests();
+  }
+
+  // Sam clicks Cancel on a waiting request: Dune is free again, and it stops counting toward Sam's 3
+  async function handleCancel(requestId) {
+    const result = await cancelRequest(requestId);
+    setRequestError(result.error || '');
+    if (!result.error) loadShelfAndRequests();
+  }
 
   return (
     <div>
@@ -164,12 +187,16 @@ function FriendPage({ name, onSignOut }) {
       <h2>Hi, {name}</h2>
       <button onClick={onSignOut}>Sign out</button>
       <ErrorMessage message={listError} />
+      <ErrorMessage message={requestError} />
       <section>
         <h2 id="friend-shelf">Books</h2>
-        {/* each book says "on the shelf" or "lent out", but never who has it: the server doesn't send that */}
+        {/* each book says "on the shelf", "lent out" or "asked for", but never who: the server doesn't send that */}
         <ul aria-labelledby="friend-shelf">
           {shelf.map((book) => (
-            <li key={book._id}>{bookName(book)} by {book.author} · {book.state}</li>
+            <li key={book._id}>
+              {bookName(book)} by {book.author} · {book.state}
+              {book.state === 'on the shelf' && <button onClick={() => handleAsk(book._id)}>Ask</button>}
+            </li>
           ))}
         </ul>
       </section>
@@ -178,6 +205,20 @@ function FriendPage({ name, onSignOut }) {
         {!myLoans && <p>Loading…</p>}
         <ErrorMessage message={myLoans?.error} />
         {myLoans && !myLoans.error && <FriendLoans loans={myLoans} />} {/* the same lists as Sam's panel on my page */}
+      </section>
+      <section aria-labelledby="my-requests">
+        <h2 id="my-requests">My requests</h2>
+        {!myRequests && <p>Loading…</p>}
+        <ErrorMessage message={myRequests?.error} />
+        {myRequests && !myRequests.error && myRequests.length === 0 && <p>No requests yet</p>}
+        <ul aria-labelledby="my-requests"> {/* newest first, the order the server sends */}
+          {myRequests && !myRequests.error && myRequests.map((request) => (
+            <li key={request._id}>
+              {bookName(request.book)} · {request.status}
+              {request.status === 'waiting' && <button onClick={() => handleCancel(request._id)}>Cancel</button>}
+            </li>
+          ))}
+        </ul>
       </section>
     </div>
   );
