@@ -377,3 +377,65 @@ test('Sam\'s panel says "Loading…" while Sam\'s loans are on the way', async (
     expect(panel).toHaveTextContent('0 of 3 books');
     expect(panel).not.toHaveTextContent('Loading…');
 });
+
+const MATILDA = { _id: 'matilda-id', title: 'Matilda', author: 'Roald Dahl' };
+
+// the shelf, as spines: each spine is a button named like "Dune by Frank Herbert"
+function spine(name) {
+    return screen.queryByRole('button', { name: new RegExp(`^${name} by`) });
+}
+
+test('typing part of a title or author, in any capitals, leaves only matching books on the shelf', async () => {
+    api.getBooks.mockResolvedValue([DUNE, MATILDA]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByRole('button', { name: 'Dune by Frank Herbert' }); // the shelf has loaded
+    const search = screen.getByRole('searchbox', { name: 'Search books' });
+
+    await user.type(search, 'HERB'); // part of "Frank Herbert", in capitals
+    expect(spine('Dune')).toBeInTheDocument();
+    expect(spine('Matilda')).not.toBeInTheDocument();
+
+    await user.clear(search);
+    await user.type(search, 'mati'); // part of "Matilda"
+    expect(spine('Matilda')).toBeInTheDocument();
+    expect(spine('Dune')).not.toBeInTheDocument();
+});
+
+test('copy notes aren\'t searched, and the shelf says so when nothing matches', async () => {
+    api.getBooks.mockResolvedValue([{ ...DUNE, copyNote: 'signed' }, MATILDA]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByRole('button', { name: 'Matilda by Roald Dahl' });
+
+    await user.type(screen.getByRole('searchbox', { name: 'Search books' }), 'signed'); // only in Dune's copy note
+
+    expect(spine('Dune \\(signed\\)')).not.toBeInTheDocument();
+    expect(spine('Matilda')).not.toBeInTheDocument();
+    expect(screen.getByText("No books match 'signed'")).toBeInTheDocument();
+});
+
+test('"Pick a book" still lists every book while searching, and emptying the box brings the whole shelf back', async () => {
+    api.getBooks.mockResolvedValue([DUNE, MATILDA]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByRole('button', { name: 'Dune by Frank Herbert' });
+    const search = screen.getByRole('searchbox', { name: 'Search books' });
+
+    await user.type(search, 'dune');
+    expect(spine('Matilda')).not.toBeInTheDocument(); // gone from the shelf...
+    expect(screen.getByRole('option', { name: 'Matilda' })).toBeInTheDocument(); // ...but I can still lend it
+
+    await user.clear(search);
+    expect(spine('Dune')).toBeInTheDocument();
+    expect(spine('Matilda')).toBeInTheDocument();
+});

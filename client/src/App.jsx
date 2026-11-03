@@ -14,6 +14,13 @@ function shortDay(dueBack) {
 
 // a red message, like "This book is already lent out". Marked as an alert so a screen reader
 // reads it out loud right away. Shows nothing when there's no message
+// does this book match what I typed in the search box? "herb" finds Dune by Frank Herbert.
+// Capitals don't matter, part of a word is enough, and only title and author count, not the copy note
+function matchesSearch(book, search) {
+  const words = search.trim().toLowerCase();
+  return book.title.toLowerCase().includes(words) || book.author.toLowerCase().includes(words);
+}
+
 function ErrorMessage({ message }) {
   return message ? <p className="error" role="alert">{message}</p> : null;
 }
@@ -75,6 +82,7 @@ function App() { //these are memory boxes
   const[author, setAuthor] = useState('');
   const[copyNote, setCopyNote] = useState(''); // optional, like "signed"
   const[editingId, setEditingId] = useState(''); // the book in the form for editing, or '' when the form adds a new book
+  const[search, setSearch] = useState(''); // what I typed in the search box above the shelf
   const[friends, setFriends] = useState([]);
   const[name, setName] = useState('');
   const[openFriend, setOpenFriend] = useState(null); // the friend whose panel is open, or null when it's closed
@@ -89,6 +97,7 @@ function App() { //these are memory boxes
   const[friendError, setFriendError] = useState(''); // the red message under the friend form
   const[listErrors, setListErrors] = useState({}); // which lists couldn't load, like { loans: 'Something went wrong. Try again.' }
   const listError = Object.values(listErrors).find((error) => error); // the red message at the top, if any list is broken
+  const shelfBooks = books.filter((book) => matchesSearch(book, search)); // the books on the shelf right now
 
   function loadBooks() { //load function, fill a list from the server
     return getBooks().then((result) => fillList(result, 'books', setBooks, setListErrors)); // fill the list in once the server answers
@@ -213,8 +222,10 @@ return (
         )}
       </form>
       <ErrorMessage message={bookError} />
-    <ul className="books-list"> {/* the books stand on the shelf as spines */}
-      {books.map((book) => (
+    <input type="search" aria-label="Search books" placeholder="Search by title or author" value={search} onChange={(e) => setSearch(e.target.value)} />
+    {search && shelfBooks.length === 0 && <p>No books match '{search}'</p>}
+    <ul className="books-list"> {/* the books stand on the shelf as spines. Only the ones that match the search */}
+      {shelfBooks.map((book) => (
         <li key = {book._id}>
           {/* a button, so the spine can be clicked, or reached with the keyboard. aria-pressed = this one is in the form */}
           <button className="spine" aria-pressed={book._id === editingId} onClick={() => startEditing(book)}>
