@@ -1,6 +1,7 @@
 // Picture mode: `npm run picture` shows my shelf with pretend answers instead of the real server,
 // so the review can open the page at phone width and take a picture without Google sign-in or a database.
 // It only runs on my computer, and only in this mode. The real app never sees it.
+import { SIGN_IN_KEY } from './src/api';
 
 const longBook = {
   _id: 'book-long',
@@ -25,10 +26,6 @@ const ANSWERS = {
   '/friends': [sam, ana],
   '/loans': [samsLoan],
   '/requests': [anasRequest],
-  '/friends/friend-sam/loans': { active: [samsLoan], returned: [], limit: 3 },
-  '/friends/friend-sam/requests': [],
-  '/friends/friend-ana/loans': { active: [], returned: [], limit: 3 },
-  '/friends/friend-ana/requests': [anasRequest],
 };
 
 // the pretend server's answer to one address, like '/books'
@@ -40,8 +37,9 @@ export function pictureAnswer(path) {
 // /phone shows my shelf in a frame as wide as a phone (375), with no gaps around it.
 // Chrome's picture-taker can't make its own window narrower than 500, but it can picture this frame
 const PHONE_WIDTH = 375;
+const PHONE_HEIGHT = 2400; // keep in step with --window-size in CLAUDE.md rule 6, or the bottom is left out of the picture
 const PHONE_PAGE = `<!doctype html><title>Phone width</title>
-<body style="margin:0"><iframe src="/" width="${PHONE_WIDTH}" height="2400" style="border:0;display:block"></iframe></body>`;
+<body style="margin:0"><iframe src="/" width="${PHONE_WIDTH}" height="${PHONE_HEIGHT}" style="border:0;display:block"></iframe></body>`;
 
 // the Vite plugin: answers /api with the pretend answers, and starts the page already signed in
 export function pictureMode() {
@@ -62,7 +60,7 @@ export function pictureMode() {
     },
     // a pretend sign-in in the browser, so the page skips the Google button
     transformIndexHtml() {
-      return [{ tag: 'script', children: "localStorage.setItem('signIn', 'picture-mode');", injectTo: 'head-prepend' }];
+      return [{ tag: 'script', children: `localStorage.setItem('${SIGN_IN_KEY}', 'picture-mode');`, injectTo: 'head-prepend' }];
     },
   };
 }

@@ -7,8 +7,8 @@ describe('picture mode', () => {
   });
 
   it('has a book with a long name, to see if the spine cuts it off', () => {
-    const names = pictureAnswer('/books').body.map((book) => `${book.title} (${book.copyNote})`);
-    expect(names.some((name) => name.length > 60)).toBe(true);
+    const titles = pictureAnswer('/books').body.map((book) => book.title);
+    expect(titles.some((title) => title.length > 60)).toBe(true);
   });
 
   it('answers every list my shelf asks for when it opens', () => {

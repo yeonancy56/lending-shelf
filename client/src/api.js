@@ -11,7 +11,7 @@ const KNOWN_MISTAKES = [400, 403, 404, 409];
 
 // The Google sign-in, kept in the browser so a reload stays signed in.
 // It goes with every request, and the server checks it's really me.
-const SIGN_IN_KEY = 'signIn';
+export const SIGN_IN_KEY = 'signIn'; // picture-mode.js uses it too
 const NOT_SIGNED_IN = 'Please sign in.'; // the server's own words, for when its 401 has none
 
 // after the Google button: remember who signed in
