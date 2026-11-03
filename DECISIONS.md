@@ -761,3 +761,8 @@ Why: Sam would be told "no" when I never said no. Lending first closes the gap a
 Chose: after each ticket, Claude makes one offer: 1–2 questions about what we just did, plus 1 about an earlier ticket. A new conversation no longer starts by offering review questions. This changes part of the earlier choice "Claude offers its learning questions instead of always asking". The offers before and after a ticket stay
 Other option: keep the start-of-conversation offer, but skip it if a ticket was merged that day. Or only offer it when we pick up from a handoff note
 Why: after the last ticket was merged, I got questions, typed /clear, and was offered more questions right away. That's two offers in a row. Adding one older question to the after-ticket offer still brings old tickets back, so I don't forget them
+
+## 2026-11-03 — The DECISIONS.md format is written in one place only
+Chose: the format for these entries (Chose, Other option, Why) now lives only in CLAUDE.md, the file Claude reads at the start of every conversation. The other guide for Claude just points to it
+Other option: keep it only in the other guide, docs/agents/domain.md, or keep both copies
+Why: with two copies, one could change and the other wouldn't, and they'd quietly stop matching. That had already started: one said the date like "2026-10-16" and the other said "YYYY-MM-DD"
