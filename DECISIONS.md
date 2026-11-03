@@ -693,3 +693,8 @@ Why: editing a book already works this way, so delete now matches it. Checking f
 Chose: ErrorMessage now lives in its own small file, ErrorMessage.jsx. App.jsx and the Google sign-in file both use it, so the "Sign-in isn't set up yet" message is drawn the same way as every other red message
 Other option: leave it in App.jsx, and keep writing the sign-in message out by hand
 Why: this changes the earlier choice to keep it in App.jsx. That made sense while only App.jsx needed it. Now the sign-in file needs it too, and it shouldn't borrow from App.jsx, because App.jsx already uses the sign-in file. Two files that lean on each other are confusing and easy to break. With its own file, both can use it
+
+## 2026-11-03 — Claude offers its learning questions instead of always asking
+Chose: before a ticket, after a ticket, and at the start of a session, Claude offers its questions, and I can say "skip"
+Other option: keep asking every time, as before
+Why: I was skipping most of them, often because we had already talked the plan through. An offer still keeps the questions there for when I want them
