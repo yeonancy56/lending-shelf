@@ -33,8 +33,9 @@ async function updateBook(id, data) {
     return bookDao.update(id, data);
 }
 
+// a book that's been lent can't be deleted, because its loans (out now or returned) still need it
 async function deleteBook(id) {
-    if (await loanDao.existsForBook(id)) {
+    if (await loanDao.hasEverBeenLent(id)) {
         throw ruleBroken("This book has been lent before, so it can't be deleted. Its loans need it.");
     }
     return bookDao.remove(id);

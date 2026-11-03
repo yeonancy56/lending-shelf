@@ -473,3 +473,8 @@ Why: none of the other rule messages name the book, and naming it would mean an 
 Chose: only the server rule. The page still expects every loan to have its book
 Other option: the page shows "(unknown book)" instead of crashing
 Why: the rule lives in one place. A safety net could quietly hide a real problem, and my database has no broken loans today
+
+## 2026-11-02 — The books folder asks the lending folder "has Dune ever been lent?"
+Chose: the books code asks the lending folder that one yes/no question itself, before it deletes Dune
+Other option: go through the lending rule code, or copy the question into the books folder
+Why: it's the same idea as lending asking "is Dune real?": a simple yes/no question with no rules attached. The rule itself ("can't delete") stays in the books folder

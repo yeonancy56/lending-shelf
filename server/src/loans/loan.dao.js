@@ -12,8 +12,8 @@ function findActiveByBook(bookId) {
     return Loan.findOne({ book: bookId, returnedAt: null });
 }
 
-// can this book be deleted? Not if any loan, out now or returned, still needs it
-async function existsForBook(bookId) {
+// has this book ever been lent? Counts loans that are out now and ones that came back
+async function hasEverBeenLent(bookId) {
     return (await Loan.exists({ book: bookId })) !== null;
 }
 
@@ -37,4 +37,4 @@ function markReturned(id) {
     return Loan.findByIdAndUpdate(id, { returnedAt: new Date() }, { returnDocument: 'after' });
 }
 
-module.exports = {findAll, findById, create, findActiveByBook, existsForBook, countActiveByFriend, findActiveByFriend, findByFriend, markReturned}
+module.exports = {findAll, findById, create, findActiveByBook, hasEverBeenLent, countActiveByFriend, findActiveByFriend, findByFriend, markReturned}
