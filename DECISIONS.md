@@ -728,3 +728,8 @@ Why: it catches small slips, like a leftover variable or a name used without bei
 Chose: a small check I run by hand from the server folder. It lists any book with more than one active loan, any friends sharing an email, and whether each database rule is really on. It only reads, it never changes anything
 Other option: look through the database by hand, or have the server fix duplicates by itself
 Why: if Dune already has two active loans, the database quietly skips the "one active loan per book" rule, and nothing warns me. The rules went live on 2 November, so they may already be off. Fixing a duplicate means choosing which loan or friend is the real one, and only I know that. "Sam@Gmail.com" and "sam@gmail.com" count as the same email, like everywhere else in the app, and the check shows how each was saved. Two friends saved with an empty email count too, because the database treats that as an email. Before 2 November I could delete a book that was still lent out, so the check still finds loans whose book is gone
+
+## 2026-11-03 — The duplicate check reads the data directly, not through the app's layers
+Chose: the check sits in its own scripts folder, outside the app, and reads books, friends and loans straight from the database
+Other option: go through the app's usual steps (route, controller, service, DAO), like lending Dune to Sam does
+Why: those steps are for the page asking the server to do something. Nobody clicks a button for this check. I run it by hand, it reads, and it stops. It also needs things the app never asks for, like loans whose book was deleted, and whether a database rule is on. Adding those to the app's layers would put code there that the app itself never uses
