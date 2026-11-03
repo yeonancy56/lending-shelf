@@ -165,6 +165,16 @@ test('says the loan was not found when the ID is not a real ID (404)', async () 
     const res = await owner.post('/loans/not-an-id/return');
 
     expect(res.status).toBe(404);
+    expect(res.body.error).toBe('Loan not found');
+});
+
+test('says the loan was not found when no loan has that ID (404)', async () => {
+    const nobody = new mongoose.Types.ObjectId().toString(); // looks like a real ID, but no loan has it
+
+    const res = await owner.post(`/loans/${nobody}/return`);
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe('Loan not found');
 });
 
 test('the loans list says when each book is due back, and which ones are overdue', async () => {
