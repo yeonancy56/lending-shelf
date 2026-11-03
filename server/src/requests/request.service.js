@@ -6,6 +6,7 @@ const friendDao = require('../friends/friend.dao');
 const { badRequest, ruleBroken } = require('../errors');
 
 const SAME_KEY = 11000; // the database's own code for "that would break a one-only rule"
+const NOTE_LIMIT = 200; // a decline note is a few words, not a letter
 
 // Sam asks for Dune. Sam is always the friend from the sign-in, never from what the page sent.
 // The same lending rules as my lend form run straight away, so Sam hears "no" now, not after waiting for me
@@ -30,10 +31,10 @@ async function listRequestsForPanel(friendId) {
     return requestDao.findByFriend(friendId);
 }
 
-// why a request that isn't waiting any more can't be cancelled or approved again
+// why a request that isn't waiting any more can't be cancelled, approved or declined again
 function notWaiting(request) {
     if (request.status === 'cancelled') return ruleBroken('This request was cancelled');
-    return ruleBroken('This request has already been answered'); // approved (or, later, declined)
+    return ruleBroken('This request has already been answered'); // approved or declined
 }
 
 // my Requests list: what still needs an answer from me, in the order it came
@@ -66,4 +67,17 @@ async function approveRequest(requestId) {
     return requestDao.linkLoan(requestId, loan.id);
 }
 
-module.exports = { askForBook, listFriendRequests, listWaitingRequests, listRequestsForPanel, cancelRequest, approveRequest };
+// I say no to Sam's request for Dune, maybe with a short note Sam will read. Nothing is lent.
+// Gives back nothing when there's no such request, so the controller can say "Request not found"
+async function declineRequest(requestId, note) {
+    note = note ?? ''; // no note at all is fine: Sam just sees "declined"
+    if (typeof note !== 'string') throw badRequest('The note must be words.');
+    if (note.length > NOTE_LIMIT) throw badRequest(`Keep the note to ${NOTE_LIMIT} characters or fewer.`);
+    const request = await requestDao.findById(requestId);
+    if (!request) return null;
+    const declined = await requestDao.markDeclined(requestId, note);
+    if (!declined) throw notWaiting(await requestDao.findById(requestId));
+    return declined;
+}
+
+module.exports = { askForBook, listFriendRequests, listWaitingRequests, listRequestsForPanel, cancelRequest, approveRequest, declineRequest };

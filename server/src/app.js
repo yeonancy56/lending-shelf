@@ -38,5 +38,6 @@ app.use('/loans', onlyOwner, loanRoutes);
 
 app.get('/requests', onlyOwner, requestController.listWaiting); // my Requests list: waiting requests, oldest first
 app.post('/requests/:id/approve', onlyOwner, requestController.approve); // I say yes, and the book is lent right away
+app.post('/requests/:id/decline', onlyOwner, requestController.decline); // I say no, maybe with a short note for Sam
 
 module.exports = app;                // sharing the app

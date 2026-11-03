@@ -68,7 +68,17 @@ function markApproved(id) {
     );
 }
 
-// one request, whoever made it, for my Approve button.
+// decline: only if it's still waiting, in one step, so a decline can't land on a request I just approved.
+// Gives back nothing when it wasn't waiting any more
+function markDeclined(id, note) {
+    return Request.findOneAndUpdate(
+        { _id: id, status: 'waiting' },
+        { status: 'declined', answeredAt: new Date(), note },
+        { returnDocument: 'after' },
+    );
+}
+
+// one request, whoever made it, for my Approve and Decline buttons.
 // An ID in the wrong shape, like "abc", can't belong to any request, so there's nothing to find
 function findById(id) {
     return mongoose.isValidObjectId(id) ? Request.findById(id) : null;
@@ -79,4 +89,4 @@ function linkLoan(id, loanId) {
     return Request.findByIdAndUpdate(id, { loan: loanId }, { returnDocument: 'after' });
 }
 
-module.exports = { create, findWaitingByBook, countWaitingByFriend, findAskedForBookIds, hasEverBeenAskedFor, hasEverAsked, findByFriend, findByIdForFriend, markCancelled, findWaiting, markApproved, linkLoan, findById };
+module.exports = { create, findWaitingByBook, countWaitingByFriend, findAskedForBookIds, hasEverBeenAskedFor, hasEverAsked, findByFriend, findByIdForFriend, markCancelled, findWaiting, markApproved, markDeclined, linkLoan, findById };
