@@ -13,6 +13,11 @@ async function list(req, res) {
     res.json(books);
 }
 
+// Sam's view of the shelf, through /shelf
+async function shelf(req, res) {
+    res.json(await bookService.listShelf());
+}
+
 async function getOne(req, res) {
     const book = await bookService.getBook(req.params.id);
     if(!book) return res.status(404).json({error: 'Book not found'});
@@ -68,4 +73,4 @@ async function remove(req, res) {
     }
 }
 
-module.exports = {list, getOne, create, update, remove}
+module.exports = {list, shelf, getOne, create, update, remove}

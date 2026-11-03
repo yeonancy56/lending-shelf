@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'; //useState = memory, what should the page remember, useEffect = do something at a certain time
-import { getBooks, addBook, updateBook, getFriends, addFriend, updateFriend, getFriendLoans, getLoans, lendBook, returnLoan, isSignedIn, saveSignIn, signOut, whenSignedOut } from './api';
+import { getBooks, addBook, updateBook, getFriends, addFriend, updateFriend, getFriendLoans, getLoans, lendBook, returnLoan, getShelf, getMyLoans, whoAmI, isSignedIn, saveSignIn, signOut, whenSignedOut } from './api';
 import GoogleSignIn from './GoogleSignIn';
 
 // a book's name on the page: "Dune (signed)" when it has a copy note, just "Dune" when it doesn't
@@ -89,19 +89,32 @@ function SignInScreen({ message, onSignIn }) {
   );
 }
 
-// The whole page: the sign-in screen until I sign in, then my shelf.
-// Nothing is asked from the server until I'm signed in, so a stranger sees no books, friends or loans
+// The whole page: the sign-in screen until someone signs in, then my shelf or the friend page.
+// Nothing is asked from the server until someone's signed in, so a stranger sees no books, friends or loans
 function App() {
   const [signedIn, setSignedIn] = useState(isSignedIn); // already signed in from before a reload?
   const [signInMessage, setSignInMessage] = useState('');
+  // the server's answer to "who am I?": { who: 'owner' } or { who: 'friend', name: 'Sam' }. null while it's on the way
+  const [me, setMe] = useState(null);
 
   // the server says it doesn't know me (a stranger, or a sign-in that's too old): back to the sign-in button
   useEffect(() => {
     whenSignedOut((message) => {
       setSignInMessage(message);
       setSignedIn(false);
+      setMe(null);
     });
   }, []);
+
+  // once signed in, ask "who am I?", so the page knows which page to show
+  useEffect(() => {
+    if (!signedIn) return;
+    let stillSignedIn = true;
+    whoAmI().then((answer) => {
+      if (stillSignedIn) setMe(answer); // signed out while the answer was on the way? Then it's thrown away
+    });
+    return () => { stillSignedIn = false; };
+  }, [signedIn]);
 
   // useCallback keeps this the same function every time, so Google's button isn't drawn again on every change
   const handleSignIn = useCallback((signIn) => {
@@ -113,10 +126,61 @@ function App() {
   function handleSignOut() {
     signOut();
     setSignedIn(false);
+    setMe(null); // the next person to sign in might be someone else
   }
 
   if (!signedIn) return <SignInScreen message={signInMessage} onSignIn={handleSignIn} />;
+  if (!me) return <p>Loading…</p>; // "who am I?" is still on the way
+  if (me.error) {
+    // the server broke while saying who I am, so there's no page to show yet. Sign out lets me try again
+    return (
+      <div>
+        <h1>Lending Shelf</h1>
+        <ErrorMessage message={me.error} />
+        <button onClick={handleSignOut}>Sign out</button>
+      </div>
+    );
+  }
+  if (me.who === 'friend') return <FriendPage name={me.name} onSignOut={handleSignOut} />;
   return <Shelf onSignOut={handleSignOut} />;
+}
+
+// Sam's page: every book on the shelf, and Sam's own loans. Nothing to click but Sign out,
+// because lending, returning, adding and editing are only for me
+function FriendPage({ name, onSignOut }) {
+  const [shelf, setShelf] = useState([]);
+  const [myLoans, setMyLoans] = useState(null); // null while the server hasn't answered yet
+  const [listErrors, setListErrors] = useState({});
+  const listError = Object.values(listErrors).find((error) => error);
+
+  useEffect(() => { // when the page opens, fill in the shelf and Sam's loans
+    getShelf().then((result) => fillList(result, 'shelf', setShelf, setListErrors));
+    getMyLoans().then(setMyLoans);
+  }, []);
+
+  return (
+    <div>
+      <h1>Lending Shelf</h1>
+      <h2>Hi, {name}</h2>
+      <button onClick={onSignOut}>Sign out</button>
+      <ErrorMessage message={listError} />
+      <section>
+        <h2 id="friend-shelf">Books</h2>
+        {/* each book says "on the shelf" or "lent out", but never who has it: the server doesn't send that */}
+        <ul aria-labelledby="friend-shelf">
+          {shelf.map((book) => (
+            <li key={book._id}>{bookName(book)} by {book.author} · {book.state}</li>
+          ))}
+        </ul>
+      </section>
+      <section aria-labelledby="my-loans">
+        <h2 id="my-loans">My loans</h2>
+        {!myLoans && <p>Loading…</p>}
+        <ErrorMessage message={myLoans?.error} />
+        {myLoans && !myLoans.error && <FriendLoans loans={myLoans} />} {/* the same lists as Sam's panel on my page */}
+      </section>
+    </div>
+  );
 }
 
 function Shelf({ onSignOut }) { //these are memory boxes 

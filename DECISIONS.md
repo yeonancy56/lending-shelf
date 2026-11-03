@@ -623,3 +623,8 @@ Why: without the client id, Google's checker skips "was this sign-in made for my
 Chose: Sam's panel gets an Edit button. It puts Sam's name and email in the friend form at the top, with Save and Cancel, like clicking a book's spine
 Other option: an edit box inside Sam's panel, or an Edit button next to each name in the list
 Why: it works the same way as editing a book, so there's nothing new to learn. The panel is already where I go to look at Sam
+
+## 2026-11-02 — Sam's addresses are only for friends, even for me
+Chose: the friend shelf view and "my loans" answer only a signed-in friend. If I ask for them, the server says "Only a friend can do that." Each address belongs to one side: mine, or a friend's
+Other option: let me see the friend shelf view too, since it shows nothing secret
+Why: I have no loans of my own, so "my loans" means nothing for me. And one simple rule, "every address is mine or a friend's", is easier to check than a mix

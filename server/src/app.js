@@ -7,19 +7,29 @@ app.get ('/health', (req,res) => {       // health route, open to anyone, so Ren
    res.send('ok')
 });
 
-// every address below this line needs the owner's sign-in
-const onlyOwner = require('./auth/only-owner');
-app.use(onlyOwner);
-
-const bookRoutes = require('./books/book.routes');
+// every address below this line needs a sign-in: mine, or a friend's like Sam's
+const { signedIn, onlyOwner, onlyFriend, whoAmI } = require('./auth/gatekeeper');
+app.use(signedIn);
 
 app.use(express.json());
-app.use('/books', bookRoutes);
+
+// "who am I?", for both of us: the page asks it to know which page to show
+app.get('/me', whoAmI);
+
+// Sam's addresses. Each one works out it's Sam from the sign-in, so Sam can only ever see Sam's own things
+const bookController = require('./books/book.controller');
+const loanController = require('./loans/loan.controller');
+app.get('/shelf', onlyFriend, bookController.shelf);          // every book, "on the shelf" or "lent out", with no names
+app.get('/me/loans', onlyFriend, loanController.listMine);    // Sam's own loans
+
+// my addresses. A friend gets 403 on every one of them
+const bookRoutes = require('./books/book.routes');
+app.use('/books', onlyOwner, bookRoutes);
 
 const friendRoutes = require('./friends/friend.routes');
-app.use('/friends', friendRoutes);
+app.use('/friends', onlyOwner, friendRoutes);
 
 const loanRoutes = require('./loans/loan.routes');
-app.use('/loans', loanRoutes);
+app.use('/loans', onlyOwner, loanRoutes);
 
-module.exports = app;                // sharing the app 
+module.exports = app;                // sharing the app

@@ -1,7 +1,7 @@
 // Tests how api.js reads the server's answer. No server needed:
 // fetch (the browser's way of calling the server) is swapped for a fake one.
 import { afterEach, expect, test, vi } from 'vitest';
-import { addBook, addFriend, updateFriend, getBooks, getFriends, getLoans, isSignedIn, lendBook, returnLoan, saveSignIn, signOut, whenSignedOut } from './api';
+import { addBook, addFriend, updateFriend, getBooks, getFriends, getLoans, getShelf, getMyLoans, whoAmI, isSignedIn, lendBook, returnLoan, saveSignIn, signOut, whenSignedOut } from './api';
 
 const DUNE = { title: 'Dune', author: 'Frank Herbert' };
 
@@ -26,6 +26,24 @@ test('keeps the server\'s own words when returning a loan that no longer exists'
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(answer(404, JSON.stringify({ error: 'Loan not found' }))));
 
     expect(await returnLoan('loan-id')).toEqual({ error: 'Loan not found' });
+});
+
+test('keeps the server\'s own words when Sam tries something only I can do (403)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(answer(403, JSON.stringify({ error: 'Only the owner can do that.' }))));
+
+    expect(await getLoans()).toEqual({ error: 'Only the owner can do that.' });
+});
+
+test.each([
+    ['"who am I?"', whoAmI, '/api/me'],
+    ['the friend shelf view', getShelf, '/api/shelf'],
+    ['Sam\'s own loans', getMyLoans, '/api/me/loans'],
+])('asks the server for %s at its own address', async (_, ask, address) => {
+    const fetch = vi.fn().mockResolvedValue(answer(200, JSON.stringify({ who: 'owner' })));
+    vi.stubGlobal('fetch', fetch);
+
+    expect(await ask()).toEqual({ who: 'owner' });
+    expect(fetch).toHaveBeenCalledWith(address, expect.anything());
 });
 
 // every button that sends something: Add book, Add Friend, Save friend, Lend and Return
@@ -54,6 +72,9 @@ test.each([
     ['books', getBooks],
     ['friends', getFriends],
     ['loans', getLoans],
+    ['who am I', whoAmI],
+    ['shelf', getShelf],
+    ['my loans', getMyLoans],
 ])('says something went wrong when the %s list can\'t load', async (_, load) => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
 
