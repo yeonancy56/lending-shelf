@@ -1,15 +1,19 @@
 const friendDao = require('./friend.dao')
 const loanDao = require('../loans/loan.dao');
+const requestDao = require('../requests/request.dao');
 const tidyEmail = require('../auth/tidy-email');
 const { badRequest, ruleBroken } = require('../errors');
 
 function listFriends()             { return friendDao.findAll(); }
 function getFriend(id)             { return friendDao.findById(id); }
 
-// a friend who's borrowed can't be deleted, because their loans (out now or returned) still need them
+// a friend who's borrowed or asked can't be deleted, because their loans and requests are kept forever and still need them
 async function deleteFriend(id) {
     if (await loanDao.hasEverBorrowed(id)) {
         throw ruleBroken("This friend has borrowed before, so they can't be deleted. Their loans need them.");
+    }
+    if (await requestDao.hasEverAsked(id)) {
+        throw ruleBroken("This friend has asked for a book before, so they can't be deleted. Their requests need them.");
     }
     return friendDao.remove(id);
 }
