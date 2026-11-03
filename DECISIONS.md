@@ -700,6 +700,7 @@ Why: this changes the earlier choice to keep it in App.jsx. That made sense whil
 Chose: before a ticket, after a ticket, and at the start of a session, Claude offers its questions, and I can say "skip"
 Other option: keep asking every time, as before
 Why: I was skipping most of them, often because we had already talked the plan through. An offer still keeps the questions there for when I want them
+Replaced by: "One quiz offer per ticket, not two" (2026-11-03), for the start of a session only. A new conversation no longer starts with questions
 
 ## 2026-11-03 — Deleting a friend first checks the friend is there
 Chose: before deleting, the server checks the friend exists, the same check editing a friend uses. An address like /friends/abc now gets "Friend not found" instead of a crash
@@ -755,3 +756,8 @@ Why: today a fresh Claude couldn't find the note, because nothing said where it 
 Chose: when I approve Sam's request for Dune, Dune is lent first, and only then is the request marked "approved". This replaces two entries from 2026-11-02: "leave the gap for now" and "the request goes back to waiting". Sam's request keeps waiting the whole time, so nobody else can ask for Dune in between. If saving the loan breaks, the request was never changed, so there's nothing to undo. If the yes can't be saved after Dune was lent, or Sam cancels in that same split second, the new loan is removed. Dune was never really handed over, so the loan isn't kept as a record. If I click Approve twice, the database's "one active loan per book" rule lets only one loan through
 Other option: decline Sam's request on its own when lending breaks
 Why: Sam would be told "no" when I never said no. Lending first closes the gap and makes the code shorter
+
+## 2026-11-03 — One quiz offer per ticket, not two
+Chose: after each ticket, Claude makes one offer: 1–2 questions about what we just did, plus 1 about an earlier ticket. A new conversation no longer starts by offering review questions. This changes part of the earlier choice "Claude offers its learning questions instead of always asking". The offers before and after a ticket stay
+Other option: keep the start-of-conversation offer, but skip it if a ticket was merged that day. Or only offer it when we pick up from a handoff note
+Why: after the last ticket was merged, I got questions, typed /clear, and was offered more questions right away. That's two offers in a row. Adding one older question to the after-ticket offer still brings old tickets back, so I don't forget them

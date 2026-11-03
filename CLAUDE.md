@@ -25,18 +25,18 @@ A MERN app for tracking books I lend to friends.
    explain your plan, or skip?"). If I explain it, ask 2–3 questions, one at a
    time, until the plan is clear.
 3. **After each ticket**, run /code-review, then offer 1–2 questions to check
-   I understand the change ("want a quick question, or skip?").
+   I understand the change, plus 1 about an earlier ticket ("want a quick
+   question, or skip?"). This is the only offer of review questions. A new
+   session doesn't start with one.
 4. **Every decision goes in DECISIONS.md.** Claude writes the entry in plain,
    everyday language — short sentences, no jargon, as if explaining to a friend
    who doesn't code.
-5. **Start each session** by offering 2–3 quick review questions about earlier
-   tickets ("want some review questions, or skip?").
-6. When you explain something, connect it to this app (Dune, Sam, loans), not
+5. When you explain something, connect it to this app (Dune, Sam, loans), not
    to abstract examples.
-7. **Every ticket gets its own branch and a pull request.** Use the pr skill
+6. **Every ticket gets its own branch and a pull request.** Use the pr skill
    for the PR description, run /code-review, and merge only after CI passes.
    After merging, delete the branch.
-8. **When a ticket is merged, after the rule 3 questions, tell me to /clear.** If we're stopping mid-work,
+7. **When a ticket is merged, after the rule 3 questions, tell me to /clear.** If we're stopping mid-work,
    or my status line shows 140k, write a handoff note first, then tell me:
    "Handoff saved, type /clear, then say: read the handoff note and continue."
    The note is `HANDOFF.md` at the project root. It's kept out of git, and
