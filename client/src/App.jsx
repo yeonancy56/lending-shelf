@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'; //useState = memory, what should the page remember, useEffect = do something at a certain time
-import { getBooks, addBook, updateBook, getFriends, addFriend, updateFriend, getFriendLoans, getFriendRequests, getWaitingRequests, approveRequest, declineRequest, getLoans, lendBook, returnLoan, getShelf, getMyLoans, getMyRequests, askForBook, cancelRequest, whoAmI, isSignedIn, saveSignIn, signOut, whenSignedOut } from './api';
+import { getBooks, addBook, updateBook, getFriends, addFriend, updateFriend, getFriendLoans, getFriendRequests, getWaitingRequests, approveRequest, declineRequest, getLoans, lendBook, returnLoan, getShelf, getMyLoans, getMyRequests, askForBook, cancelRequest, rateBook, whoAmI, isSignedIn, saveSignIn, signOut, whenSignedOut } from './api';
 import GoogleSignIn from './GoogleSignIn';
 import ErrorMessage from './ErrorMessage';
 
@@ -43,6 +43,28 @@ function fillList(result, list, setList, setListErrors) {
 function BookCount({ books, arrived }) {
   if (!arrived) return null;
   return <p className="book-count">{books.length === 1 ? '1 book' : `${books.length} books`}</p>;
+}
+
+// Sam's own stars for one copy he's returned: five buttons, filled up to his stars (★★★★☆), or all empty (☆☆☆☆☆) before he rates.
+// Clicking one saves it straight away. Labelled "your stars", so it's never mixed up with anyone else's
+const STARS = [1, 2, 3, 4, 5];
+function YourStars({ book, onRate }) {
+  return (
+    <span role="group" aria-label={`Your stars for ${bookName(book)}`} className="your-stars">
+      your stars{' '}
+      {STARS.map((stars) => (
+        <button
+          key={stars}
+          className="star"
+          aria-label={stars === 1 ? '1 star' : `${stars} stars`}
+          aria-pressed={book.myStars === stars}
+          onClick={() => onRate(book._id, stars)}
+        >
+          {stars <= (book.myStars ?? 0) ? '★' : '☆'}
+        </button>
+      ))}
+    </span>
+  );
 }
 
 // one request's line, like "Dune · declined · “I'm rereading it this week”". The note only shows when I wrote one
@@ -177,7 +199,7 @@ function FriendPage({ name, onSignOut }) {
   const [myLoans, setMyLoans] = useState(null); // null while the server hasn't answered yet
   const [myRequests, setMyRequests] = useState(null); // null while the server hasn't answered yet
   const [listErrors, setListErrors] = useState({});
-  const [requestError, setRequestError] = useState(''); // the red message for Ask and Cancel
+  const [requestError, setRequestError] = useState(''); // the red message for Ask, Cancel and the stars
   const listError = Object.values(listErrors).find((error) => error);
 
   // fill in (or fill in again) the shelf and Sam's requests: asking or cancelling changes both
@@ -205,6 +227,13 @@ function FriendPage({ name, onSignOut }) {
     if (!result.error) loadShelfAndRequests();
   }
 
+  // Sam clicks a star on Dune: it's saved straight away, and the shelf shows his new stars
+  async function handleRate(bookId, stars) {
+    const result = await rateBook(bookId, stars);
+    setRequestError(result.error || '');
+    if (!result.error) loadShelfAndRequests();
+  }
+
   return (
     <div>
       <h1>Lending Shelf</h1>
@@ -221,6 +250,7 @@ function FriendPage({ name, onSignOut }) {
             <li key={book._id}>
               {bookName(book)} by {book.author} · {book.state}
               {book.state === SHELF_STATE.AT_HOME && <button onClick={() => handleAsk(book._id)}>Ask</button>}
+              {book.canRate && <YourStars book={book} onRate={handleRate} />} {/* only copies Sam has returned */}
             </li>
           ))}
         </ul>

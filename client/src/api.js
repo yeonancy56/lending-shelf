@@ -115,6 +115,16 @@ export async function cancelRequest(id) {
     });
 }
 
+// the friend page: Sam gives a copy he's returned 1 to 5 stars, or changes them.
+// PUT, because it sets Sam's stars to this, whatever they were. The server knows it's Sam from the sign-in
+export async function rateBook(bookId, stars) {
+    return send('/me/ratings/' + bookId, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stars: stars }),
+    });
+}
+
 // my Requests list: every waiting request, oldest first, with who asked for what
 export async function getWaitingRequests() {
     return send('/requests');

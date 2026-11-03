@@ -19,27 +19,49 @@ const dueBack = '2026-10-15T12:00:00.000Z';
 const samsLoan = { _id: 'loan-1', book: longBook, friend: sam, lentAt, dueBack, overdue: true };
 const anasRequest = { _id: 'request-1', book: dune, friend: ana, status: 'waiting' };
 
-// what the server would say to each question my shelf asks. Anything else gets "not found"
+// Sam's page: he's returned the long book (and rated it 4) and Matilda (not rated yet), so both get his stars
+const samsPastLoans = [
+  { _id: 'loan-2', book: longBook, lentAt: '2026-09-01T12:00:00.000Z', returnedAt: '2026-09-10T12:00:00.000Z' },
+  { _id: 'loan-3', book: matilda, lentAt: '2026-08-01T12:00:00.000Z', returnedAt: '2026-08-12T12:00:00.000Z' },
+];
+
+// what the server would say to each question a page asks: mine (owner), or Sam's (friend).
+// Anything else gets "not found"
 const ANSWERS = {
-  '/me': { who: 'owner' },
-  '/books': [longBook, dune, matilda],
-  '/friends': [sam, ana],
-  '/loans': [samsLoan],
-  '/requests': [anasRequest],
+  owner: {
+    '/me': { who: 'owner' },
+    '/books': [longBook, dune, matilda],
+    '/friends': [sam, ana],
+    '/loans': [samsLoan],
+    '/requests': [anasRequest],
+  },
+  friend: {
+    '/me': { who: 'friend', name: 'Sam' },
+    '/shelf': [
+      { ...longBook, state: 'at home', canRate: true, myStars: 4 },
+      { ...dune, state: 'asked for' },
+      { ...matilda, state: 'at home', canRate: true },
+    ],
+    '/me/loans': { active: [], returned: samsPastLoans, limit: 3 },
+    '/me/requests': [],
+  },
 };
 
-// the pretend server's answer to one address, like '/books'
-export function pictureAnswer(path) {
-  if (path in ANSWERS) return { status: 200, body: ANSWERS[path] };
+// the pretend server's answer to one address, like '/books', for me (owner) or for Sam (friend)
+export function pictureAnswer(path, who = 'owner') {
+  if (path in ANSWERS[who]) return { status: 200, body: ANSWERS[who][path] };
   return { status: 404, body: { error: 'Picture mode only shows the page' } };
 }
 
-// /phone shows my shelf in a frame as wide as a phone (375), with no gaps around it.
+// the pretend sign-in for each page. /phone?as=friend pictures Sam's page, plain /phone pictures mine
+const PRETEND_SIGN_IN = { owner: 'picture-mode', friend: 'picture-mode-friend' };
+
+// /phone shows my shelf in a frame as wide as a phone (375), with no gaps around it, and /phone?as=friend shows Sam's page.
 // Chrome's picture-taker can't make its own window narrower than 500, but it can picture this frame
 const PHONE_WIDTH = 375;
 const PHONE_HEIGHT = 2400; // keep in step with --window-size in CLAUDE.md rule 6, or the bottom is left out of the picture
-const PHONE_PAGE = `<!doctype html><title>Phone width</title>
-<body style="margin:0"><iframe src="/" width="${PHONE_WIDTH}" height="${PHONE_HEIGHT}" style="border:0;display:block"></iframe></body>`;
+const phonePage = (search) => `<!doctype html><title>Phone width</title>
+<body style="margin:0"><iframe src="/${search}" width="${PHONE_WIDTH}" height="${PHONE_HEIGHT}" style="border:0;display:block"></iframe></body>`;
 
 // the Vite plugin: answers /api with the pretend answers, and starts the page already signed in
 export function pictureMode() {
@@ -49,18 +71,21 @@ export function pictureMode() {
     configureServer(server) {
       server.middlewares.use('/phone', (req, res) => {
         res.setHeader('Content-Type', 'text/html');
-        res.end(PHONE_PAGE);
+        res.end(phonePage(req.url.includes('as=friend') ? '?as=friend' : ''));
       });
       server.middlewares.use('/api', (req, res) => {
-        const { status, body } = pictureAnswer(req.url.split('?')[0]);
+        // the page sends its pretend sign-in, so it's Sam's answers for Sam's page
+        const who = req.headers.authorization === 'Bearer ' + PRETEND_SIGN_IN.friend ? 'friend' : 'owner';
+        const { status, body } = pictureAnswer(req.url.split('?')[0], who);
         res.statusCode = status;
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(body));
       });
     },
-    // a pretend sign-in in the browser, so the page skips the Google button
+    // a pretend sign-in in the browser, so the page skips the Google button. Sam's when the address says ?as=friend
     transformIndexHtml() {
-      return [{ tag: 'script', children: `localStorage.setItem('${SIGN_IN_KEY}', 'picture-mode');`, injectTo: 'head-prepend' }];
+      const signIn = `location.search.includes('as=friend') ? '${PRETEND_SIGN_IN.friend}' : '${PRETEND_SIGN_IN.owner}'`;
+      return [{ tag: 'script', children: `localStorage.setItem('${SIGN_IN_KEY}', ${signIn});`, injectTo: 'head-prepend' }];
     },
   };
 }

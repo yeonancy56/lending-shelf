@@ -1,6 +1,7 @@
 const bookDao = require('./book.dao');
 const loanDao = require('../loans/loan.dao');
 const requestDao = require('../requests/request.dao');
+const ratingDao = require('../ratings/rating.dao');
 const { badRequest, ruleBroken } = require('../errors');
 const { isSameText } = require('./book.same-text');
 const SHELF_STATE = require('./book.shelf-state');
@@ -9,16 +10,26 @@ function listBooks()          { return bookDao.findAll(); }
 function getBook(id)          { return bookDao.findById(id); }
 
 // the friend shelf view: every book, and whether it's "at home", "lent out" or "asked for".
-// Only the book's own details are copied over, so who has Dune, or who asked for it, can never slip into Sam's page
-async function listShelf() {
+// Only the book's own details are copied over, so who has Dune, or who asked for it, can never slip into Sam's page.
+// For the friend looking (friendId), a copy they've returned also says they can rate it, with their own stars once they have.
+// Never anyone else's stars
+async function listShelf(friendId) {
     const books = await bookDao.findAll();
     const lentOutIds = await loanDao.findLentOutBookIds();
     const askedForIds = await requestDao.findAskedForBookIds();
+    const returnedIds = await loanDao.findReturnedBookIds(friendId);
+    const myRatings = await ratingDao.findByFriend(friendId);
     const isIn = (ids, book) => ids.some((id) => id.equals(book._id));
     function stateOf(book) {
         if (isIn(lentOutIds, book)) return SHELF_STATE.LENT_OUT;
         if (isIn(askedForIds, book)) return SHELF_STATE.ASKED_FOR;
         return SHELF_STATE.AT_HOME;
+    }
+    // canRate and myStars are left out when they don't apply, the same way a book with no copy note has no copyNote
+    function starsOf(book) {
+        if (!isIn(returnedIds, book)) return {};
+        const mine = myRatings.find((rating) => rating.book.equals(book._id));
+        return mine ? { canRate: true, myStars: mine.stars } : { canRate: true };
     }
     return books.map((book) => ({
         _id: book._id,
@@ -26,6 +37,7 @@ async function listShelf() {
         author: book.author,
         copyNote: book.copyNote,
         state: stateOf(book),
+        ...starsOf(book),
     }));
 }
 

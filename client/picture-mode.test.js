@@ -17,6 +17,23 @@ describe('picture mode', () => {
     }
   });
 
+  it('as Sam, says he is a friend, so the page shows his page', () => {
+    expect(pictureAnswer('/me', 'friend')).toEqual({ status: 200, body: { who: 'friend', name: 'Sam' } });
+  });
+
+  it('as Sam, answers every list his page asks for when it opens', () => {
+    for (const path of ['/shelf', '/me/loans', '/me/requests']) {
+      expect(pictureAnswer(path, 'friend').status).toBe(200);
+    }
+  });
+
+  it('as Sam, the shelf has a copy he rated, one he can rate but hasn\'t, and the long name with stars under it', () => {
+    const shelf = pictureAnswer('/shelf', 'friend').body;
+    expect(shelf.some((book) => book.canRate && book.myStars)).toBe(true);
+    expect(shelf.some((book) => book.canRate && !book.myStars)).toBe(true);
+    expect(shelf.some((book) => book.canRate && book.title.length > 60)).toBe(true);
+  });
+
   it('says "not found" to anything else', () => {
     expect(pictureAnswer('/nothing-here').status).toBe(404);
   });

@@ -162,6 +162,25 @@ li button {
   font-size: 14px;
 }
 
+/* Sam's own stars, on their own line under a copy he's returned: "your stars ★★★★☆" */
+.your-stars {
+  display: block;
+  color: var(--quiet);
+  font-size: 14px;
+}
+
+/* each star is a button, but a plain star, not the round green one. Wide enough to tap on a phone */
+li .star {
+  background: none;
+  color: var(--button);
+  padding: 0;
+  margin: 0;
+  min-width: 36px;
+  min-height: 36px;
+  font-size: 24px;
+  line-height: 1;
+}
+
 /* the books stand up on the shelf like spines */
 .books-list {
   display: flex;

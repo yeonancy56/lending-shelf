@@ -13,9 +13,9 @@ async function list(req, res) {
     res.json(books);
 }
 
-// Sam's view of the shelf, through /shelf
+// Sam's view of the shelf, through /shelf. Which friend comes from Sam's sign-in, so Sam only ever sees Sam's own stars
 async function shelf(req, res) {
-    res.json(await bookService.listShelf());
+    res.json(await bookService.listShelf(req.who.friendId));
 }
 
 async function getOne(req, res) {

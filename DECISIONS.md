@@ -809,3 +809,23 @@ Why: my shelf now means every book I own, lent out or not, so "on the shelf" did
 Chose: the server and Sam's page each keep "at home", "lent out" and "asked for" in one short list, and use that list instead of typing the words again
 Other option: share one list between the server and the page, or leave the words typed out wherever they're used
 Why: Sam's page shows the Ask button only when the server says "at home". If one side changed the word and the other didn't, the Ask buttons would quietly vanish. One list per side means a rename is one line on each side. Sharing one list would need a new shared folder, and that's too much for three words. The tests still type the real words, so a slip on either side makes a test fail
+
+## 2026-11-03 — Friends rate each copy, once each
+Chose: a friend gives a copy of a book 1 to 5 stars. Each friend has one rating per copy. If Sam borrows the signed Dune twice, he still has one rating for it, and he can change it but not remove it
+Other option: one rating per loan, so Sam rates Dune again every time he borrows it. Or one rating per book for all copies together
+Why: if Sam read Dune five times, one rating per loan would count him five times in the average. Each copy gets its own stars because a cleaner, newer copy can be nicer to read than a worn one. Changing covers "I changed my mind". Removing would need another button and rule I didn't ask for
+
+## 2026-11-03 — Sam can rate a copy once he's returned it
+Chose: Sam can rate the signed Dune after he has returned it at least once, even if he has it again now. Only friends rate. I don't
+Other option: let Sam rate while he still has it the first time, or let me rate my own books too
+Why: he should finish the book before rating it. My own stars would mix with what my friends think, and a 5 from me on my favourite would push its average up
+
+## 2026-11-03 — The average shows with how many rated it
+Chose: each copy shows "★ 4.5 · 2 ratings" ("1 rating" for one), and nothing at all when no one has rated it. I see only the average. Sam sees the average and his own stars, never what Priya gave
+Other option: show just "★ 4.5", show "0 stars" for no ratings, or show me who gave what
+Why: 5 stars from one friend means less than 4.5 from six, so the count matters. "0 stars" would look like everyone hated it. If friends could see each other's stars, Priya might feel awkward giving a low one
+
+## 2026-11-03 — Sam rates on the shelf list, by clicking a star
+Chose: on Sam's shelf list, a copy he can rate but hasn't rated yet shows five empty stars ☆☆☆☆☆. Clicking one saves right away, with no Save button. His own stars are labelled "your stars" so they don't get mixed up with the average
+Other option: rate from the "had before" list of returned loans
+Why: a book Sam borrowed twice appears twice in "had before", so he'd see the same stars on two rows. On the shelf list each copy appears once, right next to its average
