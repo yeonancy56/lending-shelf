@@ -738,3 +738,8 @@ Why: those steps are for the page asking the server to do something. Nobody clic
 Chose: one file with the 21 rules the code should follow, like "every red message uses ErrorMessage" and "the code says copyNote, not note". Each rule names the decision it came from, and the reasons stay in DECISIONS.md
 Other option: leave the rules inside DECISIONS.md, or copy each reason into the new file too
 Why: to check that a new change shows "Dune (signed)" the right way, the reviewer had to dig through almost 150 decisions to find a handful of rules. One list is quicker to check against. Pointing back instead of copying the reasons means there's only one place to change each one
+
+## 2026-11-03 — Start fresh after each ticket, with a handoff note when needed
+Chose: when a ticket is merged, Claude tells me to type /clear. If we stop in the middle, or the counter at the bottom of my screen reaches 140k, Claude first writes a handoff note saying where we are, then tells me to clear and ask it to read the note
+Other option: keep one long conversation going until it runs out of room
+Why: a long conversation gets slow and Claude starts forgetting the early parts. A merged ticket is a clean place to stop, since everything is saved on GitHub. If we're halfway through, like in the middle of lending Dune to Sam, the note keeps the bits that aren't saved anywhere yet
