@@ -88,6 +88,12 @@ _Avoid_: withdraw, delete
 When the friend gives the book back, which turns an active loan into a returned loan.
 _Avoid_: check in, give back
 
+## Ratings
+
+**Rating**:
+The 1 to 5 stars a friend gives one copy of a book. Sam can rate the signed Dune once he has returned it at least once, even if he has it again now. Each friend has at most one rating per copy, so if Sam borrows the signed Dune twice, he still has one rating for it. He can change it later but can't take it away. Two copies of Dune get separate ratings, because one copy can be nicer to read than the other. Only friends rate. I don't.
+_Avoid_: review, score, vote
+
 ## Rules
 
 **Lending rules**:

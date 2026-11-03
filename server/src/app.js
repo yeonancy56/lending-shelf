@@ -21,6 +21,8 @@ const shelfRoutes = require('./books/shelf.routes');
 app.use(shelfRoutes);       // /shelf: every book and whether it is free, with no names
 const myLoansRoutes = require('./loans/my-loans.routes');
 app.use(myLoansRoutes);     // /me/loans: Sam's own loans
+const ratingRoutes = require('./ratings/rating.routes');
+app.use(ratingRoutes);      // /me/ratings/:bookId: Sam's stars for one copy
 
 // requests: some addresses are Sam's and some are mine, so each one says whose it is in its own file
 const requestRoutes = require('./requests/request.routes');

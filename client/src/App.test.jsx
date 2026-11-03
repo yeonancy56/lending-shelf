@@ -839,6 +839,73 @@ test('when Cancel fails, Sam sees the red message', async () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('This request was cancelled');
 });
 
+// Sam's stars: a copy Sam has returned gets five star buttons, named "1 star" to "5 stars"
+const STAR_NAMES = ['1 star', '2 stars', '3 stars', '4 stars', '5 stars'];
+
+test('a copy Sam returned but hasn\'t rated shows five empty stars; a copy he never returned shows none', async () => {
+    signedInAsSam({ shelf: [
+        { ...DUNE, copyNote: 'signed', state: 'at home', canRate: true },
+        { ...MATILDA, state: 'at home' },
+    ] });
+
+    render(<App />);
+
+    const [dune, matilda] = await within(await screen.findByRole('list', { name: 'Books' })).findAllByRole('listitem');
+    const stars = within(dune).getByRole('group', { name: 'Your stars for Dune (signed)' });
+    expect(stars).toHaveTextContent('your stars ☆☆☆☆☆');
+    for (const name of STAR_NAMES) {
+        expect(within(stars).getByRole('button', { name })).toHaveAttribute('aria-pressed', 'false');
+    }
+    expect(within(matilda).queryByRole('group')).not.toBeInTheDocument();
+    expect(within(matilda).queryByRole('button', { name: '1 star' })).not.toBeInTheDocument();
+});
+
+test('Sam clicks the 4th star on Dune: 4 is saved straight away, and Dune shows his 4 stars', async () => {
+    signedInAsSam({ shelf: [{ ...DUNE, state: 'at home', canRate: true }] });
+    api.rateBook.mockResolvedValue({ book: 'dune-id', stars: 4 });
+
+    const user = userEvent.setup();
+    render(<App />);
+    const fourth = await screen.findByRole('button', { name: '4 stars' });
+    api.getShelf.mockResolvedValue([{ ...DUNE, state: 'at home', canRate: true, myStars: 4 }]);
+    await user.click(fourth);
+
+    expect(api.rateBook).toHaveBeenCalledWith('dune-id', 4);
+    const stars = screen.getByRole('group', { name: 'Your stars for Dune' });
+    expect(await within(stars).findByRole('button', { name: '4 stars', pressed: true })).toBeInTheDocument();
+    expect(stars).toHaveTextContent('your stars ★★★★☆');
+    expect(within(stars).getByRole('button', { name: '5 stars' })).toHaveAttribute('aria-pressed', 'false');
+});
+
+test('Sam changes his 3 stars on Dune to 5', async () => {
+    signedInAsSam({ shelf: [{ ...DUNE, state: 'at home', canRate: true, myStars: 3 }] });
+    api.rateBook.mockResolvedValue({ book: 'dune-id', stars: 5 });
+
+    const user = userEvent.setup();
+    render(<App />);
+    const stars = await screen.findByRole('group', { name: 'Your stars for Dune' });
+    expect(stars).toHaveTextContent('your stars ★★★☆☆');
+    api.getShelf.mockResolvedValue([{ ...DUNE, state: 'at home', canRate: true, myStars: 5 }]);
+    await user.click(within(stars).getByRole('button', { name: '5 stars' }));
+
+    expect(api.rateBook).toHaveBeenCalledWith('dune-id', 5);
+    expect(await within(stars).findByRole('button', { name: '5 stars', pressed: true })).toBeInTheDocument();
+    expect(stars).toHaveTextContent('your stars ★★★★★');
+});
+
+test('when rating fails, Sam sees the red message', async () => {
+    signedInAsSam({ shelf: [{ ...DUNE, state: 'at home', canRate: true }] });
+    api.rateBook.mockResolvedValue({ error: "This book can be rated once you've returned it" });
+
+    const user = userEvent.setup();
+    render(<App />);
+    const fourth = await screen.findByRole('button', { name: '4 stars' });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    await user.click(fourth);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent("This book can be rated once you've returned it");
+});
+
 test('signing in as me still shows my page', async () => {
     api.isSignedIn.mockReturnValue(false);
     api.getBooks.mockResolvedValue([DUNE]);

@@ -27,6 +27,16 @@ async function hasEverBorrowed(friendId) {
     return (await Loan.exists({ friend: friendId })) !== null;
 }
 
+// rating: has this friend ever brought this book back? Sam can rate Dune once he has, even if he has it again now
+async function hasReturned(bookId, friendId) {
+    return (await Loan.exists({ book: bookId, friend: friendId, returnedAt: { $ne: null } })) !== null;
+}
+
+// the friend shelf view: which books has this friend brought back at least once? Those are the ones Sam can rate
+function findReturnedBookIds(friendId) {
+    return Loan.distinct('book', { friend: friendId, returnedAt: { $ne: null } });
+}
+
 // rule 2: how mayn books does this friend out?
 function countActiveByFriend(friendId) {
     return Loan.countDocuments({ friend: friendId, returnedAt: null });
@@ -52,4 +62,4 @@ function remove(id) {
     return Loan.findByIdAndDelete(id);
 }
 
-module.exports = {findAll, findById, create, remove, findActiveByBook, hasEverBeenLent, findLentOutBookIds, hasEverBorrowed, countActiveByFriend, findActiveByFriend, findByFriend, markReturned}
+module.exports = {findAll, findById, create, remove, findActiveByBook, hasEverBeenLent, findLentOutBookIds, hasEverBorrowed, hasReturned, findReturnedBookIds, countActiveByFriend, findActiveByFriend, findByFriend, markReturned}

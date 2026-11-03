@@ -24,7 +24,7 @@ test('Sam sees every book, with "lent out" on Dune (out with Alex) and "at home"
     const matilda = await Book.create({ title: 'Matilda', author: 'Roald Dahl' });
     const hobbit = await Book.create({ title: 'The Hobbit', author: 'J.R.R. Tolkien' });
     await Loan.create({ book: dune.id, friend: alex.id });
-    // Sam had The Hobbit once, but brought it back, so it's at home again
+    // Sam had The Hobbit once, but brought it back, so it's at home again, and Sam can rate it
     await Loan.create({ book: hobbit.id, friend: sam.id, returnedAt: new Date() });
 
     const res = await asSam.get('/shelf');
@@ -33,7 +33,7 @@ test('Sam sees every book, with "lent out" on Dune (out with Alex) and "at home"
     expect(res.body).toEqual([
         { _id: dune.id, title: 'Dune', author: 'Frank Herbert', copyNote: 'signed', state: 'lent out' },
         { _id: matilda.id, title: 'Matilda', author: 'Roald Dahl', state: 'at home' },
-        { _id: hobbit.id, title: 'The Hobbit', author: 'J.R.R. Tolkien', state: 'at home' },
+        { _id: hobbit.id, title: 'The Hobbit', author: 'J.R.R. Tolkien', state: 'at home', canRate: true },
     ]);
 });
 
