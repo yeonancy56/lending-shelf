@@ -534,3 +534,128 @@ test('Sign out forgets me and goes back to the sign-in button', async () => {
     expect(screen.getByRole('button', { name: 'Sign in with Google' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Dune/ })).not.toBeInTheDocument();
 });
+
+const EMAIL_BOX = 'Google email (optional)';
+
+test('adding Sam sends the Google email I typed, then empties the form', async () => {
+    api.getBooks.mockResolvedValue([]);
+    api.getFriends.mockResolvedValue([]);
+    api.getLoans.mockResolvedValue([]);
+    api.addFriend.mockResolvedValue({ ...SAM, email: 'sam@gmail.com' });
+
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.type(screen.getByPlaceholderText('Name'), 'Sam');
+    await user.type(screen.getByPlaceholderText(EMAIL_BOX), 'Sam@Gmail.com');
+    await user.click(screen.getByRole('button', { name: 'Add Friend' }));
+
+    expect(api.addFriend).toHaveBeenCalledWith({ name: 'Sam', email: 'Sam@Gmail.com' });
+    expect(screen.getByPlaceholderText('Name')).toHaveValue('');
+    expect(screen.getByPlaceholderText(EMAIL_BOX)).toHaveValue('');
+});
+
+test('an email another friend already has shows the red message, and keeps what I typed', async () => {
+    api.getBooks.mockResolvedValue([]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+    api.addFriend.mockResolvedValue({ error: 'Sam already has this email.' });
+
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.type(screen.getByPlaceholderText('Name'), 'Alex');
+    await user.type(screen.getByPlaceholderText(EMAIL_BOX), 'sam@gmail.com');
+    await user.click(screen.getByRole('button', { name: 'Add Friend' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Sam already has this email.');
+    expect(screen.getByPlaceholderText('Name')).toHaveValue('Alex');
+    expect(screen.getByPlaceholderText(EMAIL_BOX)).toHaveValue('sam@gmail.com');
+});
+
+// Sam's panel is open, and the "server" says Sam has nothing borrowed
+function samsPanelIsEmpty() {
+    api.getFriendLoans.mockResolvedValue({ active: [], returned: [], limit: 3 });
+}
+
+test('Edit in Sam\'s panel puts Sam\'s name and email in the friend form', async () => {
+    api.getBooks.mockResolvedValue([]);
+    api.getFriends.mockResolvedValue([{ ...SAM, email: 'sam@gmail.com' }]);
+    api.getLoans.mockResolvedValue([]);
+    samsPanelIsEmpty();
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Sam' }));
+    const panel = await screen.findByRole('region', { name: "Sam's loans" });
+    await user.click(within(panel).getByRole('button', { name: 'Edit' }));
+
+    expect(screen.getByPlaceholderText('Name')).toHaveValue('Sam');
+    expect(screen.getByPlaceholderText(EMAIL_BOX)).toHaveValue('sam@gmail.com');
+    expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add Friend' })).not.toBeInTheDocument();
+});
+
+test('emptying Sam\'s email box and saving removes Sam\'s email, then the form goes back to adding friends', async () => {
+    api.getBooks.mockResolvedValue([]);
+    api.getFriends.mockResolvedValue([{ ...SAM, email: 'sam@gmail.com' }]);
+    api.getLoans.mockResolvedValue([]);
+    samsPanelIsEmpty();
+    api.updateFriend.mockResolvedValue(SAM);
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Sam' }));
+    await user.click(within(await screen.findByRole('region', { name: "Sam's loans" })).getByRole('button', { name: 'Edit' }));
+    api.getFriends.mockResolvedValue([SAM]); // what the list looks like after saving
+    await user.clear(screen.getByPlaceholderText(EMAIL_BOX));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(api.updateFriend).toHaveBeenCalledWith('sam-id', { name: 'Sam', email: '' });
+    expect(await screen.findByRole('button', { name: 'Add Friend' })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Name')).toHaveValue('');
+    expect(api.getFriends).toHaveBeenCalledTimes(2); // the friends list reloads
+    expect(api.getLoans).toHaveBeenCalledTimes(2); // and the loans list, which shows Sam's name
+});
+
+test('changing Sam\'s email to my own shows the red message, and keeps it in the box ready to fix', async () => {
+    api.getBooks.mockResolvedValue([]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+    samsPanelIsEmpty();
+    const message = "That's your own email. A friend needs their own.";
+    api.updateFriend.mockResolvedValue({ error: message });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Sam' }));
+    await user.click(within(await screen.findByRole('region', { name: "Sam's loans" })).getByRole('button', { name: 'Edit' }));
+    await user.type(screen.getByPlaceholderText(EMAIL_BOX), 'nancy@gmail.com');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(message);
+    expect(api.updateFriend).toHaveBeenCalledWith('sam-id', { name: 'Sam', email: 'nancy@gmail.com' });
+    expect(screen.getByPlaceholderText(EMAIL_BOX)).toHaveValue('nancy@gmail.com');
+    expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
+});
+
+test('Cancel empties the friend form without saving', async () => {
+    api.getBooks.mockResolvedValue([]);
+    api.getFriends.mockResolvedValue([{ ...SAM, email: 'sam@gmail.com' }]);
+    api.getLoans.mockResolvedValue([]);
+    samsPanelIsEmpty();
+    api.updateFriend.mockClear();
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Sam' }));
+    await user.click(within(await screen.findByRole('region', { name: "Sam's loans" })).getByRole('button', { name: 'Edit' }));
+    // the friend form's Cancel, not the book form's
+    const friendForm = screen.getByPlaceholderText('Name').closest('form');
+    await user.click(within(friendForm).getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.getByPlaceholderText('Name')).toHaveValue('');
+    expect(screen.getByPlaceholderText(EMAIL_BOX)).toHaveValue('');
+    expect(screen.getByRole('button', { name: 'Add Friend' })).toBeInTheDocument();
+    expect(api.updateFriend).not.toHaveBeenCalled();
+});

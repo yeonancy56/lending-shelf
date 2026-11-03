@@ -1,7 +1,7 @@
 // Tests how api.js reads the server's answer. No server needed:
 // fetch (the browser's way of calling the server) is swapped for a fake one.
 import { afterEach, expect, test, vi } from 'vitest';
-import { addBook, addFriend, getBooks, getFriends, getLoans, isSignedIn, lendBook, returnLoan, saveSignIn, signOut, whenSignedOut } from './api';
+import { addBook, addFriend, updateFriend, getBooks, getFriends, getLoans, isSignedIn, lendBook, returnLoan, saveSignIn, signOut, whenSignedOut } from './api';
 
 const DUNE = { title: 'Dune', author: 'Frank Herbert' };
 
@@ -28,10 +28,11 @@ test('keeps the server\'s own words when returning a loan that no longer exists'
     expect(await returnLoan('loan-id')).toEqual({ error: 'Loan not found' });
 });
 
-// every button that sends something: Add book, Add Friend, Lend and Return
+// every button that sends something: Add book, Add Friend, Save friend, Lend and Return
 test.each([
     ['adding a book', () => addBook(DUNE)],
     ['adding a friend', () => addFriend({ name: 'Sam' })],
+    ['saving an edited friend', () => updateFriend('sam-id', { name: 'Sam', email: 'sam@gmail.com' })],
     ['lending Dune to Sam', () => lendBook('dune-id', 'sam-id')],
     ['returning a loan', () => returnLoan('loan-id')],
 ])('says something went wrong when the server breaks while %s', async (_, click) => {
