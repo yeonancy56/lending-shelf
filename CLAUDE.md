@@ -44,10 +44,11 @@ A MERN app for tracking books I lend to friends.
 
 ## DECISIONS.md format
 
+This is the only place the format is written. New entries go at the bottom.
 Each entry is short:
 
 ```
-## <2026-10-16> — <what I decided>
+## <YYYY-MM-DD> — <what I decided>
 Chose: ...
 Other option: ...
 Why: ...
