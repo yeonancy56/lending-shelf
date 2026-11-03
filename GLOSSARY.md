@@ -12,6 +12,10 @@ _Avoid_: title, copy, item
 Every book I own, whether it's at home or lent out. If I own 12 books and Dune is with Sam, my shelf still has 12 books.
 _Avoid_: library, collection
 
+**At home**:
+A book on my shelf that isn't lent out and that no one has asked for. Sam's page labels it "at home", like "Dune · at home", and only books at home can be asked for. Once Sam asks for Dune, it says "asked for" instead.
+_Avoid_: on the shelf, available, in (as in "Dune is in")
+
 **Copy note**:
 A few words I write to describe one copy of a book, like "signed" or "Mum's copy", so I can tell two Dunes apart. It's optional, but every copy of the same book needs a different one.
 _Avoid_: note, label, tag, edition, nickname

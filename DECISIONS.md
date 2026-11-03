@@ -508,6 +508,7 @@ Why: Sam can see Dune exists even while it's out, and other friends' borrowing s
 Chose: the ask button only shows on books that aren't lent out
 Other option: let Sam ask for Dune while Alex has it, like a waiting list
 Why: a waiting list brings its own questions, like who goes first. It can be a later feature
+Replaced by: "Sam's page says at home" (2026-11-03). Same choice, but the word is "at home" now, because my shelf means every book I own
 
 ## 2026-11-02 — The lending rules are checked when Sam asks, and again when I approve
 Chose: if Sam already has 3 books or an overdue one, Sam is told right away and the request never reaches me. The rules run again when I say yes
@@ -538,6 +539,7 @@ Why: sometimes a reason is kind and saves a text. Making it required would be a 
 Chose: Sam can ask for Dune again straight away, as long as Dune is on the shelf and the rules allow it
 Other option: Sam has to wait a few days before asking for Dune again
 Why: these are my friends, so a waiting period feels unfriendly. If Sam asks too often, I can text them
+Replaced by: "Sam's page says at home" (2026-11-03). Same choice, but the word is "at home" now, because my shelf means every book I own
 
 ## 2026-11-02 — Sam can take back a request before I answer
 Chose: Sam can cancel a waiting request. Dune goes back to being free for anyone to ask for
@@ -786,7 +788,7 @@ Why: the review can't sign in with my Google account, so it couldn't see the rea
 Chose: my shelf is every book I own, whether it's at home or lent out. If Dune is with Sam, it's still on my shelf
 Other option: the shelf is only the books at home right now
 Why: the glossary used "on my shelf" both ways, which was confusing. Owning a book doesn't stop when I lend it. A request still only works for a book that isn't lent out, and the glossary now says that plainly
-This changes the earlier choice of words: two entries from 2 November ("Sam can only ask for books on the shelf" and "After a no, Sam can ask again any time") say "on the shelf" to mean at home. Those choices still stand, only the word changed. Sam's page still labels a book at home "on the shelf". That label becomes "at home" in its own ticket
+This changes the earlier choice of words: two entries from 2 November ("Sam can only ask for books on the shelf" and "After a no, Sam can ask again any time") say "on the shelf" to mean at home. Those choices still stand, only the word changed. Sam's page labelled a book at home "on the shelf". That label changed to "at home" in its own ticket (see "Sam's page says at home", 2026-11-03)
 
 ## 2026-11-03 — Show "12 books" under the title
 Chose: a small soft-brown line under the Lending Shelf title says how many books are on my shelf, lent out ones too. It says "1 book" for one and "0 books" for none. Friends like Sam see it on their page too
@@ -797,3 +799,8 @@ Why: I wanted to know how big my shelf is at a glance. Each book already says if
 Chose: the count shows nothing while the books are on the way, and nothing if they can't load
 Other option: show "Counting…" while waiting
 Why: before the server answers, the page has no books yet, so it would wrongly say "0 books" and look like my shelf got wiped. A blank line for half a second is easy to miss, and if loading breaks, the red message already says so
+
+## 2026-11-03 — Sam's page says at home
+Chose: a book that isn't lent out or asked for is labelled "at home" on Sam's page, like "Dune · at home". Only those books get the Ask button, same as before
+Other option: keep "on the shelf"
+Why: my shelf now means every book I own, lent out or not, so "on the shelf" didn't say the book was free. "At home" says where the book really is

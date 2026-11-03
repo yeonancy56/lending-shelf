@@ -159,7 +159,7 @@ test('Sam can\'t cancel a request I declined (409)', async () => {
     expect((await Request.findById(asked.id)).status).toBe('declined');
 });
 
-test('after I decline, Sam sees it as declined with my note, Dune is on the shelf, and my Requests list is empty', async () => {
+test('after I decline, Sam sees it as declined with my note, Dune is at home, and my Requests list is empty', async () => {
     const asked = await Request.create({ book: dune.id, friend: sam.id });
 
     await asMe.post(`/requests/${asked.id}/decline`).send({ note: "I'm rereading it this week" });
@@ -170,7 +170,7 @@ test('after I decline, Sam sees it as declined with my note, Dune is on the shel
 
     expect(samsRequests.body.map((r) => [r.book.title, r.status, r.note])).toEqual([['Dune', 'declined', "I'm rereading it this week"]]);
     expect(samsPanel.body.map((r) => [r.book.title, r.status, r.note])).toEqual([['Dune', 'declined', "I'm rereading it this week"]]);
-    expect(shelf.body.find((b) => b.title === 'Dune').state).toBe('on the shelf');
+    expect(shelf.body.find((b) => b.title === 'Dune').state).toBe('at home');
     expect(myList.body).toEqual([]);
 });
 

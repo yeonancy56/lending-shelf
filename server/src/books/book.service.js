@@ -7,7 +7,7 @@ const { isSameText } = require('./book.same-text');
 function listBooks()          { return bookDao.findAll(); }
 function getBook(id)          { return bookDao.findById(id); }
 
-// the friend shelf view: every book, and whether it's "on the shelf", "lent out" or "asked for".
+// the friend shelf view: every book, and whether it's "at home", "lent out" or "asked for".
 // Only the book's own details are copied over, so who has Dune, or who asked for it, can never slip into Sam's page
 async function listShelf() {
     const books = await bookDao.findAll();
@@ -17,7 +17,7 @@ async function listShelf() {
     function stateOf(book) {
         if (isIn(lentOutIds, book)) return 'lent out';
         if (isIn(askedForIds, book)) return 'asked for';
-        return 'on the shelf';
+        return 'at home';
     }
     return books.map((book) => ({
         _id: book._id,

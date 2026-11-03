@@ -84,7 +84,7 @@ export async function whoAmI() {
     return send('/me');
 }
 
-// the friend page: every book, each "on the shelf" or "lent out", never who has it
+// the friend page: every book, each "at home", "lent out" or "asked for", never who has it
 export async function getShelf() {
     return send('/shelf');
 }
