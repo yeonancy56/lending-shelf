@@ -688,3 +688,8 @@ Why: it needs a click and a broken database in the same fraction of a second. Ke
 Chose: before deleting, the server checks the book exists, the same check editing uses. An address like /books/abc now gets "Book not found" instead of a crash
 Other option: catch the crash and turn it into "Book not found"
 Why: editing a book already works this way, so delete now matches it. Checking first is plainer than waiting for something to break
+
+## 2026-11-03 — The red message piece moves to its own file
+Chose: ErrorMessage now lives in its own small file, ErrorMessage.jsx. App.jsx and the Google sign-in file both use it, so the "Sign-in isn't set up yet" message is drawn the same way as every other red message
+Other option: leave it in App.jsx, and keep writing the sign-in message out by hand
+Why: this changes the earlier choice to keep it in App.jsx. That made sense while only App.jsx needed it. Now the sign-in file needs it too, and it shouldn't borrow from App.jsx, because App.jsx already uses the sign-in file. Two files that lean on each other are confusing and easy to break. With its own file, both can use it

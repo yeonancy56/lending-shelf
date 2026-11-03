@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import ErrorMessage from './ErrorMessage';
 
 // Google's "Sign in with Google" button. Google draws it, and when I sign in
 // it hands back a sign-in (a long code with my email inside, signed by Google), which goes to onSignIn.
@@ -34,7 +35,7 @@ function GoogleSignIn({ onSignIn }) {
 
   if (!CLIENT_ID) {
     // a reminder for me while setting up, instead of an empty page
-    return <p className="error" role="alert">Sign-in isn't set up yet: VITE_GOOGLE_CLIENT_ID is missing.</p>;
+    return <ErrorMessage message="Sign-in isn't set up yet: VITE_GOOGLE_CLIENT_ID is missing." />;
   }
   return <div ref={buttonBox} />;
 }
