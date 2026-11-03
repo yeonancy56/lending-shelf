@@ -77,6 +77,7 @@ async function approveRequest(requestId) {
 async function declineRequest(requestId, note) {
     note = note ?? ''; // no note at all is fine: Sam just sees "declined"
     if (typeof note !== 'string') throw badRequest('The note must be words.');
+    note = note.trim(); // spaces around it don't count, and a note of only spaces is no note
     if (note.length > NOTE_LIMIT) throw badRequest(`Keep the note to ${NOTE_LIMIT} characters or fewer.`);
     const request = await requestDao.findById(requestId);
     if (!request) return null;
