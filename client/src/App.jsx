@@ -3,6 +3,14 @@ import { getBooks, addBook, updateBook, getFriends, addFriend, updateFriend, get
 import GoogleSignIn from './GoogleSignIn';
 import ErrorMessage from './ErrorMessage';
 
+// the three words the server puts next to each book on Sam's page. The server has its own copy
+// (server/src/books/book.shelf-state.js), so a rename changes this list and that file
+const SHELF_STATE = {
+  AT_HOME: 'at home',     // the only one the page checks: these books get the Ask button
+  LENT_OUT: 'lent out',
+  ASKED_FOR: 'asked for',
+};
+
 // a book's name on the page: "Dune (signed)" when it has a copy note, just "Dune" when it doesn't
 function bookName(book) {
   return book.copyNote ? `${book.title} (${book.copyNote})` : book.title;
@@ -212,7 +220,7 @@ function FriendPage({ name, onSignOut }) {
           {shelf.map((book) => (
             <li key={book._id}>
               {bookName(book)} by {book.author} · {book.state}
-              {book.state === 'at home' && <button onClick={() => handleAsk(book._id)}>Ask</button>}
+              {book.state === SHELF_STATE.AT_HOME && <button onClick={() => handleAsk(book._id)}>Ask</button>}
             </li>
           ))}
         </ul>

@@ -804,3 +804,8 @@ Why: before the server answers, the page has no books yet, so it would wrongly s
 Chose: a book that isn't lent out or asked for is labelled "at home" on Sam's page, like "Dune · at home". Only those books get the Ask button, same as before
 Other option: keep "on the shelf"
 Why: my shelf now means every book I own, lent out or not, so "on the shelf" didn't say the book was free. "At home" says where the book really is
+
+## 2026-11-03 — The three book words are written once on each side
+Chose: the server and Sam's page each keep "at home", "lent out" and "asked for" in one short list, and use that list instead of typing the words again
+Other option: share one list between the server and the page, or leave the words typed out wherever they're used
+Why: Sam's page shows the Ask button only when the server says "at home". If one side changed the word and the other didn't, the Ask buttons would quietly vanish. One list per side means a rename is one line on each side. Sharing one list would need a new shared folder, and that's too much for three words. The tests still type the real words, so a slip on either side makes a test fail

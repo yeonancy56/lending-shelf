@@ -3,6 +3,7 @@ const loanDao = require('../loans/loan.dao');
 const requestDao = require('../requests/request.dao');
 const { badRequest, ruleBroken } = require('../errors');
 const { isSameText } = require('./book.same-text');
+const SHELF_STATE = require('./book.shelf-state');
 
 function listBooks()          { return bookDao.findAll(); }
 function getBook(id)          { return bookDao.findById(id); }
@@ -15,9 +16,9 @@ async function listShelf() {
     const askedForIds = await requestDao.findAskedForBookIds();
     const isIn = (ids, book) => ids.some((id) => id.equals(book._id));
     function stateOf(book) {
-        if (isIn(lentOutIds, book)) return 'lent out';
-        if (isIn(askedForIds, book)) return 'asked for';
-        return 'at home';
+        if (isIn(lentOutIds, book)) return SHELF_STATE.LENT_OUT;
+        if (isIn(askedForIds, book)) return SHELF_STATE.ASKED_FOR;
+        return SHELF_STATE.AT_HOME;
     }
     return books.map((book) => ({
         _id: book._id,
