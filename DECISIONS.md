@@ -766,3 +766,8 @@ Why: after the last ticket was merged, I got questions, typed /clear, and was of
 Chose: the layout for these entries now lives only in CLAUDE.md, the file Claude reads at the start of every conversation. Claude's other guide, docs/agents/domain.md, just points to it
 Other option: keep it only in docs/agents/domain.md, or keep both copies
 Why: with two copies, one could change and the other wouldn't, and they'd quietly stop matching. That had already started: one showed a real date, the other showed a blank to fill in. It's the same idea as the coding rules list, which points back instead of copying
+
+## 2026-11-03 — A test checks that the words on every spine are easy to read
+Chose: a test reads the colors from the styles file and checks the book's name and the author on every spine (today green, rust and gold), in light and dark mode. The word color must be at least 4.5 times brighter than the spine color, the usual rule for easy reading. If a color is written in a way the test can't read, the test fails instead of skipping it. Before, I checked this by hand
+Other option: open the page in a real browser and measure the colors there, or keep checking by hand
+Why: if I change a spine color later, the test tells me right away when a name like "Dune (signed)" gets hard to read. Reading the file is quick and needs no browser. It would miss a color set somewhere else, but today every color is in that one file
