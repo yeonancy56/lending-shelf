@@ -26,6 +26,16 @@ function findByFriend(friendId) {
     return Request.find({ friend: friendId }).sort({ askedAt: -1 }).populate('book');
 }
 
+// has anyone ever asked for this book? Counts every request, whatever happened to it
+async function hasEverBeenAskedFor(bookId) {
+    return (await Request.exists({ book: bookId })) !== null;
+}
+
+// has this friend ever asked for a book? Counts every request, whatever happened to it
+async function hasEverAsked(friendId) {
+    return (await Request.exists({ friend: friendId })) !== null;
+}
+
 // one of this friend's requests. Alex's request is never "found" for Sam.
 // An ID in the wrong shape, like "abc", can't belong to any request, so there's nothing to find
 function findByIdForFriend(id, friendId) {
@@ -69,4 +79,4 @@ function linkLoan(id, loanId) {
     return Request.findByIdAndUpdate(id, { loan: loanId }, { returnDocument: 'after' });
 }
 
-module.exports = { create, findWaitingByBook, countWaitingByFriend, findAskedForBookIds, findByFriend, findByIdForFriend, markCancelled, findWaiting, markApproved, linkLoan, findById };
+module.exports = { create, findWaitingByBook, countWaitingByFriend, findAskedForBookIds, hasEverBeenAskedFor, hasEverAsked, findByFriend, findByIdForFriend, markCancelled, findWaiting, markApproved, linkLoan, findById };

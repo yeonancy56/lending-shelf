@@ -634,6 +634,11 @@ Chose: if Sam is waiting on Dune, my lend form says "Sam has asked for this book
 Other option: let the lend form lend Dune to Sam, since Sam is the one who asked
 Why: otherwise Sam would have Dune and a request for Dune still waiting at the same time. Saying yes to the request does the same lending, and keeps the two connected
 
+## 2026-11-02 — When a book was both lent and asked for, I hear about the loan
+Chose: if Dune has been lent and also asked for, deleting it says "This book has been lent before…". The "asked for" message only shows when there's no loan. Sam works the same way
+Other option: one message that names both, or the "asked for" one first
+Why: an approved request always comes with a loan, so the loan message covers it. One clear reason is enough to know why Dune stays
+
 ## 2026-11-02 — Sam's panel asks for Sam's requests separately
 Chose: Sam's panel asks the server twice: once for Sam's loans (like today) and once for Sam's requests
 Other option: one answer with both loans and requests in it

@@ -8,6 +8,7 @@ const owner = request.agent(app).set('Authorization', 'Bearer owner-sign-in');
 const Book = require('./book.model');
 const Friend = require('../friends/friend.model');
 const Loan = require('../loans/loan.model');
+const Request = require('../requests/request.model');
 const testDb = require('../../test-db');
 
 const DUNE = { title: 'Dune', author: 'Frank Herbert' };
@@ -316,14 +317,35 @@ test('DELETE /books/:id refuses to delete Dune after Sam gave it back, because t
     expect(shelf.body).toHaveLength(1); // Dune is still on the shelf
 });
 
-test('DELETE /books/:id deletes Matilda, who was never lent (204)', async () => {
+// requests are kept forever, so a book anyone ever asked for stays, whatever happened to the request.
+// These are the statuses a request can have today; declined joins this list when it exists
+const REQUEST_STATUSES = ['waiting', 'approved', 'cancelled'];
+
+test.each(REQUEST_STATUSES)('DELETE /books/:id refuses to delete Dune after Sam asked for it, even when the request is %s (409)', async (status) => {
+    const dune = await Book.create(DUNE);
+    const sam = await Friend.create({ name: 'Sam' });
+    await Request.create({ book: dune._id, friend: sam._id, status });
+
+    const res = await owner.delete(`/books/${dune._id}`);
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toBe("This book has been asked for before, so it can't be deleted. Its requests need it.");
+    const shelf = await owner.get('/books');
+    expect(shelf.body).toHaveLength(1); // Dune is still on the shelf
+});
+
+test('DELETE /books/:id deletes Matilda, who was never lent or asked for (204)', async () => {
     const matilda = await Book.create({ title: 'Matilda', author: 'Roald Dahl' });
+    // Sam asked for Dune, not Matilda, so that request doesn't hold Matilda back
+    const dune = await Book.create(DUNE);
+    const sam = await Friend.create({ name: 'Sam' });
+    await Request.create({ book: dune._id, friend: sam._id });
 
     const res = await owner.delete(`/books/${matilda._id}`);
 
     expect(res.status).toBe(204);
     const shelf = await owner.get('/books');
-    expect(shelf.body).toHaveLength(0); // Matilda is gone
+    expect(shelf.body).toHaveLength(1); // Matilda is gone, only Dune is left
 });
 
 test('DELETE /books/:id for a book that isn\'t there says so (404)', async () => {
