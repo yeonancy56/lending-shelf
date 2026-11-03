@@ -29,4 +29,27 @@ async function cancel(req, res) {
     }
 }
 
-module.exports = { ask, listMine, cancel };
+// Sam's panel on my page, through /friends/:id/requests
+async function listForFriend(req, res) {
+    const requests = await requestService.listRequestsForPanel(req.params.id);
+    if (!requests) return res.status(404).json({ error: 'Friend not found' });
+    res.json(requests);
+}
+
+// my Requests list, through GET /requests
+async function listWaiting(req, res) {
+    res.json(await requestService.listWaitingRequests());
+}
+
+// I approve, through POST /requests/:id/approve. If a lending rule says no, I see why, and the request keeps waiting
+async function approve(req, res) {
+    try {
+        const request = await requestService.approveRequest(req.params.id);
+        if (!request) return res.status(404).json({ error: 'Request not found' });
+        res.json(request);
+    } catch (err) {
+        answerKnownMistake(res, err);
+    }
+}
+
+module.exports = { ask, listMine, cancel, listWaiting, approve, listForFriend };

@@ -57,17 +57,21 @@ const RULE_WORDS = {
     },
 };
 
-// The one shared check, used by my lend form and by Sam asking, so the rules can never drift apart.
-// reader is 'owner' or 'friend', and only changes the words. Says nothing when every rule passes
-async function checkLendingRules(bookId, friendId, reader) {
+// The one shared check, used by my lend form, by Sam asking, and by me approving, so the rules can never drift apart.
+// reader is 'owner' or 'friend', and only changes the words. Says nothing when every rule passes.
+// approvingId is the request I'm saying yes to, if any. It's left out of "asked for" and the 3-book count,
+// so Sam's own request for Dune doesn't block itself
+async function checkLendingRules(bookId, friendId, reader, approvingId = null) {
     const words = RULE_WORDS[reader];
     // rule 1: is the book already out?
     if (await loanDao.findActiveByBook(bookId)) throw ruleBroken(words.lentOut);
     // rule 2: has someone asked for it? Then I answer them first, and nobody else can ask
     const waitingRequest = await requestDao.findWaitingByBook(bookId);
-    if (waitingRequest) throw ruleBroken(words.askedFor(waitingRequest.friend.name));
+    if (waitingRequest && String(waitingRequest._id) !== String(approvingId)) {
+        throw ruleBroken(words.askedFor(waitingRequest.friend.name));
+    }
     // rule 3: the 3-book limit. Books the friend has now and their waiting requests both count
-    const count = await loanDao.countActiveByFriend(friendId) + await requestDao.countWaitingByFriend(friendId);
+    const count = await loanDao.countActiveByFriend(friendId) + await requestDao.countWaitingByFriend(friendId, approvingId);
     if (count >= MAX_LOANS) throw ruleBroken(words.limit);
     // rule 4: does the friend have an overdue book?
     const activeLoans = await loanDao.findActiveByFriend(friendId);

@@ -32,6 +32,9 @@ const OWNER_ADDRESSES = [
     ['get', '/loans'],
     ['post', '/loans'],
     ['post', '/loans/some-id/return'],
+    ['get', '/friends/some-id/requests'],
+    ['get', '/requests'],
+    ['post', '/requests/some-id/approve'],
 ];
 
 // every address only a signed-in friend, like Sam, can use

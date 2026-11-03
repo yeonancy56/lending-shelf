@@ -1,6 +1,8 @@
 const requestDao = require('./request.dao');
 const bookDao = require('../books/book.dao');
 const loanService = require('../loans/loan.service');
+const loanDao = require('../loans/loan.dao');
+const friendDao = require('../friends/friend.dao');
 const { badRequest, ruleBroken } = require('../errors');
 
 const SAME_KEY = 11000; // the database's own code for "that would break a one-only rule"
@@ -21,6 +23,22 @@ async function askForBook(bookId, friendId) {
 
 function listFriendRequests(friendId) { return requestDao.findByFriend(friendId); }
 
+// Sam's panel on my page: every request Sam ever made.
+// Gives back nothing when there's no such friend, so the controller can say "Friend not found"
+async function listRequestsForPanel(friendId) {
+    if (!(await friendDao.exists(friendId))) return null;
+    return requestDao.findByFriend(friendId);
+}
+
+// why a request that isn't waiting any more can't be cancelled or approved again
+function notWaiting(request) {
+    if (request.status === 'cancelled') return ruleBroken('This request was cancelled');
+    return ruleBroken('This request has already been answered'); // approved (or, later, declined)
+}
+
+// my Requests list: what still needs an answer from me, in the order it came
+function listWaitingRequests() { return requestDao.findWaiting(); }
+
 // Sam takes back Sam's own waiting request. Dune is free again, and it stops counting toward Sam's 3.
 // Gives back nothing when Sam has no such request, so the controller can say "Request not found"
 async function cancelRequest(requestId, friendId) {
@@ -29,7 +47,23 @@ async function cancelRequest(requestId, friendId) {
     // nothing was cancelled: either it isn't Sam's (or isn't there at all), or it's not waiting any more
     const request = await requestDao.findByIdForFriend(requestId, friendId);
     if (!request) return null;
-    throw ruleBroken('This request was already cancelled');
+    if (request.status === 'cancelled') throw ruleBroken('This request was already cancelled');
+    throw notWaiting(request);
 }
 
-module.exports = { askForBook, listFriendRequests, cancelRequest };
+// I say yes to Sam's request for Dune: Dune is lent to Sam right now, so the 14 days start today
+// Gives back nothing when there's no such request, so the controller can say "Request not found"
+async function approveRequest(requestId) {
+    const request = await requestDao.findById(requestId);
+    if (!request) return null;
+    if (request.status !== 'waiting') throw notWaiting(request);
+    // the rules again, in case something changed since Sam asked, like Sam's loan going overdue
+    await loanService.checkLendingRules(request.book, request.friend, 'owner', request._id);
+    // say yes first, in one step: if I clicked twice, only one click gets this far, so Dune is lent only once
+    const approved = await requestDao.markApproved(requestId);
+    if (!approved) throw notWaiting(await requestDao.findById(requestId));
+    const loan = await loanDao.create({ book: approved.book, friend: approved.friend });
+    return requestDao.linkLoan(requestId, loan.id);
+}
+
+module.exports = { askForBook, listFriendRequests, listWaitingRequests, listRequestsForPanel, cancelRequest, approveRequest };
