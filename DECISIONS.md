@@ -294,8 +294,8 @@ Chose: delete the sample styling and pictures the app never uses, and change the
 Other option: leave them and add the new look on top
 Why: old rules that do nothing would sit next to the new ones, and I'd have a hard time telling which ones matter
 
-## 2026-11-02 — The look lives in one plain CSS file
-Chose: write all the colors, fonts and spacing myself in one file, index.css, which the app already uses
+## 2026-11-02 — The look lives in one plain styles file
+Chose: write all the colors, fonts and spacing myself in one styles file (the file that tells the browser how the page should look), index.css, which the app already uses
 Other option: add an extra add-on that comes with ready-made styles
 Why: the app is one page, and writing the styles myself is the basic thing to learn first. An add-on would mean more to learn without making the page better
 
@@ -310,9 +310,9 @@ Other option: paper cards on a cream background, or a lined notebook page with n
 Why: I tried all three on my real page and liked this one best. It looks the most like my own bookshelf
 
 ## 2026-11-02 — A book's spine never cuts off its name
-Chose: the whole name and note always show on the spine, like "Dune (signed)". A long name wraps onto a second line, so that spine gets a bit thicker. The author shows in smaller letters
+Chose: the whole name and copy note always show on the spine, like "Dune (signed)". A long name wraps onto a second line, so that spine gets a bit thicker. The author shows in smaller letters
 Other option: cut long names with "…" so every spine is the same size, or leave the author off
-Why: I decided before that the note must show everywhere, so I can tell my two copies of Dune apart. A cut-off spine could hide exactly that part
+Why: I decided before that the copy note must show everywhere, so I can tell my two copies of Dune apart. A cut-off spine could hide exactly that part
 
 ## 2026-11-02 — On a spine, the title and the author have different colors
 Chose: the book's name (like "Dune (signed)") is cream and a bit bold. The author is a soft gold and smaller. The gold spine got darker so the words on it are easy to read
@@ -330,13 +330,13 @@ Other option: do it all in one ticket
 Why: ticket 1 is small and changes almost nothing I can see, so ticket 2 only has the new look in it and is easier to follow
 
 ## 2026-11-02 — Tests check that a message is marked as an error, not its exact red
-Chose: each red message gets a hidden label that says "this is a warning", and the tests check for that label
+Chose: each red message gets an alert mark, a hidden tag that says "this is an alert", and the tests check for that mark
 Other option: make the tests check the exact new red, or stop checking at all
-Why: the tests can't see colors from the styles file. Checking "this is a warning" is what really matters. Also, for people who can't see the screen and have the computer read the page out loud, a warning gets read out right away
+Why: the tests can't see colors from the styles file. Checking for the alert mark is what really matters. Also, for people who can't see the screen and have the computer read the page out loud, an alert gets read out right away
 
 ## 2026-11-02 — Boxes for typing get their own solid color in dark mode
 Chose: the boxes are a soft cream in light mode and a dark brown in dark mode. In dark mode, their edge is a lighter brown
-Other option: one see-through white for both, with the same wood-brown edge, like in the prototype
+Other option: one see-through white for both, with the same wood-brown edge, like in the quick try-out version of the look I made first
 Why: in dark mode, see-through white turns the boxes grey, and my light words on grey were hard to read. The darker edge almost disappeared against the dark page, so I couldn't see where a box was
 
 ## 2026-11-02 — CI runs the lint check too

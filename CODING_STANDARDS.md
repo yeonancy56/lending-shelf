@@ -86,7 +86,7 @@ saying so.
     read counts as "Something went wrong")
 15. **The look lives in `index.css`.** Colors are set once at the top for light
     and dark mode, and every red uses the one shared red. (The look lives in one
-    plain CSS file; All red messages use one shared red)
+    plain styles file; All red messages use one shared red)
 
 ## Tests
 
