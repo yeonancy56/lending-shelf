@@ -1,6 +1,7 @@
 const loanDao = require ('./loan.dao');
 const bookDao = require('../books/book.dao');
 const friendDao = require('../friends/friend.dao');
+const requestDao = require('../requests/request.dao'); // "has someone asked for Dune?" and "how many is Sam waiting on?"
 const { badRequest, ruleBroken } = require('../errors');
 
 const MAX_LOANS = 3;
@@ -39,25 +40,46 @@ async function listFriendLoans(friendId) {
     };
 }
 
+// The lending rules, worded for whoever is reading the red message:
+// me at the lend form ("this friend…"), or Sam asking for a book ("you…")
+const RULE_WORDS = {
+    owner: {
+        lentOut: 'This book is already lent out',
+        askedFor: (friendName) => `${friendName} has asked for this book`, // I need to know who to answer first
+        limit: 'this friend already has 3 books',
+        overdue: 'This friend has an overdue book',
+    },
+    friend: {
+        lentOut: 'This book is already lent out',
+        askedFor: () => 'Someone has already asked for this book', // never who, so Sam's asking stays private
+        limit: 'You already have 3 books and requests',
+        overdue: 'You have an overdue book. Please bring it back first',
+    },
+};
+
+// The one shared check, used by my lend form and by Sam asking, so the rules can never drift apart.
+// reader is 'owner' or 'friend', and only changes the words. Says nothing when every rule passes
+async function checkLendingRules(bookId, friendId, reader) {
+    const words = RULE_WORDS[reader];
+    // rule 1: is the book already out?
+    if (await loanDao.findActiveByBook(bookId)) throw ruleBroken(words.lentOut);
+    // rule 2: has someone asked for it? Then I answer them first, and nobody else can ask
+    const waitingRequest = await requestDao.findWaitingByBook(bookId);
+    if (waitingRequest) throw ruleBroken(words.askedFor(waitingRequest.friend.name));
+    // rule 3: the 3-book limit. Books the friend has now and their waiting requests both count
+    const count = await loanDao.countActiveByFriend(friendId) + await requestDao.countWaitingByFriend(friendId);
+    if (count >= MAX_LOANS) throw ruleBroken(words.limit);
+    // rule 4: does the friend have an overdue book?
+    const activeLoans = await loanDao.findActiveByFriend(friendId);
+    if (activeLoans.some(isOverdue)) throw ruleBroken(words.overdue);
+}
+
 async function lendBook(bookId, friendId) {
     // first: do this book and friend exist? No point checking the rules otherwise
     if (!(await bookDao.exists(bookId))) throw badRequest('That book does not exist');
     if (!(await friendDao.exists(friendId))) throw badRequest('That friend does not exist');
-
-    //rule 1: is the book already out?
-    const activeLoan = await loanDao.findActiveByBook(bookId);
-    if (activeLoan) throw ruleBroken('This book is already lent out');
-
-    // rule 2: does the friend already have 3?
-    const count = await loanDao.countActiveByFriend(friendId);
-    if (count >= MAX_LOANS) throw ruleBroken('this friend already has 3 books');
-
-
-    //rule 3: does the friend have an overdue book?
-    const activeLoans = await loanDao.findActiveByFriend(friendId);
-    if (activeLoans.some(isOverdue)) throw ruleBroken('This friend has an overdue book');
-
-    // all rules paseed -> lend it 
+    await checkLendingRules(bookId, friendId, 'owner');
+    // all rules passed -> lend it
     return loanDao.create({book: bookId, friend: friendId});
 }
 
@@ -68,4 +90,4 @@ async function returnBook(loanId) {
     return loanDao.markReturned(loanId);
 }
 
-module.exports = {listLoans, listFriendLoans, lendBook, returnBook}
+module.exports = {listLoans, listFriendLoans, checkLendingRules, lendBook, returnBook}

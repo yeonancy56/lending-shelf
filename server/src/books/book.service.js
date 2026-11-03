@@ -1,23 +1,30 @@
 const bookDao = require('./book.dao');
 const loanDao = require('../loans/loan.dao');
+const requestDao = require('../requests/request.dao');
 const { badRequest, ruleBroken } = require('../errors');
 const { isSameText } = require('./book.same-text');
 
 function listBooks()          { return bookDao.findAll(); }
 function getBook(id)          { return bookDao.findById(id); }
 
-// the friend shelf view: every book, and whether it's "on the shelf" or "lent out".
-// Only the book's own details are copied over, so who has Dune can never slip into Sam's page
+// the friend shelf view: every book, and whether it's "on the shelf", "lent out" or "asked for".
+// Only the book's own details are copied over, so who has Dune, or who asked for it, can never slip into Sam's page
 async function listShelf() {
     const books = await bookDao.findAll();
     const lentOutIds = await loanDao.findLentOutBookIds();
-    const isLentOut = (book) => lentOutIds.some((id) => id.equals(book._id));
+    const askedForIds = await requestDao.findAskedForBookIds();
+    const isIn = (ids, book) => ids.some((id) => id.equals(book._id));
+    function stateOf(book) {
+        if (isIn(lentOutIds, book)) return 'lent out';
+        if (isIn(askedForIds, book)) return 'asked for';
+        return 'on the shelf';
+    }
     return books.map((book) => ({
         _id: book._id,
         title: book.title,
         author: book.author,
         copyNote: book.copyNote,
-        state: isLentOut(book) ? 'lent out' : 'on the shelf',
+        state: stateOf(book),
     }));
 }
 

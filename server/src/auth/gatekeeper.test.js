@@ -38,6 +38,9 @@ const OWNER_ADDRESSES = [
 const FRIEND_ADDRESSES = [
     ['get', '/shelf'],
     ['get', '/me/loans'],
+    ['get', '/me/requests'],
+    ['post', '/requests'],
+    ['post', '/requests/some-id/cancel'],
 ];
 
 // every address at all, plus "who am I?", which both of us can ask
