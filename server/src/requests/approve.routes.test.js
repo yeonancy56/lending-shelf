@@ -166,7 +166,20 @@ test('while I approve Sam\'s request, Dune stays asked for: Alex can\'t ask in b
     expect(await Request.countDocuments({ friend: alex.id })).toBe(0);
 });
 
-test('if Sam cancels in the split second while I approve, Dune is taken back and not lent to Sam (409)', async () => {
+test('if saving my yes breaks after Dune was lent, the loan is undone and the request keeps waiting, so I can approve again', async () => {
+    const asked = await Request.create({ book: dune.id, friend: sam.id });
+    jest.spyOn(Request, 'findOneAndUpdate').mockRejectedValueOnce(new Error('the database is down')); // saying yes breaks, once
+
+    const res = await asMe.post(`/requests/${asked.id}/approve`);
+
+    expect(res.status).toBe(500);
+    expect(await Loan.countDocuments()).toBe(0);
+    expect((await Request.findById(asked.id)).status).toBe('waiting');
+    const again = await asMe.post(`/requests/${asked.id}/approve`);
+    expect(again.status).toBe(200);
+});
+
+test('if Sam cancels in the split second while I approve, the loan is undone and Dune isn\'t lent to Sam (409)', async () => {
     const asked = await Request.create({ book: dune.id, friend: sam.id });
     // Sam cancels just as my approve saves the loan
     const realCreate = Loan.create.bind(Loan);

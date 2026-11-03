@@ -658,6 +658,7 @@ Why: it's the quickest way to answer Sam. A decline lends nothing and Sam can as
 Chose: approving still says yes first, so two clicks lend Dune only once. But if saving the loan then fails, my yes is undone. Sam's request is back on my Requests list, and Sam sees it waiting again
 Other option: leave it marked "approved", even though Dune was never lent
 Why: an "approved" with no loan is a lie. Sam would think Dune is coming, and I'd have nothing left to click. Putting it back means I can just click Approve again
+Replaced by: "Approving lends the book first, then says yes" (2026-11-03). Now my yes comes last, so there's no yes to undo
 
 ## 2026-11-02 — The database itself stops Dune having two active loans
 Chose: the database refuses a second loan of Dune while one is still out. If that ever happens, I see the usual "This book is already lent out"
@@ -683,6 +684,7 @@ Why: app.js should only plug the folders in. When I work on requests, all of it 
 Chose: leave it, and say so in the pull request. While I approve Sam's request for Dune, there's a split second where Dune isn't "asked for". If Alex asks right then and saving the loan also fails, Sam's request stays "approved" with no loan
 Other option: keep Dune "asked for" for the whole approve, or decline Sam's request by itself if this happens
 Why: it needs a click and a broken database in the same fraction of a second. Keeping Dune asked for is more code to get right, and an automatic decline would tell Sam no when I never said it
+Replaced by: "Approving lends the book first, then says yes" (2026-11-03). The gap is closed now
 
 ## 2026-11-03 — Deleting a book first checks the book is there
 Chose: before deleting, the server checks the book exists, the same check editing uses. An address like /books/abc now gets "Book not found" instead of a crash
@@ -750,6 +752,6 @@ Other option: save it in Claude's memory folder, or commit it to GitHub with the
 Why: today a fresh Claude couldn't find the note, because nothing said where it was. One fixed name in the main folder is the first place to look, and I can open it myself too. The note only matters for the next conversation, for example if we stopped halfway through lending Dune to Sam. So it doesn't belong in the app's history on GitHub
 
 ## 2026-11-03 — Approving lends the book first, then says yes
-Chose: when I approve Sam's request for Dune, Dune is lent first, and only then is the request marked "approved". This replaces "leave the gap for now" from 2026-11-02. Sam's request keeps waiting the whole time, so nobody else can ask for Dune in between. If lending breaks, nothing needs undoing. If Sam cancels in that same split second, Dune is taken back
+Chose: when I approve Sam's request for Dune, Dune is lent first, and only then is the request marked "approved". This replaces two entries from 2026-11-02: "leave the gap for now" and "the request goes back to waiting". Sam's request keeps waiting the whole time, so nobody else can ask for Dune in between. If saving the loan breaks, the request was never changed, so there's nothing to undo. If the yes can't be saved after Dune was lent, or Sam cancels in that same split second, the new loan is removed. Dune was never really handed over, so the loan isn't kept as a record. If I click Approve twice, the database's "one active loan per book" rule lets only one loan through
 Other option: decline Sam's request on its own when lending breaks
 Why: Sam would be told "no" when I never said no. Lending first closes the gap and makes the code shorter

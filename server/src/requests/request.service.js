@@ -63,10 +63,17 @@ async function approveRequest(requestId) {
     // If lending breaks, there's nothing to undo: the request was never changed. If I clicked twice, the database lets only one loan of Dune through
     const loan = await loanService.startLoan(request.book, request.friend); // the loans code makes the loan, the same way it does for my lend form
     // then say yes, in one step, pointing to the loan
-    const approved = await requestDao.markIfWaiting(requestId, { status: STATUS.APPROVED, answeredAt: new Date(), loan: loan.id });
+    let approved;
+    try {
+        approved = await requestDao.markIfWaiting(requestId, { status: STATUS.APPROVED, answeredAt: new Date(), loan: loan.id });
+    } catch (err) {
+        // saying yes broke after Dune was lent: undo the loan, so the request just keeps waiting and I can click Approve again
+        await loanService.undoLoan(loan.id);
+        throw err;
+    }
     if (approved) return approved;
-    // Sam cancelled in the split second between: take Dune back, so it isn't lent to Sam after all
-    await loanService.takeBackLoan(loan.id);
+    // Sam cancelled in the split second between: undo the loan, so Dune isn't lent to Sam after all
+    await loanService.undoLoan(loan.id);
     throw notWaiting(await requestDao.findById(requestId));
 }
 

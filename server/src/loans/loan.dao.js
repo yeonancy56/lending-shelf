@@ -47,9 +47,9 @@ function markReturned(id) {
     return Loan.findByIdAndUpdate(id, { returnedAt: new Date() }, { returnDocument: 'after' });
 }
 
-// approving broke after Dune was lent, so the loan never really happened: remove it
-function deleteById(id) {
+// remove a loan completely, for a loan that never really happened
+function remove(id) {
     return Loan.findByIdAndDelete(id);
 }
 
-module.exports = {findAll, findById, create, deleteById, findActiveByBook, hasEverBeenLent, findLentOutBookIds, hasEverBorrowed, countActiveByFriend, findActiveByFriend, findByFriend, markReturned}
+module.exports = {findAll, findById, create, remove, findActiveByBook, hasEverBeenLent, findLentOutBookIds, hasEverBorrowed, countActiveByFriend, findActiveByFriend, findByFriend, markReturned}
