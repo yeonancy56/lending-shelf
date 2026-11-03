@@ -733,3 +733,8 @@ Why: if Dune already has two active loans, the database quietly skips the "one a
 Chose: the check sits in its own scripts folder and reads books, friends and loans itself. It still uses the app's own description of a book, a friend and a loan, and the same email tidy-up
 Other option: go through all four layers, like lending Dune to Sam does
 Why: those steps are for the page asking the server to do something. Nobody clicks a button for this check. I run it by hand, it reads, and it stops. It also needs things the app never asks for, like loans whose book was deleted, and whether a database rule is on. Adding those to the app's layers would put code there that the app itself never uses
+
+## 2026-11-03 — The coding rules get their own short list, CODING_STANDARDS.md
+Chose: one file with the 21 rules the code should follow, like "every red message uses ErrorMessage" and "the code says copyNote, not note". Each rule names the decision it came from, and the reasons stay in DECISIONS.md
+Other option: leave the rules inside DECISIONS.md, or copy each reason into the new file too
+Why: to check that a new change shows "Dune (signed)" the right way, the reviewer had to dig through almost 150 decisions to find a handful of rules. One list is quicker to check against. Pointing back instead of copying the reasons means there's only one place to change each one
