@@ -703,3 +703,8 @@ Why: I was skipping most of them, often because we had already talked the plan t
 Chose: before deleting, the server checks the friend exists, the same check editing a friend uses. An address like /friends/abc now gets "Friend not found" instead of a crash
 Other option: catch the crash and turn it into "Friend not found"
 Why: this is the same fix books got in #62, so deleting a book and deleting a friend now work the same way
+
+## 2026-11-03 — Looking up one book or friend treats a wrong-shaped address as "not there"
+Chose: when the server looks up one book or one friend, an address like /books/abc or /friends/abc gets "not found" straight away, before asking the database. Opening Dune or Sam at a bad address now says "Book not found" or "Friend not found" instead of crashing
+Other option: add a separate "is it there?" check before each lookup, the way deleting and editing do
+Why: the lookup already gives back "nothing" when there's no such book or friend, so a wrong-shaped address can simply give back nothing too. That saves asking the database twice just to show one book

@@ -2,7 +2,11 @@ const mongoose = require('mongoose');
 const Friend =  require ('./friend.model')
 
 function findAll()         { return Friend.find()};
-function findById(id)      { return Friend.findById(id)};
+// the friend with this ID, or null. An ID in the wrong shape, like "abc", can't belong to any friend
+async function findById(id) {
+    if (!mongoose.isValidObjectId(id)) return null;
+    return Friend.findById(id);
+}
 function create(data)      { return Friend.create(data)};
 // a friend with no email has no email saved at all, so emptying Sam's email box removes it ($unset)
 function update(id, { email, ...rest }) {

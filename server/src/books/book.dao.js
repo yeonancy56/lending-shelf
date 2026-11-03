@@ -3,7 +3,11 @@ const Book = require('./book.model')
 const { sameTextPattern } = require('./book.same-text');
 
 function findAll()          { return Book.find(); }
-function findById(id)       { return Book.findById(id); }
+// the book with this ID, or null. An ID in the wrong shape, like "abc", can't belong to any book
+async function findById(id) {
+    if (!mongoose.isValidObjectId(id)) return null;
+    return Book.findById(id);
+}
 function create(data)       { return Book.create(data); }
 function remove(id)         { return Book.findByIdAndDelete(id); }
 
