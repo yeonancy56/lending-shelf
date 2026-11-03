@@ -849,3 +849,8 @@ Why: side by side, Sam might read "★ 4.5" as his own stars. On separate lines,
 Chose: when the books folder builds my shelf or Sam's, it asks the ratings DAO for Sam's own stars and for each copy's average. This covers the "your stars" from the last ticket too
 Other option: go through the ratings service, which would only pass the question along
 Why: these are plain look-ups with no rules in them, so a step in the middle would add a file that does nothing. The rating rules (only after returning, 1 to 5 stars) still live in the ratings folder
+
+## 2026-11-03 — The search box stretches across the shelf
+Chose: the search box is as wide as the shelf, on a phone and on a big screen
+Other option: make it wider only on a phone, and keep it short on a big screen
+Why: on a phone the short box cut its hint off at "Search by title or auth". One rule for every screen is simpler, and a long box sitting right above the books reads as "search this shelf"
