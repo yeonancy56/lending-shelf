@@ -125,6 +125,15 @@ select {
   min-width: 0;
 }
 
+/* the search box isn't in a form, so it stretches across the shelf itself,
+   or a phone cuts its hint off at "Search by title or auth" */
+.search-box {
+  display: block;
+  width: 100%;
+  box-sizing: border-box; /* count the padding inside the width, so it doesn't spill past the edge */
+  margin-top: 8px;
+}
+
 /* round green buttons */
 button {
   background: var(--button);

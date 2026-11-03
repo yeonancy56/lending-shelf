@@ -517,7 +517,7 @@ return (
       </form>
       <ErrorMessage message={bookError} />
     {/* type "herb" and only Dune by Frank Herbert stays on the shelf */}
-    <input type="search" aria-label="Search books" placeholder="Search by title or author" value={search} onChange={(e) => setSearch(e.target.value)} />
+    <input type="search" className="search-box" aria-label="Search books" placeholder="Search by title or author" value={search} onChange={(e) => setSearch(e.target.value)} />
     {/* nothing on the shelf matches? Say so, without the extra spaces the search ignores */}
     {search.trim() && shelfBooks.length === 0 && <p>No books match '{search.trim()}'</p>}
     <ul className="books-list"> {/* the books stand on the shelf as spines. Only the ones that match the search */}
