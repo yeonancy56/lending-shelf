@@ -13,6 +13,12 @@ async function listForFriend(req, res) {
     res.json(loans);
 }
 
+// Sam's own loans, through /me/loans. Which friend comes from Sam's sign-in, never from the address,
+// so Sam can't ask for Alex's
+async function listMine(req, res) {
+    res.json(await loanService.listFriendLoans(req.who.friendId));
+}
+
 async function lend(req, res) {
     const { bookId, friendId } = req.body;
     // nothing picked? Answer straight away, no need to ask the service
@@ -36,4 +42,4 @@ async function returnLoan(req, res) {
     }
 }
 
-module.exports = {list, listForFriend, lend, returnLoan}; 
+module.exports = {list, listForFriend, listMine, lend, returnLoan}; 

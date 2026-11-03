@@ -8,13 +8,19 @@ let googleSays;
 OAuth2Client.prototype.verifyIdToken = jest.fn(async (options) => googleSays(options));
 
 const whoIsThis = require('./who-is-this');
+const Friend = require('../friends/friend.model');
+const testDb = require('../../test-db'); // friends' emails live in the database, so this uses the pretend one
+
+beforeAll(testDb.start, 60000);
+afterAll(testDb.stop);
 
 // Google checked the sign-in and says it belongs to this email
 function googleChecked(email, emailVerified = true) {
     return () => ({ getPayload: () => ({ email, email_verified: emailVerified }) });
 }
 
-beforeEach(() => {
+beforeEach(async () => {
+    await testDb.clear();
     process.env.OWNER_EMAIL = 'nancy@gmail.com';
     process.env.GOOGLE_CLIENT_ID = 'my-app-id';
 });
@@ -36,6 +42,21 @@ test('anyone else\'s Google email is a stranger', async () => {
     googleSays = googleChecked('someone@gmail.com');
 
     expect(await whoIsThis('a-sign-in')).toEqual({ who: 'stranger' });
+});
+
+test('the Google email I added to Sam is Sam, a friend, with Sam\'s id and name', async () => {
+    const sam = await Friend.create({ name: 'Sam', email: 'sam@gmail.com' });
+    googleSays = googleChecked('Sam@Gmail.com'); // capitals don't matter here either
+
+    expect(await whoIsThis('a-sign-in')).toEqual({ who: 'friend', friendId: sam.id, name: 'Sam' });
+});
+
+test('my own email is still the owner, never a friend', async () => {
+    // the friend form refuses my email, but even if one slipped in, I'm the owner first
+    await Friend.collection.insertOne({ name: 'Sneaky', email: 'nancy@gmail.com' });
+    googleSays = googleChecked('nancy@gmail.com');
+
+    expect(await whoIsThis('a-sign-in')).toEqual({ who: 'owner' });
 });
 
 test('asks Google about this sign-in, made for my app', async () => {

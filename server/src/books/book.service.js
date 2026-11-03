@@ -6,6 +6,21 @@ const { isSameText } = require('./book.same-text');
 function listBooks()          { return bookDao.findAll(); }
 function getBook(id)          { return bookDao.findById(id); }
 
+// the friend shelf view: every book, and whether it's "on the shelf" or "lent out".
+// Only the book's own details are copied over, so who has Dune can never slip into Sam's page
+async function listShelf() {
+    const books = await bookDao.findAll();
+    const lentOutIds = await loanDao.findLentOutBookIds();
+    const isLentOut = (book) => lentOutIds.some((id) => id.equals(book._id));
+    return books.map((book) => ({
+        _id: book._id,
+        title: book.title,
+        author: book.author,
+        copyNote: book.copyNote,
+        state: isLentOut(book) ? 'lent out' : 'on the shelf',
+    }));
+}
+
 // the other copies of this book must look different from it: if there are any, it needs a copy note,
 // and that note must be different from every other copy's ("Paperback" and "paperback" count as the same).
 // When editing, the book being edited is left out, so it never clashes with itself
@@ -41,4 +56,4 @@ async function deleteBook(id) {
     return bookDao.remove(id);
 }
 
-module.exports = {listBooks, getBook, addBook, updateBook, deleteBook};
+module.exports = {listBooks, listShelf, getBook, addBook, updateBook, deleteBook};
