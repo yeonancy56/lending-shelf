@@ -36,7 +36,7 @@ A MERN app for tracking books I lend to friends.
 7. **Every ticket gets its own branch and a pull request.** Use the pr skill
    for the PR description, run /code-review, and merge only after CI passes.
    After merging, delete the branch.
-8. **When a ticket is merged, tell me to /clear.** If we're stopping mid-work,
+8. **When a ticket is merged, after the rule 3 questions, tell me to /clear.** If we're stopping mid-work,
    or my status line shows 140k, write a handoff note first, then tell me:
    "Handoff saved, type /clear, then say: read the handoff note and continue."
 
