@@ -9,6 +9,7 @@ const owner = request.agent(app).set('Authorization', 'Bearer owner-sign-in');
 const Book = require('../books/book.model');
 const Friend = require('../friends/friend.model');
 const Loan = require('./loan.model');
+const Request = require('../requests/request.model');
 const testDb = require('../../test-db');
 
 let dune;
@@ -108,6 +109,49 @@ test('does not lend to Sam when Sam has an overdue book (409)', async () => {
     expect(res.body.error).toBe('This friend has an overdue book');
 });
 
+test('does not lend Dune when Alex has asked for it, and says it was Alex (409)', async () => {
+    const alex = await Friend.create({ name: 'Alex' });
+    await Request.create({ book: dune.id, friend: alex.id }); // Alex's request for Dune is waiting
+
+    const res = await owner.post('/loans').send({ bookId: dune.id, friendId: sam.id });
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toBe('Alex has asked for this book');
+    expect(await Loan.countDocuments()).toBe(0);
+});
+
+test('does not lend Dune to Sam with the form while Sam\'s own request for it waits: I answer the request instead (409)', async () => {
+    await Request.create({ book: dune.id, friend: sam.id });
+
+    const res = await owner.post('/loans').send({ bookId: dune.id, friendId: sam.id });
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toBe('Sam has asked for this book');
+});
+
+test('lends Dune once Alex\'s request for it is cancelled (201)', async () => {
+    const alex = await Friend.create({ name: 'Alex' });
+    await Request.create({ book: dune.id, friend: alex.id, status: 'cancelled', cancelledAt: new Date() });
+
+    const res = await owner.post('/loans').send({ bookId: dune.id, friendId: sam.id });
+
+    expect(res.status).toBe(201);
+});
+
+test('does not lend Sam a book when Sam has 2 books and 1 waiting request (409)', async () => {
+    for (const title of ['Matilda', 'Emma']) {
+        const book = await Book.create({ title, author: 'Someone' });
+        await Loan.create({ book: book.id, friend: sam.id });
+    }
+    const holes = await Book.create({ title: 'Holes', author: 'Louis Sachar' });
+    await Request.create({ book: holes.id, friend: sam.id }); // Sam is waiting on Holes, so that's 3
+
+    const res = await owner.post('/loans').send({ bookId: dune.id, friendId: sam.id });
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toBe('this friend already has 3 books');
+});
+
 test('does not return Dune twice (409)', async () => {
     const loan = await Loan.create({ book: dune.id, friend: sam.id, returnedAt: new Date() }); // Dune is already back
 
@@ -184,4 +228,28 @@ test('GET /friends/:id/loans for a friend who isn\'t there says so (404)', async
     expect(missing.body.error).toBe('Friend not found');
     expect(wrongShape.status).toBe(404);
     expect(wrongShape.body.error).toBe('Friend not found');
+});
+
+test('lending Dune to Sam and to Alex at the same moment: only one gets Dune', async () => {
+    await Loan.init(); // make sure the database's own "one active loan per book" rule is in place
+    const alex = await Friend.create({ name: 'Alex' });
+
+    const answers = await Promise.all([
+        owner.post('/loans').send({ bookId: dune.id, friendId: sam.id }),
+        owner.post('/loans').send({ bookId: dune.id, friendId: alex.id }),
+    ]);
+
+    expect(answers.map((a) => a.status).sort()).toEqual([201, 409]);
+    expect(answers.find((a) => a.status === 409).body.error).toBe('This book is already lent out');
+    expect(await Loan.countDocuments({ book: dune.id, returnedAt: null })).toBe(1);
+});
+
+test('once Dune comes back, it can be lent again: returned loans don\'t count as active (201)', async () => {
+    await Loan.init();
+    await Loan.create({ book: dune.id, friend: sam.id, returnedAt: new Date() });
+    await Loan.create({ book: dune.id, friend: sam.id, returnedAt: new Date() });
+
+    const res = await owner.post('/loans').send({ bookId: dune.id, friendId: sam.id });
+
+    expect(res.status).toBe(201);
 });

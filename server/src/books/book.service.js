@@ -1,10 +1,32 @@
 const bookDao = require('./book.dao');
 const loanDao = require('../loans/loan.dao');
+const requestDao = require('../requests/request.dao');
 const { badRequest, ruleBroken } = require('../errors');
 const { isSameText } = require('./book.same-text');
 
 function listBooks()          { return bookDao.findAll(); }
 function getBook(id)          { return bookDao.findById(id); }
+
+// the friend shelf view: every book, and whether it's "on the shelf", "lent out" or "asked for".
+// Only the book's own details are copied over, so who has Dune, or who asked for it, can never slip into Sam's page
+async function listShelf() {
+    const books = await bookDao.findAll();
+    const lentOutIds = await loanDao.findLentOutBookIds();
+    const askedForIds = await requestDao.findAskedForBookIds();
+    const isIn = (ids, book) => ids.some((id) => id.equals(book._id));
+    function stateOf(book) {
+        if (isIn(lentOutIds, book)) return 'lent out';
+        if (isIn(askedForIds, book)) return 'asked for';
+        return 'on the shelf';
+    }
+    return books.map((book) => ({
+        _id: book._id,
+        title: book.title,
+        author: book.author,
+        copyNote: book.copyNote,
+        state: stateOf(book),
+    }));
+}
 
 // the other copies of this book must look different from it: if there are any, it needs a copy note,
 // and that note must be different from every other copy's ("Paperback" and "paperback" count as the same).
@@ -33,12 +55,15 @@ async function updateBook(id, data) {
     return bookDao.update(id, data);
 }
 
-// a book that's been lent can't be deleted, because its loans (out now or returned) still need it
+// a book that's been lent or asked for can't be deleted, because its loans and requests are kept forever and still need it
 async function deleteBook(id) {
     if (await loanDao.hasEverBeenLent(id)) {
         throw ruleBroken("This book has been lent before, so it can't be deleted. Its loans need it.");
     }
+    if (await requestDao.hasEverBeenAskedFor(id)) {
+        throw ruleBroken("This book has been asked for before, so it can't be deleted. Its requests need it.");
+    }
     return bookDao.remove(id);
 }
 
-module.exports = {listBooks, getBook, addBook, updateBook, deleteBook};
+module.exports = {listBooks, listShelf, getBook, addBook, updateBook, deleteBook};

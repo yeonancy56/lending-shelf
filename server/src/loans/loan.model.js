@@ -7,4 +7,9 @@ const loanSchema = new mongoose.Schema({
     returnedAt: { type: Date, default: null },
 });
 
+// the database itself refuses a second active loan for the same book. The lending rules already check this,
+// but if my lend form and my Approve button lend Dune at the same moment, both could pass that check before either is saved.
+// Returned loans don't count, so Dune can be lent again once it comes back
+loanSchema.index({ book: 1 }, { unique: true, partialFilterExpression: { returnedAt: { $type: 'null' } } });
+
 module.exports = mongoose.model('Loan', loanSchema);

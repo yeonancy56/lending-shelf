@@ -16,6 +16,10 @@ vi.mock('./GoogleSignIn', () => ({
 // most tests are about the shelf, so they start signed in as me
 beforeEach(() => {
     api.isSignedIn.mockReturnValue(true);
+    api.whoAmI.mockResolvedValue({ who: 'owner' });
+    // no one has asked for anything, unless a test says so
+    api.getWaitingRequests.mockResolvedValue([]);
+    api.getFriendRequests.mockResolvedValue([]);
 });
 
 const DUNE = { _id: 'dune-id', title: 'Dune', author: 'Frank Herbert' };
@@ -34,7 +38,7 @@ test('marks the message as an error when lending Dune fails', async () => {
     render(<App />);
 
     // pick Dune and Sam (findBy waits for the lists to arrive, like the real page does)
-    await user.selectOptions(screen.getByDisplayValue('Pick a book'), await screen.findByRole('option', { name: 'Dune' }));
+    await user.selectOptions(await screen.findByDisplayValue('Pick a book'), await screen.findByRole('option', { name: 'Dune' }));
     await user.selectOptions(screen.getByDisplayValue('Pick a friend'), await screen.findByRole('option', { name: 'Sam' }));
 
     // no message yet, so whatever shows up next was caused by clicking Lend
@@ -71,7 +75,7 @@ test('marks the message as an error when adding a second Dune fails, and keeps w
     const user = userEvent.setup();
     render(<App />);
 
-    await user.type(screen.getByPlaceholderText('Title'), 'Dune');
+    await user.type(await screen.findByPlaceholderText('Title'), 'Dune');
     await user.type(screen.getByPlaceholderText('Author'), 'Frank Herbert');
     await user.type(screen.getByPlaceholderText("Note (optional, like 'signed')"), 'paperback');
     await user.click(screen.getByRole('button', { name: 'Add book' }));
@@ -533,4 +537,519 @@ test('Sign out forgets me and goes back to the sign-in button', async () => {
     expect(api.signOut).toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Sign in with Google' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Dune/ })).not.toBeInTheDocument();
+});
+
+const EMAIL_BOX = 'Google email (optional)';
+
+test('adding Sam sends the Google email I typed, then empties the form', async () => {
+    api.getBooks.mockResolvedValue([]);
+    api.getFriends.mockResolvedValue([]);
+    api.getLoans.mockResolvedValue([]);
+    api.addFriend.mockResolvedValue({ ...SAM, email: 'sam@gmail.com' });
+
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.type(await screen.findByPlaceholderText('Name'), 'Sam');
+    await user.type(screen.getByPlaceholderText(EMAIL_BOX), 'Sam@Gmail.com');
+    await user.click(screen.getByRole('button', { name: 'Add Friend' }));
+
+    expect(api.addFriend).toHaveBeenCalledWith({ name: 'Sam', email: 'Sam@Gmail.com' });
+    expect(screen.getByPlaceholderText('Name')).toHaveValue('');
+    expect(screen.getByPlaceholderText(EMAIL_BOX)).toHaveValue('');
+});
+
+test('an email another friend already has shows the red message, and keeps what I typed', async () => {
+    api.getBooks.mockResolvedValue([]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+    api.addFriend.mockResolvedValue({ error: 'Sam already has this email.' });
+
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.type(await screen.findByPlaceholderText('Name'), 'Alex');
+    await user.type(screen.getByPlaceholderText(EMAIL_BOX), 'sam@gmail.com');
+    await user.click(screen.getByRole('button', { name: 'Add Friend' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Sam already has this email.');
+    expect(screen.getByPlaceholderText('Name')).toHaveValue('Alex');
+    expect(screen.getByPlaceholderText(EMAIL_BOX)).toHaveValue('sam@gmail.com');
+});
+
+// Sam's panel is open, and the "server" says Sam has nothing borrowed
+function samsPanelIsEmpty() {
+    api.getFriendLoans.mockResolvedValue({ active: [], returned: [], limit: 3 });
+}
+
+test('Edit in Sam\'s panel puts Sam\'s name and email in the friend form', async () => {
+    api.getBooks.mockResolvedValue([]);
+    api.getFriends.mockResolvedValue([{ ...SAM, email: 'sam@gmail.com' }]);
+    api.getLoans.mockResolvedValue([]);
+    samsPanelIsEmpty();
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Sam' }));
+    const panel = await screen.findByRole('region', { name: "Sam's loans" });
+    await user.click(within(panel).getByRole('button', { name: 'Edit' }));
+
+    expect(screen.getByPlaceholderText('Name')).toHaveValue('Sam');
+    expect(screen.getByPlaceholderText(EMAIL_BOX)).toHaveValue('sam@gmail.com');
+    expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add Friend' })).not.toBeInTheDocument();
+});
+
+test('emptying Sam\'s email box and saving removes Sam\'s email, then the form goes back to adding friends', async () => {
+    api.getBooks.mockResolvedValue([]);
+    api.getFriends.mockResolvedValue([{ ...SAM, email: 'sam@gmail.com' }]);
+    api.getLoans.mockResolvedValue([]);
+    samsPanelIsEmpty();
+    api.updateFriend.mockResolvedValue(SAM);
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Sam' }));
+    await user.click(within(await screen.findByRole('region', { name: "Sam's loans" })).getByRole('button', { name: 'Edit' }));
+    api.getFriends.mockResolvedValue([SAM]); // what the list looks like after saving
+    await user.clear(screen.getByPlaceholderText(EMAIL_BOX));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(api.updateFriend).toHaveBeenCalledWith('sam-id', { name: 'Sam', email: '' });
+    expect(await screen.findByRole('button', { name: 'Add Friend' })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Name')).toHaveValue('');
+    expect(api.getFriends).toHaveBeenCalledTimes(2); // the friends list reloads
+    expect(api.getLoans).toHaveBeenCalledTimes(2); // and the loans list, which shows Sam's name
+});
+
+test('changing Sam\'s email to my own shows the red message, and keeps it in the box ready to fix', async () => {
+    api.getBooks.mockResolvedValue([]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+    samsPanelIsEmpty();
+    const message = "That's your own email. A friend needs their own.";
+    api.updateFriend.mockResolvedValue({ error: message });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Sam' }));
+    await user.click(within(await screen.findByRole('region', { name: "Sam's loans" })).getByRole('button', { name: 'Edit' }));
+    await user.type(screen.getByPlaceholderText(EMAIL_BOX), 'nancy@gmail.com');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(message);
+    expect(api.updateFriend).toHaveBeenCalledWith('sam-id', { name: 'Sam', email: 'nancy@gmail.com' });
+    expect(screen.getByPlaceholderText(EMAIL_BOX)).toHaveValue('nancy@gmail.com');
+    expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
+});
+
+test('Cancel empties the friend form without saving', async () => {
+    api.getBooks.mockResolvedValue([]);
+    api.getFriends.mockResolvedValue([{ ...SAM, email: 'sam@gmail.com' }]);
+    api.getLoans.mockResolvedValue([]);
+    samsPanelIsEmpty();
+    api.updateFriend.mockClear();
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Sam' }));
+    await user.click(within(await screen.findByRole('region', { name: "Sam's loans" })).getByRole('button', { name: 'Edit' }));
+    // the friend form's Cancel, not the book form's
+    const friendForm = screen.getByPlaceholderText('Name').closest('form');
+    await user.click(within(friendForm).getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.getByPlaceholderText('Name')).toHaveValue('');
+    expect(screen.getByPlaceholderText(EMAIL_BOX)).toHaveValue('');
+    expect(screen.getByRole('button', { name: 'Add Friend' })).toBeInTheDocument();
+    expect(api.updateFriend).not.toHaveBeenCalled();
+});
+
+// Sam is signed in. The "server" says who Sam is, what's on the shelf, and Sam's own loans and requests
+function signedInAsSam({ shelf = [], myLoans = { active: [], returned: [], limit: 3 }, myRequests = [] } = {}) {
+    api.whoAmI.mockResolvedValue({ who: 'friend', name: 'Sam' });
+    api.getShelf.mockResolvedValue(shelf);
+    api.getMyLoans.mockResolvedValue(myLoans);
+    api.getMyRequests.mockResolvedValue(myRequests);
+}
+
+test('signing in with Sam\'s Google account shows the friend page, not mine', async () => {
+    api.isSignedIn.mockReturnValue(false);
+    signedInAsSam();
+    api.getBooks.mockClear();
+    api.getFriends.mockClear();
+    api.getLoans.mockClear();
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole('button', { name: 'Sign in with Google' }));
+
+    expect(await screen.findByRole('heading', { name: 'Hi, Sam' })).toBeInTheDocument();
+    expect(api.whoAmI).toHaveBeenCalled();
+    // my lists hold every friend's name, so the friend page never asks for them
+    expect(api.getBooks).not.toHaveBeenCalled();
+    expect(api.getFriends).not.toHaveBeenCalled();
+    expect(api.getLoans).not.toHaveBeenCalled();
+});
+
+test('the friend page shows every book as "lent out" or "on the shelf", and never who has it', async () => {
+    signedInAsSam({ shelf: [
+        { ...DUNE, copyNote: 'signed', state: 'lent out' },
+        { ...MATILDA, state: 'on the shelf' },
+    ] });
+
+    render(<App />);
+
+    const shelf = await screen.findByRole('list', { name: 'Books' });
+    const books = await within(shelf).findAllByRole('listitem');
+    expect(books[0]).toHaveTextContent('Dune (signed) by Frank Herbert · lent out');
+    expect(books[1]).toHaveTextContent('Matilda by Roald Dahl · on the shelf');
+    expect(shelf).not.toHaveTextContent('Alex'); // no "→ Alex" like on my Loans list
+    expect(shelf).not.toHaveTextContent('→');
+});
+
+test('the friend page shows none of my buttons or boxes: no lend, return, add, edit or delete', async () => {
+    signedInAsSam({
+        shelf: [{ ...DUNE, state: 'lent out' }],
+        myLoans: { active: [{ _id: 'loan-1', book: DUNE, lentAt: '2026-11-01T10:00:00Z', dueBack: '2026-11-15T10:00:00Z', overdue: false }], returned: [], limit: 3 },
+    });
+
+    render(<App />);
+    await screen.findByRole('heading', { name: 'Hi, Sam' });
+    await screen.findByText(/due back/);
+
+    // Sign out is the only button, and there's nothing to type in
+    expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual(['Sign out']);
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument(); // no "Pick a book" or "Pick a friend"
+});
+
+test('Sam sees Dune with its due back day and overdue, and Matilda as a past loan', async () => {
+    signedInAsSam({ myLoans: {
+        active: [{ _id: 'loan-1', book: DUNE, lentAt: '2026-10-01T10:00:00Z', dueBack: '2026-10-15T10:00:00Z', overdue: true }],
+        returned: [{ _id: 'loan-2', book: MATILDA, lentAt: '2026-09-01T10:00:00Z', returnedAt: '2026-09-10T10:00:00Z', overdue: false }],
+        limit: 3,
+    } });
+
+    render(<App />);
+
+    const myLoans = await screen.findByRole('region', { name: 'My loans' });
+    expect(await within(myLoans).findByText('1 of 3 books')).toBeInTheDocument();
+    expect(within(myLoans).getByRole('list', { name: 'Has now' })).toHaveTextContent('Dune, due back 15 Oct · overdue');
+    expect(within(myLoans).getByRole('list', { name: 'Past loans' })).toHaveTextContent('Matilda, lent 1 Sept, returned 10 Sept');
+});
+
+test('only books on the shelf get an Ask button: not "lent out" or "asked for" ones', async () => {
+    signedInAsSam({ shelf: [
+        { ...DUNE, state: 'lent out' },
+        { ...MATILDA, state: 'on the shelf' },
+        { _id: 'emma-id', title: 'Emma', author: 'Jane Austen', state: 'asked for' },
+    ] });
+
+    render(<App />);
+
+    const books = await within(await screen.findByRole('list', { name: 'Books' })).findAllByRole('listitem');
+    expect(within(books[0]).queryByRole('button', { name: 'Ask' })).not.toBeInTheDocument();
+    expect(within(books[1]).getByRole('button', { name: 'Ask' })).toBeInTheDocument();
+    expect(books[2]).toHaveTextContent('Emma by Jane Austen · asked for');
+    expect(within(books[2]).queryByRole('button', { name: 'Ask' })).not.toBeInTheDocument();
+});
+
+test('Sam clicks Ask on Matilda: it\'s sent, then Matilda says "asked for" and shows in My requests as waiting', async () => {
+    signedInAsSam({ shelf: [{ ...MATILDA, state: 'on the shelf' }] });
+    api.askForBook.mockResolvedValue({ _id: 'request-1', book: 'matilda-id', status: 'waiting' });
+
+    const user = userEvent.setup();
+    render(<App />);
+    const ask = await screen.findByRole('button', { name: 'Ask' });
+    // what the "server" says once Sam's request is saved
+    api.getShelf.mockResolvedValue([{ ...MATILDA, state: 'asked for' }]);
+    api.getMyRequests.mockResolvedValue([{ _id: 'request-1', book: MATILDA, status: 'waiting', askedAt: '2026-11-02T10:00:00Z' }]);
+    await user.click(ask);
+
+    expect(api.askForBook).toHaveBeenCalledWith('matilda-id');
+    const myRequests = await screen.findByRole('list', { name: 'My requests' });
+    expect(await within(myRequests).findByText(/Matilda/)).toHaveTextContent('Matilda · waiting');
+    expect(screen.getByRole('list', { name: 'Books' })).toHaveTextContent('Matilda by Roald Dahl · asked for');
+    expect(screen.queryByRole('button', { name: 'Ask' })).not.toBeInTheDocument();
+});
+
+test('when a lending rule says no to Sam\'s Ask, Sam sees the red message', async () => {
+    signedInAsSam({ shelf: [{ ...MATILDA, state: 'on the shelf' }] });
+    api.askForBook.mockResolvedValue({ error: 'You already have 3 books and requests' });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Ask' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('You already have 3 books and requests');
+});
+
+test('My requests lists every request with its status, and only waiting ones get a Cancel button', async () => {
+    signedInAsSam({ myRequests: [
+        { _id: 'request-2', book: DUNE, status: 'waiting', askedAt: '2026-11-02T10:00:00Z' },
+        { _id: 'request-1', book: MATILDA, status: 'cancelled', askedAt: '2026-10-01T10:00:00Z', cancelledAt: '2026-10-02T10:00:00Z' },
+    ] });
+
+    render(<App />);
+
+    const items = await within(await screen.findByRole('list', { name: 'My requests' })).findAllByRole('listitem');
+    expect(items[0]).toHaveTextContent('Dune · waiting');
+    expect(within(items[0]).getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+    expect(items[1]).toHaveTextContent('Matilda · cancelled');
+    expect(within(items[1]).queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument();
+});
+
+test('My requests says so when Sam has never asked for anything', async () => {
+    signedInAsSam();
+
+    render(<App />);
+
+    const myRequests = await screen.findByRole('region', { name: 'My requests' });
+    expect(await within(myRequests).findByText('No requests yet')).toBeInTheDocument();
+});
+
+test('Sam cancels the waiting request for Dune: it\'s sent, then it shows as cancelled and Dune is on the shelf again', async () => {
+    signedInAsSam({
+        shelf: [{ ...DUNE, state: 'asked for' }],
+        myRequests: [{ _id: 'request-1', book: DUNE, status: 'waiting', askedAt: '2026-11-02T10:00:00Z' }],
+    });
+    api.cancelRequest.mockResolvedValue({ _id: 'request-1', status: 'cancelled' });
+
+    const user = userEvent.setup();
+    render(<App />);
+    const cancel = await screen.findByRole('button', { name: 'Cancel' });
+    api.getShelf.mockResolvedValue([{ ...DUNE, state: 'on the shelf' }]);
+    api.getMyRequests.mockResolvedValue([{ _id: 'request-1', book: DUNE, status: 'cancelled', askedAt: '2026-11-02T10:00:00Z', cancelledAt: '2026-11-02T11:00:00Z' }]);
+    await user.click(cancel);
+
+    expect(api.cancelRequest).toHaveBeenCalledWith('request-1');
+    expect(await screen.findByText('Dune · cancelled')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Ask' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument();
+});
+
+test('when Cancel fails, Sam sees the red message', async () => {
+    signedInAsSam({ myRequests: [{ _id: 'request-1', book: DUNE, status: 'waiting', askedAt: '2026-11-02T10:00:00Z' }] });
+    api.cancelRequest.mockResolvedValue({ error: 'This request was cancelled' });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Cancel' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('This request was cancelled');
+});
+
+test('signing in as me still shows my page', async () => {
+    api.isSignedIn.mockReturnValue(false);
+    api.getBooks.mockResolvedValue([DUNE]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+    api.getShelf.mockClear();
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole('button', { name: 'Sign in with Google' }));
+
+    expect(await screen.findByRole('button', { name: 'Lend' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Hi, Sam' })).not.toBeInTheDocument();
+    expect(api.getShelf).not.toHaveBeenCalled();
+});
+
+test('when "who am I?" breaks, the page says something went wrong and still lets me sign out', async () => {
+    api.whoAmI.mockResolvedValue({ error: 'Something went wrong. Try again.' });
+
+    const user = userEvent.setup();
+    render(<App />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong. Try again.');
+    await user.click(screen.getByRole('button', { name: 'Sign out' }));
+    expect(screen.getByRole('button', { name: 'Sign in with Google' })).toBeInTheDocument();
+});
+
+// my page, with Dune and Matilda, Sam and Alex, and no loans yet
+function myShelf() {
+    api.getBooks.mockResolvedValue([DUNE, MATILDA]);
+    api.getFriends.mockResolvedValue([SAM, { _id: 'alex-id', name: 'Alex' }]);
+    api.getLoans.mockResolvedValue([]);
+}
+
+test('my Requests list shows who asked for what, in the server\'s order (oldest first), each with Approve', async () => {
+    myShelf();
+    api.getWaitingRequests.mockResolvedValue([
+        { _id: 'request-1', book: MATILDA, friend: { _id: 'alex-id', name: 'Alex' }, status: 'waiting' },
+        { _id: 'request-2', book: DUNE, friend: SAM, status: 'waiting' },
+    ]);
+
+    render(<App />);
+
+    const items = await within(await screen.findByRole('list', { name: 'Requests' })).findAllByRole('listitem');
+    expect(items[0]).toHaveTextContent('Alex asked for Matilda');
+    expect(items[1]).toHaveTextContent('Sam asked for Dune');
+    expect(within(items[1]).getByRole('button', { name: 'Approve' })).toBeInTheDocument();
+});
+
+test('my Requests list says so when nothing is waiting', async () => {
+    myShelf();
+
+    render(<App />);
+
+    expect(await screen.findByText('No requests waiting')).toBeInTheDocument();
+});
+
+test('Approve on Sam\'s request for Dune: it\'s sent, the request leaves the list, and the loan shows up', async () => {
+    myShelf();
+    api.getWaitingRequests.mockResolvedValue([{ _id: 'request-2', book: DUNE, friend: SAM, status: 'waiting' }]);
+    api.approveRequest.mockResolvedValue({ _id: 'request-2', status: 'approved', loan: 'loan-1' });
+
+    const user = userEvent.setup();
+    render(<App />);
+    const approve = await screen.findByRole('button', { name: 'Approve' });
+    // what the "server" says once Dune is lent to Sam
+    api.getWaitingRequests.mockResolvedValue([]);
+    api.getLoans.mockResolvedValue([{ _id: 'loan-1', book: DUNE, friend: SAM, dueBack: '2026-11-16T12:00:00.000Z', overdue: false }]);
+    await user.click(approve);
+
+    expect(api.approveRequest).toHaveBeenCalledWith('request-2');
+    expect(await screen.findByText('No requests waiting')).toBeInTheDocument();
+    expect(await screen.findByText(/Dune → Sam/)).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+});
+
+test('when a lending rule says no to Approve, I see the red message and the request stays in the list', async () => {
+    myShelf();
+    api.getWaitingRequests.mockResolvedValue([{ _id: 'request-2', book: DUNE, friend: SAM, status: 'waiting' }]);
+    api.approveRequest.mockResolvedValue({ error: 'This friend has an overdue book' });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Approve' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('This friend has an overdue book');
+    expect(screen.getByRole('list', { name: 'Requests' })).toHaveTextContent('Sam asked for Dune');
+});
+
+test('Decline with a note on Sam\'s request for Dune: the note is sent, the request leaves the list, and nothing is lent', async () => {
+    myShelf();
+    api.getWaitingRequests.mockResolvedValue([
+        { _id: 'request-1', book: MATILDA, friend: { _id: 'alex-id', name: 'Alex' }, status: 'waiting' },
+        { _id: 'request-2', book: DUNE, friend: SAM, status: 'waiting' },
+    ]);
+    api.declineRequest.mockResolvedValue({ _id: 'request-2', status: 'declined', note: "I'm rereading it this week" });
+
+    const user = userEvent.setup();
+    render(<App />);
+    const items = await within(await screen.findByRole('list', { name: 'Requests' })).findAllByRole('listitem');
+    // the note box is already there, next to Approve and Decline: no extra click to open it
+    await user.type(within(items[1]).getByRole('textbox', { name: 'Note for Sam (optional)' }), "I'm rereading it this week");
+    // what the "server" says once Sam's request is declined: only Alex's is still waiting
+    api.getWaitingRequests.mockResolvedValue([{ _id: 'request-1', book: MATILDA, friend: { _id: 'alex-id', name: 'Alex' }, status: 'waiting' }]);
+    await user.click(within(items[1]).getByRole('button', { name: 'Decline' }));
+
+    expect(api.declineRequest).toHaveBeenCalledWith('request-2', "I'm rereading it this week");
+    await vi.waitFor(() => expect(screen.getByRole('list', { name: 'Requests' })).not.toHaveTextContent('Sam asked for Dune'));
+    expect(screen.getByRole('list', { name: 'Requests' })).toHaveTextContent('Alex asked for Matilda');
+    expect(api.approveRequest).not.toHaveBeenCalled();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+});
+
+test('Decline with an empty note box sends an empty note', async () => {
+    myShelf();
+    api.getWaitingRequests.mockResolvedValue([{ _id: 'request-2', book: DUNE, friend: SAM, status: 'waiting' }]);
+    api.declineRequest.mockResolvedValue({ _id: 'request-2', status: 'declined', note: '' });
+
+    const user = userEvent.setup();
+    render(<App />);
+    const decline = await screen.findByRole('button', { name: 'Decline' });
+    api.getWaitingRequests.mockResolvedValue([]);
+    await user.click(decline);
+
+    expect(api.declineRequest).toHaveBeenCalledWith('request-2', '');
+    expect(await screen.findByText('No requests waiting')).toBeInTheDocument();
+});
+
+test('when Decline is refused, like a note that\'s too long, I see the red message and the request stays in the list', async () => {
+    myShelf();
+    api.getWaitingRequests.mockResolvedValue([{ _id: 'request-2', book: DUNE, friend: SAM, status: 'waiting' }]);
+    api.declineRequest.mockResolvedValue({ error: 'Keep the note to 200 characters or fewer.' });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.type(await screen.findByRole('textbox', { name: 'Note for Sam (optional)' }), 'Not now');
+    await user.click(screen.getByRole('button', { name: 'Decline' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Keep the note to 200 characters or fewer.');
+    expect(screen.getByRole('list', { name: 'Requests' })).toHaveTextContent('Sam asked for Dune');
+    expect(screen.getByRole('textbox', { name: 'Note for Sam (optional)' })).toHaveValue('Not now'); // what I typed stays
+});
+
+test('Sam\'s panel shows Sam\'s requests with their status, next to Sam\'s loans', async () => {
+    myShelf();
+    api.getFriendLoans.mockResolvedValue({ active: [], returned: [], limit: 3 });
+    api.getFriendRequests.mockResolvedValue([
+        { _id: 'request-2', book: DUNE, status: 'approved' },
+        { _id: 'request-1', book: MATILDA, status: 'cancelled' },
+    ]);
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Sam' }));
+
+    expect(api.getFriendRequests).toHaveBeenCalledWith('sam-id');
+    const items = await within(await screen.findByRole('list', { name: "Sam's requests" })).findAllByRole('listitem');
+    expect(items[0]).toHaveTextContent('Dune · approved');
+    expect(items[1]).toHaveTextContent('Matilda · cancelled');
+});
+
+test('Sam sees a declined request as declined, with my note, and no Cancel button', async () => {
+    signedInAsSam({ myRequests: [
+        { _id: 'request-2', book: DUNE, status: 'declined', note: "I'm rereading it this week", askedAt: '2026-11-02T10:00:00Z' },
+        { _id: 'request-1', book: MATILDA, status: 'declined', note: '', askedAt: '2026-11-01T10:00:00Z' },
+    ] });
+
+    render(<App />);
+
+    const items = await within(await screen.findByRole('list', { name: 'My requests' })).findAllByRole('listitem');
+    expect(items[0]).toHaveTextContent("Dune · declined · “I'm rereading it this week”");
+    expect(items[1]).toHaveTextContent(/^Matilda · declined$/); // no note, so nothing after "declined"
+    expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument();
+});
+
+test('Sam\'s panel on my page shows a declined request with my note', async () => {
+    myShelf();
+    api.getFriendLoans.mockResolvedValue({ active: [], returned: [], limit: 3 });
+    api.getFriendRequests.mockResolvedValue([{ _id: 'request-2', book: DUNE, status: 'declined', note: "I'm rereading it this week" }]);
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Sam' }));
+
+    const items = await within(await screen.findByRole('list', { name: "Sam's requests" })).findAllByRole('listitem');
+    expect(items[0]).toHaveTextContent("Dune · declined · “I'm rereading it this week”");
+});
+
+test('declining while Sam\'s panel is open shows the declined request and my note there', async () => {
+    myShelf();
+    api.getWaitingRequests.mockResolvedValue([{ _id: 'request-2', book: DUNE, friend: SAM, status: 'waiting' }]);
+    api.getFriendLoans.mockResolvedValue({ active: [], returned: [], limit: 3 });
+    api.getFriendRequests.mockResolvedValue([{ _id: 'request-2', book: DUNE, status: 'waiting' }]);
+    api.declineRequest.mockResolvedValue({ _id: 'request-2', status: 'declined', note: 'Not this week' });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Sam' }));
+    await user.type(await screen.findByRole('textbox', { name: 'Note for Sam (optional)' }), 'Not this week');
+    api.getWaitingRequests.mockResolvedValue([]);
+    api.getFriendRequests.mockResolvedValue([{ _id: 'request-2', book: DUNE, status: 'declined', note: 'Not this week' }]);
+    await user.click(screen.getByRole('button', { name: 'Decline' }));
+
+    expect(await within(screen.getByRole('list', { name: "Sam's requests" })).findByText(/declined/)).toHaveTextContent('Dune · declined · “Not this week”');
+});
+
+test('Sam sees an approved request as approved, with no Cancel button', async () => {
+    signedInAsSam({ myRequests: [{ _id: 'request-1', book: DUNE, status: 'approved', askedAt: '2026-11-02T10:00:00Z' }] });
+
+    render(<App />);
+
+    expect(await screen.findByText('Dune · approved')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument();
 });

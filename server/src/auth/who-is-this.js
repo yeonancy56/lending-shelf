@@ -2,13 +2,11 @@
 // and answers who is asking. This is the only file that talks to Google.
 // Tests swap it for the pretend one in __mocks__/who-is-this.js.
 const { OAuth2Client } = require('google-auth-library');
+const tidyEmail = require('../tidy-email');
+const ROLE = require('./role');
+const friendDao = require('../friends/friend.dao');
 
 const google = new OAuth2Client();
-
-// "Nancy@Gmail.com " and "nancy@gmail.com" are the same email
-function tidyEmail(email) {
-    return (email || '').trim().toLowerCase();
-}
 
 // Asks Google whether this sign-in is real, recent, and made for my app (the client id).
 // Hands back the email Google checked, or '' if Google says no
@@ -27,17 +25,21 @@ async function checkedEmail(signIn) {
     }
 }
 
-// The answer is one of:
-//   { who: 'owner' }     my own Google email
-//   { who: 'stranger' }  a real Google sign-in, but not an email on the list
-//   { who: 'nobody' }    no sign-in, or one Google turns down (like an old one)
+// The answer is one of (see role.js):
+//   { role: 'owner' }     my own Google email
+//   { role: 'friend', friendId, name }  the Google email I added to a friend, like Sam
+//   { role: 'stranger' }  a real Google sign-in, but not an email on the list
+//   { role: 'nobody' }    no sign-in, or one Google turns down (like an old one)
 async function whoIsThis(signIn) {
-    if (!signIn) return { who: 'nobody' };
+    if (!signIn) return { role: ROLE.NOBODY };
     const email = await checkedEmail(signIn);
-    if (!email) return { who: 'nobody' };
+    if (!email) return { role: ROLE.NOBODY };
     const ownerEmail = tidyEmail(process.env.OWNER_EMAIL);
-    if (ownerEmail && email === ownerEmail) return { who: 'owner' }; // ownerEmail && : with no owner email set, nobody is the owner
-    return { who: 'stranger' };
+    if (ownerEmail && email === ownerEmail) return { role: ROLE.OWNER }; // ownerEmail && : with no owner email set, nobody is the owner
+    // friends' emails are saved tidied too, so "Sam@Gmail.com" from Google finds Sam
+    const friend = await friendDao.findByEmail(email);
+    if (friend) return { role: ROLE.FRIEND, friendId: friend.id, name: friend.name };
+    return { role: ROLE.STRANGER };
 }
 
 module.exports = whoIsThis;

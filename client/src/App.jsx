@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'; //useState = memory, what should the page remember, useEffect = do something at a certain time
-import { getBooks, addBook, updateBook, getFriends, addFriend, getFriendLoans, getLoans, lendBook, returnLoan, isSignedIn, saveSignIn, signOut, whenSignedOut } from './api';
+import { getBooks, addBook, updateBook, getFriends, addFriend, updateFriend, getFriendLoans, getFriendRequests, getWaitingRequests, approveRequest, declineRequest, getLoans, lendBook, returnLoan, getShelf, getMyLoans, getMyRequests, askForBook, cancelRequest, whoAmI, isSignedIn, saveSignIn, signOut, whenSignedOut } from './api';
 import GoogleSignIn from './GoogleSignIn';
 
 // a book's name on the page: "Dune (signed)" when it has a copy note, just "Dune" when it doesn't
@@ -35,15 +35,30 @@ function fillList(result, list, setList, setListErrors) {
   }
 }
 
-// one friend's loans, in a box under the Friends list: how many they have, what they have now, and what they had before.
-// loans is null while the server hasn't answered yet
-function FriendPanel({ friend, loans, onClose }) {
+// one request's line, like "Dune · declined · “I'm rereading it this week”". The note only shows when I wrote one
+function requestLine(request) {
+  const line = `${bookName(request.book)} · ${request.status}`;
+  return request.note ? `${line} · “${request.note}”` : line;
+}
+
+// one friend's loans, in a box under the Friends list: how many they have, what they have now, what they had before,
+// and every request they made. loans and requests are null while the server hasn't answered yet
+function FriendPanel({ friend, loans, requests, onEdit, onClose }) {
   return (
     <section aria-labelledby="friend-panel-title">
       <h3 id="friend-panel-title">{friend.name}'s loans</h3>
       {!loans && <p>Loading…</p>} {/* Sam's loans are still on the way */}
       <ErrorMessage message={loans?.error} />
       {loans && !loans.error && <FriendLoans loans={loans} />}
+      <h4>Requests</h4>
+      <ErrorMessage message={requests?.error} />
+      {requests && !requests.error && requests.length === 0 && <p>No requests yet</p>}
+      <ul aria-label={`${friend.name}'s requests`}> {/* newest first, the order the server sends */}
+        {requests && !requests.error && requests.map((request) => (
+          <li key={request._id}>{requestLine(request)}</li>
+        ))}
+      </ul>
+      <button onClick={onEdit}>Edit</button> {/* puts Sam's name and email in the friend form */}
       <button onClick={onClose}>Close</button>
     </section>
   );
@@ -88,19 +103,32 @@ function SignInScreen({ message, onSignIn }) {
   );
 }
 
-// The whole page: the sign-in screen until I sign in, then my shelf.
-// Nothing is asked from the server until I'm signed in, so a stranger sees no books, friends or loans
+// The whole page: the sign-in screen until someone signs in, then my shelf or the friend page.
+// Nothing is asked from the server until someone's signed in, so a stranger sees no books, friends or loans
 function App() {
   const [signedIn, setSignedIn] = useState(isSignedIn); // already signed in from before a reload?
   const [signInMessage, setSignInMessage] = useState('');
+  // the server's answer to "who am I?": { who: 'owner' } or { who: 'friend', name: 'Sam' }. null while it's on the way
+  const [me, setMe] = useState(null);
 
   // the server says it doesn't know me (a stranger, or a sign-in that's too old): back to the sign-in button
   useEffect(() => {
     whenSignedOut((message) => {
       setSignInMessage(message);
       setSignedIn(false);
+      setMe(null);
     });
   }, []);
+
+  // once signed in, ask "who am I?", so the page knows which page to show
+  useEffect(() => {
+    if (!signedIn) return;
+    let stillSignedIn = true;
+    whoAmI().then((answer) => {
+      if (stillSignedIn) setMe(answer); // signed out while the answer was on the way? Then it's thrown away
+    });
+    return () => { stillSignedIn = false; };
+  }, [signedIn]);
 
   // useCallback keeps this the same function every time, so Google's button isn't drawn again on every change
   const handleSignIn = useCallback((signIn) => {
@@ -112,10 +140,102 @@ function App() {
   function handleSignOut() {
     signOut();
     setSignedIn(false);
+    setMe(null); // the next person to sign in might be someone else
   }
 
   if (!signedIn) return <SignInScreen message={signInMessage} onSignIn={handleSignIn} />;
+  if (!me) return <p>Loading…</p>; // "who am I?" is still on the way
+  if (me.error) {
+    // the server broke while saying who I am, so there's no page to show yet. Sign out lets me try again
+    return (
+      <div>
+        <h1>Lending Shelf</h1>
+        <ErrorMessage message={me.error} />
+        <button onClick={handleSignOut}>Sign out</button>
+      </div>
+    );
+  }
+  if (me.who === 'friend') return <FriendPage name={me.name} onSignOut={handleSignOut} />;
   return <Shelf onSignOut={handleSignOut} />;
+}
+
+// Sam's page: every book on the shelf, Sam's own loans, and Sam's own requests.
+// Sam can ask for a book that's on the shelf, and cancel a waiting request. Nothing else,
+// because lending, returning, adding and editing are only for me
+function FriendPage({ name, onSignOut }) {
+  const [shelf, setShelf] = useState([]);
+  const [myLoans, setMyLoans] = useState(null); // null while the server hasn't answered yet
+  const [myRequests, setMyRequests] = useState(null); // null while the server hasn't answered yet
+  const [listErrors, setListErrors] = useState({});
+  const [requestError, setRequestError] = useState(''); // the red message for Ask and Cancel
+  const listError = Object.values(listErrors).find((error) => error);
+
+  // fill in (or fill in again) the shelf and Sam's requests: asking or cancelling changes both
+  function loadShelfAndRequests() {
+    getShelf().then((result) => fillList(result, 'shelf', setShelf, setListErrors));
+    getMyRequests().then(setMyRequests);
+  }
+
+  useEffect(() => { // when the page opens, fill in the shelf, Sam's loans and Sam's requests
+    loadShelfAndRequests();
+    getMyLoans().then(setMyLoans);
+  }, []);
+
+  // Sam clicks Ask on Dune. If a lending rule says no (like already having 3), Sam sees why straight away
+  async function handleAsk(bookId) {
+    const result = await askForBook(bookId);
+    setRequestError(result.error || '');
+    if (!result.error) loadShelfAndRequests();
+  }
+
+  // Sam clicks Cancel on a waiting request: Dune is free again, and it stops counting toward Sam's 3
+  async function handleCancel(requestId) {
+    const result = await cancelRequest(requestId);
+    setRequestError(result.error || '');
+    if (!result.error) loadShelfAndRequests();
+  }
+
+  return (
+    <div>
+      <h1>Lending Shelf</h1>
+      <h2>Hi, {name}</h2>
+      <button onClick={onSignOut}>Sign out</button>
+      <ErrorMessage message={listError} />
+      <ErrorMessage message={requestError} />
+      <section>
+        <h2 id="friend-shelf">Books</h2>
+        {/* each book says "on the shelf", "lent out" or "asked for", but never who: the server doesn't send that */}
+        <ul aria-labelledby="friend-shelf">
+          {shelf.map((book) => (
+            <li key={book._id}>
+              {bookName(book)} by {book.author} · {book.state}
+              {book.state === 'on the shelf' && <button onClick={() => handleAsk(book._id)}>Ask</button>}
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section aria-labelledby="my-loans">
+        <h2 id="my-loans">My loans</h2>
+        {!myLoans && <p>Loading…</p>}
+        <ErrorMessage message={myLoans?.error} />
+        {myLoans && !myLoans.error && <FriendLoans loans={myLoans} />} {/* the same lists as Sam's panel on my page */}
+      </section>
+      <section aria-labelledby="my-requests">
+        <h2 id="my-requests">My requests</h2>
+        {!myRequests && <p>Loading…</p>}
+        <ErrorMessage message={myRequests?.error} />
+        {myRequests && !myRequests.error && myRequests.length === 0 && <p>No requests yet</p>}
+        <ul aria-labelledby="my-requests"> {/* newest first, the order the server sends */}
+          {myRequests && !myRequests.error && myRequests.map((request) => (
+            <li key={request._id}>
+              {requestLine(request)}
+              {request.status === 'waiting' && <button onClick={() => handleCancel(request._id)}>Cancel</button>}
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
+  );
 }
 
 function Shelf({ onSignOut }) { //these are memory boxes 
@@ -127,8 +247,14 @@ function Shelf({ onSignOut }) { //these are memory boxes
   const[search, setSearch] = useState(''); // what I typed in the search box above the shelf
   const[friends, setFriends] = useState([]);
   const[name, setName] = useState('');
+  const[email, setEmail] = useState(''); // optional: Sam's Google email, so Sam can sign in
+  const[editingFriendId, setEditingFriendId] = useState(''); // the friend in the form for editing, or '' when the form adds a new friend
   const[openFriend, setOpenFriend] = useState(null); // the friend whose panel is open, or null when it's closed
   const[friendLoans, setFriendLoans] = useState(null); // that friend's loans, once the server answers
+  const[friendRequests, setFriendRequests] = useState(null); // that friend's requests, once the server answers
+  const[waitingRequests, setWaitingRequests] = useState([]); // my Requests list: what still needs an answer from me
+  const[declineNotes, setDeclineNotes] = useState({}); // what I typed in each request's note box, like { 'request-2': 'Not this week' }
+  const[requestError, setRequestError] = useState(''); // the red message for Approve and Decline
   // the friend I last asked the server about. A ref, not useState, because the page doesn't show it
   const askedFriendId = useRef(null);
   const[loans, setLoans] = useState([]);
@@ -183,40 +309,91 @@ function Shelf({ onSignOut }) { //these are memory boxes
     return getFriends().then((result) => fillList(result, 'friends', setFriends, setListErrors));
   }
  
-  async function handleAddFriend(e) { // note e = event "the thing that just happened"
-    e.preventDefault();
-    const result = await addFriend({ name: name });
-    if (result.error) {
-      setFriendError(result.error);
-      return;
-    }
+  // empty the friend form, and go back to adding a new friend
+  function resetFriendForm() {
+    setEditingFriendId('');
     setFriendError('');
     setName('');
-    loadFriends();
+    setEmail('');
   }
 
-  // ask the server for Sam's loans, and put them in Sam's panel
+  async function handleSaveFriend(e) { // note e = event "the thing that just happened"
+    e.preventDefault();
+    const form = { name: name, email: email }; // an empty email box means no email
+    // editing? Then save the changes to that friend. Otherwise add a new one
+    const result = editingFriendId ? await updateFriend(editingFriendId, form) : await addFriend(form);
+    if (result.error) {
+      setFriendError(result.error); // like "Sam already has this email.", and what I typed stays in the boxes
+      return;
+    }
+    if (openFriend?._id === result._id) setOpenFriend(result); // Sam's panel shows Sam's new name, and Edit gets the new email
+    const wasEditing = editingFriendId;
+    resetFriendForm();
+    loadFriends();
+    if (wasEditing) loadLoans(); // a loan shows the friend's name, so a fixed name shows there too
+  }
+
+  // Edit in Sam's panel puts Sam in the form, so I can add, change or remove Sam's email
+  function startEditingFriend(friend) {
+    setEditingFriendId(friend._id);
+    setName(friend.name);
+    setEmail(friend.email || '');
+    setFriendError('');
+  }
+
+  // ask the server for Sam's loans and requests, and put them in Sam's panel
   async function loadFriendLoans(friend) {
     askedFriendId.current = friend._id;
-    const result = await getFriendLoans(friend._id);
+    const [loans, requests] = await Promise.all([getFriendLoans(friend._id), getFriendRequests(friend._id)]);
     // clicked Alex while Sam's answer was on the way? Then Sam's late answer is thrown away
-    if (askedFriendId.current === friend._id) setFriendLoans(result);
+    if (askedFriendId.current === friend._id) {
+      setFriendLoans(loans);
+      setFriendRequests(requests);
+    }
   }
 
   // clicking Sam's name opens Sam's panel, and asks the server for Sam's loans
   function openFriendPanel(friend) {
     setOpenFriend(friend);
     setFriendLoans(null); // don't show someone else's loans while Sam's are on the way
+    setFriendRequests(null);
     loadFriendLoans(friend);
   }
 
   function closeFriendPanel() {
     setOpenFriend(null);
     setFriendLoans(null);
+    setFriendRequests(null);
   }
 
   function loadLoans() {
     return getLoans().then((result) => fillList(result, 'loans', setLoans, setListErrors));
+  }
+
+  function loadRequests() {
+    return getWaitingRequests().then((result) => fillList(result, 'requests', setWaitingRequests, setListErrors));
+  }
+
+  // Approve on Sam's request for Dune: the server lends Dune to Sam right away.
+  // If a lending rule says no (like Sam's loan going overdue), I see why and the request stays in the list
+  async function handleApprove(id) {
+    const result = await approveRequest(id);
+    setRequestError(result.error || '');
+    if (result.error) return;
+    loadRequests();
+    loadLoans();
+    if (openFriend) loadFriendLoans(openFriend); // Sam's panel is open? Then it shows the new loan and the approved request
+  }
+
+  // Decline on Sam's request for Dune, with whatever is in its note box (maybe nothing). Nothing is lent.
+  // If the server says no (like a note that's too long), I see why, and the request and my note stay
+  async function handleDecline(id) {
+    const result = await declineRequest(id, declineNotes[id] || '');
+    setRequestError(result.error || '');
+    if (result.error) return;
+    setDeclineNotes((notes) => ({ ...notes, [id]: '' })); // that note is sent, so its box is done
+    loadRequests();
+    if (openFriend) loadFriendLoans(openFriend); // Sam's panel is open? Then it shows the declined request and my note
   }
 
   async function handleAddLoan(e) {
@@ -239,7 +416,8 @@ function Shelf({ onSignOut }) { //these are memory boxes
   }
 
 
-useEffect(() => { // when the page opens, fill in all three lists
+useEffect(() => { // when the page opens, fill in all four lists
+  loadRequests();
   loadBooks();
   loadFriends();
   loadLoans();
@@ -250,6 +428,27 @@ return (
     <h1>Lending Shelf</h1>
     <button onClick={onSignOut}>Sign out</button>
     <ErrorMessage message={listError} />
+    <section>
+      <h2 id="requests">Requests</h2> {/* at the top, so I see them as soon as I sign in */}
+      {waitingRequests.length === 0 && <p>No requests waiting</p>}
+      <ul aria-labelledby="requests"> {/* oldest first, the order the server sends, so I answer them in the order they came */}
+        {waitingRequests.map((request) => (
+          <li key={request._id}>
+            {request.friend.name} asked for {bookName(request.book)}{' '}
+            <button onClick={() => handleApprove(request._id)}>Approve</button>
+            {/* the note box is always there, so declining is one click */}
+            <input
+              aria-label={`Note for ${request.friend.name} (optional)`}
+              placeholder="Note (optional)"
+              value={declineNotes[request._id] || ''}
+              onChange={(e) => setDeclineNotes((notes) => ({ ...notes, [request._id]: e.target.value }))}
+            />
+            <button onClick={() => handleDecline(request._id)}>Decline</button>
+          </li>
+        ))}
+      </ul>
+      <ErrorMessage message={requestError} />
+    </section>
     <section>
      <h2>Books</h2>
       <form onSubmit={handleSaveBook}>
@@ -283,9 +482,18 @@ return (
     </section>
     <section>
     <h2>Friends</h2>
-     <form onSubmit={handleAddFriend}>
+     <form onSubmit={handleSaveFriend}>
       <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
-      <button>Add Friend</button>
+      {/* type="email": a phone shows the @ key, and the browser stops a typo like "sam.gmail.com" before it's sent */}
+      <input type="email" placeholder="Google email (optional)" value={email} onChange={(e) => setEmail(e.target.value)} />
+      {editingFriendId ? (
+        <>
+          <button>Save</button>
+          <button type="button" onClick={resetFriendForm}>Cancel</button>
+        </>
+      ) : (
+        <button>Add Friend</button>
+      )}
      </form>
      <ErrorMessage message={friendError} />
      <ul>
@@ -293,7 +501,7 @@ return (
         <li key={friend._id}><button onClick={() => openFriendPanel(friend)}>{friend.name}</button></li>
       ))}
      </ul>
-     {openFriend && <FriendPanel friend={openFriend} loans={friendLoans} onClose={closeFriendPanel} />}
+     {openFriend && <FriendPanel friend={openFriend} loans={friendLoans} requests={friendRequests} onEdit={() => startEditingFriend(openFriend)} onClose={closeFriendPanel} />}
     </section>
     <section>
     <h2>Loans</h2>
