@@ -12,6 +12,11 @@ function findActiveByBook(bookId) {
     return Loan.findOne({ book: bookId, returnedAt: null });
 }
 
+// can this book be deleted? Not if any loan, out now or returned, still needs it
+async function existsForBook(bookId) {
+    return (await Loan.exists({ book: bookId })) !== null;
+}
+
 // rule 2: how mayn books does this friend out?
 function countActiveByFriend(friendId) {
     return Loan.countDocuments({ friend: friendId, returnedAt: null });
@@ -32,4 +37,4 @@ function markReturned(id) {
     return Loan.findByIdAndUpdate(id, { returnedAt: new Date() }, { returnDocument: 'after' });
 }
 
-module.exports = {findAll, findById, create, findActiveByBook, countActiveByFriend, findActiveByFriend, findByFriend, markReturned}
+module.exports = {findAll, findById, create, findActiveByBook, existsForBook, countActiveByFriend, findActiveByFriend, findByFriend, markReturned}

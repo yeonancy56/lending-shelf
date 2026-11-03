@@ -453,3 +453,23 @@ Why: if search quietly hid books in Loans, I could think a book was missing. Sea
 Chose: after I add or save a book, the search box empties and the whole shelf comes back
 Other option: keep the search, even if the book I just saved doesn't match it
 Why: if I've searched "herb" and add Matilda, she'd never show up, and I'd think adding her didn't work
+
+## 2026-11-02 — Old loans keep showing the book's name, even if the book leaves the shelf
+Chose: a past loan of Dune always says "Dune", so a book that's been lent can't be wiped out completely
+Other option: really delete the book, and old loans say "(deleted book)"
+Why: loans are my history, and the glossary already says they're kept. "(deleted book)" wouldn't tell me what Sam borrowed
+
+## 2026-11-02 — The server won't delete a book that has ever been lent
+Chose: if any loan points to Dune, now or in the past, deleting Dune is refused. A book that was never lent can still be deleted
+Other option: "removing" a book just hides it from the shelf, but old loans still know it
+Why: it fixes the crash with a small change. Hiding is a bigger new feature, and there's no Delete button yet anyway. It can be its own ticket later
+
+## 2026-11-02 — The "can't delete" message says "This book…", like the other rules
+Chose: "This book has been lent before, so it can't be deleted. Its loans need it."
+Other option: name the book, like "Dune has been lent before…"
+Why: none of the other rule messages name the book, and naming it would mean an extra lookup just for the message
+
+## 2026-11-02 — The page doesn't get a "just in case" fix for a loan with no book
+Chose: only the server rule. The page still expects every loan to have its book
+Other option: the page shows "(unknown book)" instead of crashing
+Why: the rule lives in one place. A safety net could quietly hide a real problem, and my database has no broken loans today
