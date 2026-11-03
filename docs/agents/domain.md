@@ -25,7 +25,7 @@ If `GLOSSARY.md` doesn't exist, **proceed silently**. Don't flag its absence; do
 
 Wherever a skill says "record an ADR" or "write to `docs/adr/`", use `DECISIONS.md` instead. Do not create `docs/adr/`.
 
-When a decision is made, Claude adds the entry to the bottom of `DECISIONS.md`, following rule 4 and the "DECISIONS.md format" section in `CLAUDE.md`. The format lives only there, so don't copy it here.
+When a decision is made, Claude adds an entry to `DECISIONS.md` as the "Every decision goes in DECISIONS.md" rule and the "DECISIONS.md format" section in `CLAUDE.md` say. The format lives only there, so don't copy it here.
 
 ## Use the glossary's vocabulary
 

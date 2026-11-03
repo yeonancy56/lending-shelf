@@ -763,6 +763,6 @@ Other option: keep the start-of-conversation offer, but skip it if a ticket was 
 Why: after the last ticket was merged, I got questions, typed /clear, and was offered more questions right away. That's two offers in a row. Adding one older question to the after-ticket offer still brings old tickets back, so I don't forget them
 
 ## 2026-11-03 — The DECISIONS.md format is written in one place only
-Chose: the format for these entries (Chose, Other option, Why) now lives only in CLAUDE.md, the file Claude reads at the start of every conversation. The other guide for Claude just points to it
-Other option: keep it only in the other guide, docs/agents/domain.md, or keep both copies
-Why: with two copies, one could change and the other wouldn't, and they'd quietly stop matching. That had already started: one said the date like "2026-10-16" and the other said "YYYY-MM-DD"
+Chose: the layout for these entries now lives only in CLAUDE.md, the file Claude reads at the start of every conversation. Claude's other guide, docs/agents/domain.md, just points to it
+Other option: keep it only in docs/agents/domain.md, or keep both copies
+Why: with two copies, one could change and the other wouldn't, and they'd quietly stop matching. That had already started: one showed a real date, the other showed a blank to fill in. It's the same idea as the coding rules list, which points back instead of copying
