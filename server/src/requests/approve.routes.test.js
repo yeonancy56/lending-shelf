@@ -92,7 +92,7 @@ test('Sam, with 2 books out and another waiting request, can\'t have Dune approv
     const res = await asMe.post(`/requests/${asked.id}/approve`);
 
     expect(res.status).toBe(409);
-    expect(res.body.error).toBe('this friend already has 3 books');
+    expect(res.body.error).toBe('This friend already has 3 books');
     expect((await Request.findById(asked.id)).status).toBe('waiting');
 });
 

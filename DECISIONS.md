@@ -708,3 +708,8 @@ Why: this is the same fix books got in #62, so deleting a book and deleting a fr
 Chose: when the server looks up one book or one friend, an address like /books/abc or /friends/abc gets "not found" straight away, before asking the database. Opening Dune or Sam at a bad address now says "Book not found" or "Friend not found" instead of crashing
 Other option: add a separate "is it there?" check before each lookup, the way deleting and editing do
 Why: the lookup already gives back "nothing" when there's no such book or friend, so a wrong-shaped address can simply give back nothing too. That saves asking the database twice just to show one book. Looking up one loan or one request already works this way, so now all four match
+
+## 2026-11-03 — The 3-book message starts with a capital letter
+Chose: "This friend already has 3 books", with a capital T, like the other red messages
+Other option: leave it lowercase
+Why: every other message starts with a capital, like "This book is already lent out". The lowercase one looked like a typo

@@ -73,7 +73,7 @@ test('does not lend Dune when Dune is already out', async () => {
 test('does not lend Sam a 4th book', async () => {
     loanDao.countActiveByFriend.mockResolvedValue(3);
 
-    await expect(loanService.lendBook(DUNE, SAM)).rejects.toThrow('this friend already has 3 books');
+    await expect(loanService.lendBook(DUNE, SAM)).rejects.toThrow('This friend already has 3 books');
     expect(loanDao.countActiveByFriend).toHaveBeenCalledWith(SAM); // counted Sam's books, not Dune's
     expect(loanDao.create).not.toHaveBeenCalled();
 });
