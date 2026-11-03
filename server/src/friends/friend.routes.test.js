@@ -168,6 +168,20 @@ describe('a friend\'s Google email', () => {
         expect(await Friend.countDocuments({ email: 'sam@gmail.com' })).toBe(1);
     });
 
+    test.each([5, { an: 'object' }])('an email that isn\'t words, like %p, is refused with a plain message (400)', async (email) => {
+        const sam = await owner.post('/friends').send({ name: 'Sam', email: 'sam@gmail.com' });
+
+        const adding = await owner.post('/friends').send({ name: 'Alex', email });
+        const editing = await owner.put('/friends/' + sam.body._id).send({ name: 'Sam', email });
+
+        expect(adding.status).toBe(400);
+        expect(adding.body.error).toBe('The email must be words.');
+        expect(editing.status).toBe(400);
+        expect(editing.body.error).toBe('The email must be words.');
+        expect(await Friend.countDocuments()).toBe(1);
+        expect((await owner.get('/friends/' + sam.body._id)).body.email).toBe('sam@gmail.com');
+    });
+
     test('editing a friend that doesn\'t exist says so (404)', async () => {
         const res = await owner.put('/friends/000000000000000000000000').send({ name: 'Sam', email: 'sam@gmail.com' });
 

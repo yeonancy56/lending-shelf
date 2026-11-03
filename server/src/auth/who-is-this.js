@@ -2,7 +2,7 @@
 // and answers who is asking. This is the only file that talks to Google.
 // Tests swap it for the pretend one in __mocks__/who-is-this.js.
 const { OAuth2Client } = require('google-auth-library');
-const tidyEmail = require('./tidy-email');
+const tidyEmail = require('../tidy-email');
 const friendDao = require('../friends/friend.dao');
 
 const google = new OAuth2Client();

@@ -1,7 +1,7 @@
 const friendDao = require('./friend.dao')
 const loanDao = require('../loans/loan.dao');
 const requestDao = require('../requests/request.dao');
-const tidyEmail = require('../auth/tidy-email');
+const tidyEmail = require('../tidy-email');
 const { badRequest, ruleBroken, DUPLICATE_KEY } = require('../errors');
 
 function listFriends()             { return friendDao.findAll(); }
@@ -18,8 +18,14 @@ async function deleteFriend(id) {
     return friendDao.remove(id);
 }
 
+// the friend form, with its email tidied, so "SAM@gmail.com " becomes "sam@gmail.com".
+// An empty box (or only spaces) means no email, so Gran (who'll never sign in) works like today
+function withTidyEmail(form) {
+    return { ...form, email: tidyEmail(form.email) || undefined };
+}
+
 // one email means one friend, and my own email is never a friend's, so sign-in always knows who it is.
-// The email is already tidied, so "SAM@gmail.com " has become "sam@gmail.com".
+// The email is already tidied by withTidyEmail, just before this.
 // When editing, the friend being edited is left out, so Sam never clashes with Sam
 async function checkEmail(email, editingId) {
     if (!email) return; // no email is always fine
@@ -43,7 +49,8 @@ async function whySaveFailed(err, email) {
     return err;
 }
 
-async function addFriend(data) {
+async function addFriend(form) {
+    const data = withTidyEmail(form);
     await checkEmail(data.email);
     try {
         return await friendDao.create(data);
@@ -53,8 +60,9 @@ async function addFriend(data) {
 }
 
 // gives back nothing when there's no such friend, so the controller can say "Friend not found"
-async function updateFriend(id, data) {
+async function updateFriend(id, form) {
     if (!(await friendDao.exists(id))) return null;
+    const data = withTidyEmail(form);
     await checkEmail(data.email, id);
     try {
         return await friendDao.update(id, data);
