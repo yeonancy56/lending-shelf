@@ -38,8 +38,8 @@ A MERN app for tracking books I lend to friends.
    After merging, delete the branch.
    If the ticket changes the look, the review also takes a picture: run
    `npm run picture` in `client/` (pretend answers, no sign-in, with a long
-   book name; it stops if 5173 is busy), then picture
-   `http://localhost:5173/phone`. That page shows the shelf in a frame 375
+   book name; it stops if 5174 is busy), then picture
+   `http://localhost:5174/phone`. That page shows the shelf in a frame 375
    wide, because Chrome won't make its own window narrower than 500.
    Headless Chrome works:
    `--headless=new --hide-scrollbars --window-size=375,2400 --virtual-time-budget=5000 --screenshot=<file>`.
