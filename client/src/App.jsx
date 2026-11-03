@@ -30,6 +30,13 @@ function fillList(result, list, setList, setListErrors) {
   }
 }
 
+// under the title: how many books are on the shelf, lent out ones too, like "12 books" or "1 book".
+// Nothing until the books have arrived, so a slow or broken server never shows a wrong "0 books"
+function BookCount({ books, arrived }) {
+  if (!arrived) return null;
+  return <p className="book-count">{books.length === 1 ? '1 book' : `${books.length} books`}</p>;
+}
+
 // one request's line, like "Dune · declined · “I'm rereading it this week”". The note only shows when I wrote one
 function requestLine(request) {
   const line = `${bookName(request.book)} · ${request.status}`;
@@ -193,6 +200,7 @@ function FriendPage({ name, onSignOut }) {
   return (
     <div>
       <h1>Lending Shelf</h1>
+      <BookCount books={shelf} arrived={listErrors.shelf === ''} /> {/* '' means the shelf arrived with no error */}
       <h2>Hi, {name}</h2>
       <button onClick={onSignOut}>Sign out</button>
       <ErrorMessage message={listError} />
@@ -421,6 +429,7 @@ useEffect(() => { // when the page opens, fill in all four lists
 return (
   <div>
     <h1>Lending Shelf</h1>
+    <BookCount books={books} arrived={listErrors.books === ''} /> {/* '' means the books arrived with no error */}
     <button onClick={onSignOut}>Sign out</button>
     <ErrorMessage message={listError} />
     <section>

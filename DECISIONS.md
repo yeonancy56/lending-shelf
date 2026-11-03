@@ -781,3 +781,19 @@ Why: a name like "green" doesn't say it's for buttons, and "spine 2" doesn't say
 Chose: a "picture mode" that only runs on my computer. It shows my shelf with pretend books, friends, loans and a request, including one book with a very long name, so no Google sign-in or database is needed. A /phone page shows the shelf exactly as wide as a phone. When a ticket changes how the page looks, the review takes a picture of it and shows me
 Other option: the review stops and asks me to take the picture myself
 Why: the review can't sign in with my Google account, so it couldn't see the real page. With pretend answers it can look on its own every time. The long name is there on purpose, to catch a title that gets cut off or spills past the edge. The real app never uses picture mode
+
+## 2026-11-03 — "My shelf" means every book I own
+Chose: my shelf is every book I own, whether it's at home or lent out. If Dune is with Sam, it's still on my shelf
+Other option: the shelf is only the books at home right now
+Why: the glossary used "on my shelf" both ways, which was confusing. Owning a book doesn't stop when I lend it. A request still only works for a book that isn't lent out, and the glossary now says that plainly
+This changes the earlier choice of words: two entries from 2 November ("Sam can only ask for books on the shelf" and "After a no, Sam can ask again any time") say "on the shelf" to mean at home. Those choices still stand, only the word changed. Sam's page still labels a book at home "on the shelf". That label becomes "at home" in its own ticket
+
+## 2026-11-03 — Show "12 books" under the title
+Chose: a small soft-brown line under the Lending Shelf title says how many books are on my shelf, lent out ones too. It says "1 book" for one and "0 books" for none. Friends like Sam see it on their page too
+Other option: count only books at home, or show "2 of 12 books" while I search
+Why: I wanted to know how big my shelf is at a glance. Each book already says if it's lent out, so the count doesn't need to. Searching doesn't change what I own, so the number stays the same. Sam can already count the books, so showing the number gives nothing away. The plan said grey, but the page has no grey, only warm browns and cream, so grey looked cold. I picked a new soft brown that's still easy to read in light and dark mode
+
+## 2026-11-03 — No count until the books arrive
+Chose: the count shows nothing while the books are on the way, and nothing if they can't load
+Other option: show "Counting…" while waiting
+Why: before the server answers, the page has no books yet, so it would wrongly say "0 books" and look like my shelf got wiped. A blank line for half a second is easy to miss, and if loading breaks, the red message already says so
