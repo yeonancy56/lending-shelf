@@ -55,8 +55,10 @@ async function updateBook(id, data) {
     return bookDao.update(id, data);
 }
 
-// a book that's been lent or asked for can't be deleted, because its loans and requests are kept forever and still need it
+// a book that's been lent or asked for can't be deleted, because its loans and requests are kept forever and still need it.
+// Gives back nothing when there's no such book, so the controller can say "Book not found"
 async function deleteBook(id) {
+    if (!(await bookDao.exists(id))) return null;
     if (await loanDao.hasEverBeenLent(id)) {
         throw ruleBroken("This book has been lent before, so it can't be deleted. Its loans need it.");
     }
