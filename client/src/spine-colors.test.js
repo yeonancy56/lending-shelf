@@ -22,7 +22,8 @@ const darkOwn = colorsIn(css.match(/@media\s*\(\s*prefers-color-scheme:\s*dark\s
 const light = lightOwn;
 const dark = { ...light, ...darkOwn };
 
-// the spines are --spine-green, --spine-rust, ... however many index.css has. The two word colors also start with --spine-, so leave them out
+// the spines are --spine-green, --spine-rust, ... however many index.css has. The two word colors also start with --spine-, so leave them out.
+// Any other --spine- name counts as a spine, so a new color for words on a spine must go in WORDS
 const SPINES = Object.keys(light).filter((name) => name.startsWith('--spine-') && !WORDS.includes(name));
 
 // how bright a color looks to the eye, from 0 (black) to 1 (white)
