@@ -8,7 +8,7 @@ async function list (req, res) {
 
 // Sam's panel asks this, through /friends/:id/loans
 async function listForFriend(req, res) {
-    const loans = await loanService.friendLoans(req.params.id);
+    const loans = await loanService.listFriendLoans(req.params.id);
     if (!loans) return res.status(404).json({ error: 'Friend not found' });
     res.json(loans);
 }

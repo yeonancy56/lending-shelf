@@ -147,14 +147,14 @@ test('GET /friends/:id/loans sends what Sam has now, Sam\'s past loans, and the 
 
     expect(res.status).toBe(200);
     expect(res.body.limit).toBe(3);
-    expect(res.body.current).toHaveLength(1);
-    expect(res.body.current[0].book.title).toBe('Dune'); // the book's name, not just its ID
-    expect(res.body.current[0].dueBack).toBe('2026-10-15T12:00:00.000Z'); // 14 days after it was lent
-    expect(res.body.current[0].overdue).toBe(true);
-    expect(res.body.past).toHaveLength(1);
-    expect(res.body.past[0].book.title).toBe('Emma');
-    expect(res.body.past[0].lentAt).toBe('2026-09-01T12:00:00.000Z');
-    expect(res.body.past[0].returnedAt).toBe('2026-09-10T12:00:00.000Z');
+    expect(res.body.active).toHaveLength(1);
+    expect(res.body.active[0].book.title).toBe('Dune'); // the book's name, not just its ID
+    expect(res.body.active[0].dueBack).toBe('2026-10-15T12:00:00.000Z'); // 14 days after it was lent
+    expect(res.body.active[0].overdue).toBe(true);
+    expect(res.body.returned).toHaveLength(1);
+    expect(res.body.returned[0].book.title).toBe('Emma');
+    expect(res.body.returned[0].lentAt).toBe('2026-09-01T12:00:00.000Z');
+    expect(res.body.returned[0].returnedAt).toBe('2026-09-10T12:00:00.000Z');
 });
 
 test('GET /friends/:id/loans puts Sam\'s newest past loan first', async () => {
@@ -167,7 +167,7 @@ test('GET /friends/:id/loans puts Sam\'s newest past loan first', async () => {
 
     const res = await request(app).get(`/friends/${sam.id}/loans`);
 
-    expect(res.body.past.map((loan) => loan.book.title)).toEqual(['Emma', 'Matilda', 'Dune']);
+    expect(res.body.returned.map((loan) => loan.book.title)).toEqual(['Emma', 'Matilda', 'Dune']);
 });
 
 test('GET /friends/:id/loans for a friend who isn\'t there says so (404)', async () => {

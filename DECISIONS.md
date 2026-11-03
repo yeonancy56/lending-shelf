@@ -420,7 +420,7 @@ Other option: past loans with no dates, and no "2 of 3"
 Why: the dates show what really happened, which is why I keep returned loans. "2 of 3" tells me if I can lend Sam another before I try
 
 ## 2026-11-02 — The server answers "what are Sam's loans?"
-Chose: a new server question that sends Sam's current loans, past loans, and the 3-book limit
+Chose: a new server question that sends the books Sam has now, Sam's past loans, and the 3-book limit
 Other option: the page picks Sam's loans out of the full loans list it already has
 Why: the 3-book limit stays in one place, like "14 days". And the page doesn't have to sift through everyone's history to find Sam's
 
@@ -428,3 +428,13 @@ Why: the 3-book limit stays in one place, like "14 days". And the page doesn't h
 Chose: the panel still opens, with the red "Something went wrong" message inside it and the "Close" button
 Other option: show nothing, or put the message at the top of the page
 Why: I clicked Sam, so the answer belongs where I'm looking. And without this, the page would break
+
+## 2026-11-02 — Where the "Sam's loans" question lives in the server code
+Chose: the address starts with /friends (/friends/Sam/loans), but the loans code answers it
+Other option: let the friends code answer it, or use an address like /loans?friend=Sam
+Why: the address reads like "Sam's loans", which is what it is. And the loans code already knows about loans, due back days and the 3-book limit, so nothing gets copied
+
+## 2026-11-02 — "Newest first" means the book lent most recently
+Chose: Sam's past loans are sorted by the day each book was lent, newest at the top
+Other option: sort by the day each book came back
+Why: lending is where every loan starts, so it's the simplest order to explain. Usually the two orders are the same anyway

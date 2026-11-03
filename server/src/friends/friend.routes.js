@@ -9,6 +9,6 @@ router.get('/:id',      friendController.getOne);
 router.post('/',        friendController.create);
 router.put('/:id',      friendController.update);
 router.delete('/:id',   friendController.remove);
-router.get('/:id/loans', loanController.listForFriend); // Sam's panel: the loans part lives with the other loan code
+router.get('/:id/loans', loanController.listForFriend); // Sam's panel. The address starts with /friends, but the answer is loans, so the loans code handles it
 
 module.exports = router;
