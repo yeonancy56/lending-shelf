@@ -791,7 +791,7 @@ This changes the earlier choice of words: two entries from 2 November ("Sam can 
 ## 2026-11-03 — Show "12 books" under the title
 Chose: a small soft-brown line under the Lending Shelf title says how many books are on my shelf, lent out ones too. It says "1 book" for one and "0 books" for none. Friends like Sam see it on their page too
 Other option: count only books at home, or show "2 of 12 books" while I search
-Why: I wanted to know how big my shelf is at a glance. Each book already says if it's lent out, so the count doesn't need to. Searching doesn't change what I own, so the number stays the same. Sam can already count the books, so showing the number gives nothing away
+Why: I wanted to know how big my shelf is at a glance. Each book already says if it's lent out, so the count doesn't need to. Searching doesn't change what I own, so the number stays the same. Sam can already count the books, so showing the number gives nothing away. The plan said grey, but the page has no grey, only warm browns and cream, so grey looked cold. I picked a new soft brown that's still easy to read in light and dark mode
 
 ## 2026-11-03 — No count until the books arrive
 Chose: the count shows nothing while the books are on the way, and nothing if they can't load
