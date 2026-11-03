@@ -10,6 +10,7 @@ vi.mock('./api');
 
 const DUNE = { _id: 'dune-id', title: 'Dune', author: 'Frank Herbert' };
 const SAM = { _id: 'sam-id', name: 'Sam' };
+const MATILDA = { _id: 'matilda-id', title: 'Matilda', author: 'Roald Dahl' };
 
 test('marks the message as an error when lending Dune fails', async () => {
     // the shelf the page sees when it opens: Dune, Sam, and no loans yet
@@ -121,7 +122,6 @@ test('keeps "Something went wrong" up when only Loans broke and adding a book wo
 });
 
 test('shows when each book is due back, and marks an overdue one', async () => {
-    const MATILDA = { _id: 'matilda-id', title: 'Matilda', author: 'Roald Dahl' };
     api.getBooks.mockResolvedValue([DUNE, MATILDA]);
     api.getFriends.mockResolvedValue([SAM]);
     // midday, so the day is the same in every time zone
@@ -219,7 +219,6 @@ test('a Save that fails shows the red message and keeps what I typed, still read
 });
 
 test('clicking Sam opens Sam\'s panel with what Sam has now, and Close shuts it', async () => {
-    const MATILDA = { _id: 'matilda-id', title: 'Matilda', author: 'Roald Dahl' };
     api.getBooks.mockResolvedValue([DUNE, MATILDA]);
     api.getFriends.mockResolvedValue([SAM]);
     api.getLoans.mockResolvedValue([]);
@@ -378,11 +377,10 @@ test('Sam\'s panel says "Loading…" while Sam\'s loans are on the way', async (
     expect(panel).not.toHaveTextContent('Loading…');
 });
 
-const MATILDA = { _id: 'matilda-id', title: 'Matilda', author: 'Roald Dahl' };
 
 // the shelf, as spines: each spine is a button named like "Dune by Frank Herbert"
 function spine(name) {
-    return screen.queryByRole('button', { name: new RegExp(`^${name} by`) });
+    return screen.queryByRole('button', { name: (spineName) => spineName.startsWith(`${name} by`) });
 }
 
 test('typing part of a title or author, in any capitals, leaves only matching books on the shelf', async () => {
@@ -414,9 +412,9 @@ test('copy notes aren\'t searched, and the shelf says so when nothing matches', 
     render(<App />);
     await screen.findByRole('button', { name: 'Matilda by Roald Dahl' });
 
-    await user.type(screen.getByRole('searchbox', { name: 'Search books' }), 'signed'); // only in Dune's copy note
+    await user.type(screen.getByRole('searchbox', { name: 'Search books' }), ' signed '); // only in Dune's copy note, with stray spaces
 
-    expect(spine('Dune \\(signed\\)')).not.toBeInTheDocument();
+    expect(spine('Dune (signed)')).not.toBeInTheDocument();
     expect(spine('Matilda')).not.toBeInTheDocument();
     expect(screen.getByText("No books match 'signed'")).toBeInTheDocument();
 });
@@ -438,4 +436,25 @@ test('"Pick a book" still lists every book while searching, and emptying the box
     await user.clear(search);
     expect(spine('Dune')).toBeInTheDocument();
     expect(spine('Matilda')).toBeInTheDocument();
+});
+
+test('adding a book empties the search box, so the new book shows on the shelf', async () => {
+    // the shelf has Dune. After adding, the "server" sends Dune and Matilda
+    api.getBooks.mockResolvedValueOnce([DUNE]).mockResolvedValue([DUNE, MATILDA]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+    api.addBook.mockResolvedValue(MATILDA);
+
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByRole('button', { name: 'Dune by Frank Herbert' });
+    const search = screen.getByRole('searchbox', { name: 'Search books' });
+    await user.type(search, 'herb'); // Matilda won't match this
+
+    await user.type(screen.getByPlaceholderText('Title'), 'Matilda');
+    await user.type(screen.getByPlaceholderText('Author'), 'Roald Dahl');
+    await user.click(screen.getByRole('button', { name: 'Add book' }));
+
+    expect(await screen.findByRole('button', { name: 'Matilda by Roald Dahl' })).toBeInTheDocument();
+    expect(search).toHaveValue('');
 });

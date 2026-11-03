@@ -446,5 +446,10 @@ Why: it's instant and the simplest way. A home shelf is small enough to load all
 
 ## 2026-11-02 — Search only changes the shelf, and only looks at title and author
 Chose: the "Pick a book" list in Loans always shows every book. If nothing matches, the shelf says "No books match 'xyz'". Copy notes aren't searched
-Other option: also filter "Pick a book", or also search notes like "signed"
+Other option: also filter "Pick a book", or also search copy notes like "signed"
 Why: if search quietly hid books in Loans, I could think a book was missing. Searching notes can be added later if I want it
+
+## 2026-11-02 — Adding or saving a book empties the search
+Chose: after I add or save a book, the search box empties and the whole shelf comes back
+Other option: keep the search, even if the book I just saved doesn't match it
+Why: if I've searched "herb" and add Matilda, she'd never show up, and I'd think adding her didn't work

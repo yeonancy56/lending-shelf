@@ -12,15 +12,15 @@ function shortDay(dueBack) {
   return new Date(dueBack).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 }
 
-// a red message, like "This book is already lent out". Marked as an alert so a screen reader
-// reads it out loud right away. Shows nothing when there's no message
 // does this book match what I typed in the search box? "herb" finds Dune by Frank Herbert.
 // Capitals don't matter, part of a word is enough, and only title and author count, not the copy note
 function matchesSearch(book, search) {
-  const words = search.trim().toLowerCase();
-  return book.title.toLowerCase().includes(words) || book.author.toLowerCase().includes(words);
+  const typed = search.trim().toLowerCase();
+  return book.title.toLowerCase().includes(typed) || book.author.toLowerCase().includes(typed);
 }
 
+// a red message, like "This book is already lent out". Marked as an alert so a screen reader
+// reads it out loud right away. Shows nothing when there's no message
 function ErrorMessage({ message }) {
   return message ? <p className="error" role="alert">{message}</p> : null;
 }
@@ -123,6 +123,7 @@ function App() { //these are memory boxes
     }
     const wasEditing = editingId;
     resetBookForm();
+    setSearch(''); // empty the search, so Matilda shows on the shelf even if I'd searched "herb"
     loadBooks(); // get the fresh list from the server, and Matilda will appear
     if (wasEditing) loadLoans(); // a loan shows the book's name, so a fixed name shows there too
   }
@@ -222,8 +223,10 @@ return (
         )}
       </form>
       <ErrorMessage message={bookError} />
+    {/* type "herb" and only Dune by Frank Herbert stays on the shelf */}
     <input type="search" aria-label="Search books" placeholder="Search by title or author" value={search} onChange={(e) => setSearch(e.target.value)} />
-    {search && shelfBooks.length === 0 && <p>No books match '{search}'</p>}
+    {/* nothing on the shelf matches? Say so, without the extra spaces the search ignores */}
+    {search.trim() && shelfBooks.length === 0 && <p>No books match '{search.trim()}'</p>}
     <ul className="books-list"> {/* the books stand on the shelf as spines. Only the ones that match the search */}
       {shelfBooks.map((book) => (
         <li key = {book._id}>
