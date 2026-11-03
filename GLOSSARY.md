@@ -44,6 +44,26 @@ _Avoid_: late, past due
 The day an active loan should come back: 14 days after it was lent. Lent Monday 2 November, it's due back Monday 16 November. Returned loans don't have one.
 _Avoid_: due date, deadline, return date (that's when it actually came back)
 
+**Request**:
+When a friend asks to borrow a book that's on my shelf, like Sam asking for Dune. It waits until I approve or decline it. Only one friend can ask for a book at a time.
+_Avoid_: borrow request, hold, reservation
+
+**Waiting request**:
+A request I haven't answered yet. While Sam's request waits, Dune is **asked for**, and no one else can ask for it.
+_Avoid_: pending request, open request
+
+**Approve**:
+To say yes to a request. That lends the book straight away, so approving Sam's request for Dune starts a loan of Dune to Sam.
+_Avoid_: accept, confirm
+
+**Decline**:
+To say no to a request. I can add a short note that the friend sees, like "I'm rereading it this week." Declining doesn't lend anything.
+_Avoid_: reject, refuse, deny
+
+**Cancel**:
+When the friend takes back their own waiting request before I answer it. Only the friend who asked can cancel.
+_Avoid_: withdraw, delete
+
 **Return**:
 When the friend gives the book back, which turns an active loan into a returned loan.
 _Avoid_: check in, give back
@@ -51,9 +71,9 @@ _Avoid_: check in, give back
 ## Rules
 
 **Lending rules**:
-The three checks before a book can be lent: the book isn't already lent out, the friend is under the 3-book limit, and the friend has nothing overdue. If one fails, the rules say no.
+The checks before a book can be lent: the book isn't already lent out, no other friend has asked for it, the friend is under the 3-book limit, and the friend has nothing overdue. The same checks run when a friend asks for a book. If one fails, the rules say no.
 _Avoid_: validation, restrictions
 
 **3-book limit**:
-A friend can have at most 3 active loans at once. Returned loans don't count, so when Sam returns one of 3 books, Sam can borrow again.
+A friend can have at most 3 active loans and waiting requests together. Returned loans don't count, so when Sam returns one of 3 books, Sam can borrow again. If Sam has 2 books and is waiting on a request for Dune, Sam can't ask for anything else.
 _Avoid_: max loans, borrowing cap, quota

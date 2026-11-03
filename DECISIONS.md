@@ -478,3 +478,133 @@ Why: the rule lives in one place. A safety net could quietly hide a real problem
 Chose: the books code asks the lending folder that one yes/no question itself, before it deletes Dune
 Other option: go through the lending rule code, or copy the question into the books folder
 Why: it's the same idea as lending asking "is Dune real?": a simple yes/no question with no rules attached. The rule itself ("can't delete") stays in the books folder
+
+## 2026-11-02 — Friends ask for a book themselves, in the app
+Chose: Sam opens the app and asks for Dune on their own. So friends will need a way to sign in
+Other option: Sam texts me, and I type the request into the app myself
+Why: I want friends to use the app too, not just me. Signing in is a big new piece, so it will take more than one ticket
+
+## 2026-11-02 — Friends sign in with Google
+Chose: Sam uses "Sign in with Google" to prove it's Sam
+Other option: a secret link just for Sam, or an email and password
+Why: a secret link works for anyone Sam forwards it to. Passwords mean I'd have to keep them safe and build "forgot my password". Google does that part for me, even though setting it up is fiddly
+
+## 2026-11-02 — Only friends I've added can sign in
+Chose: I type Sam's Google email when I add Sam. Only someone signing in with that email is Sam. Anyone else is turned away
+Other option: let anyone sign in, then I pick which friend they are
+Why: strangers never get in, and there's no waiting step for me
+
+## 2026-11-02 — I sign in with Google too, as the owner
+Chose: I sign in with my own Google email. That email is the owner, who can do everything I can do today
+Other option: only friends sign in, and the app stays open for me like now
+Why: if I didn't sign in, anyone who found the page could delete Dune. Signing in is what keeps my side safe
+
+## 2026-11-02 — Sam sees the whole shelf, but not who has what
+Chose: Sam sees every book. Books that are out say "lent out", but not who has them. Sam also sees their own loans and requests
+Other option: hide books that are out, or show Sam everything I see
+Why: Sam can see Dune exists even while it's out, and other friends' borrowing stays private
+
+## 2026-11-02 — Sam can only ask for books on the shelf
+Chose: the ask button only shows on books that aren't lent out
+Other option: let Sam ask for Dune while Alex has it, like a waiting list
+Why: a waiting list brings its own questions, like who goes first. It can be a later feature
+
+## 2026-11-02 — The lending rules are checked when Sam asks, and again when I approve
+Chose: if Sam already has 3 books or an overdue one, Sam is told right away and the request never reaches me. The rules run again when I say yes
+Other option: only check when I approve
+Why: Sam finds out straight away, and I don't get requests I can't say yes to. The second check catches anything that changed in between
+
+## 2026-11-02 — Waiting requests count toward the 3-book limit
+Chose: books Sam has plus Sam's waiting requests can't go over 3
+Other option: only count books Sam has, so Sam can ask for as many as they like
+Why: otherwise I'd get requests that are bound to fail once I say yes to one
+
+## 2026-11-02 — Only one friend can ask for a book at a time
+Chose: while Sam's request for Dune waits, Dune shows "asked for" and Alex can't ask. If I say no to Sam, Alex can ask then
+Other option: let both ask, and I pick who gets Dune. The other one gets an automatic no
+Why: it's simpler, and nobody gets turned down without me deciding
+
+## 2026-11-02 — Saying yes lends the book right away
+Chose: when I approve Sam's request for Dune, Dune is lent to Sam on the spot, and the 14 days start then
+Other option: approving just means "come get it", and I click "lent" later when I hand it over
+Why: fewer steps, and my lending rules work as they are. A day or two of pickup time out of Sam's 14 days is fine among friends
+
+## 2026-11-02 — When I say no, I can add a short note
+Chose: when I decline, I can type a few words, like "I'm rereading it this week", and Sam sees them. I can also leave it blank
+Other option: no note at all, or always have to give a reason
+Why: sometimes a reason is kind and saves a text. Making it required would be a chore
+
+## 2026-11-02 — After a no, Sam can ask again any time
+Chose: Sam can ask for Dune again straight away, as long as Dune is on the shelf and the rules allow it
+Other option: Sam has to wait a few days before asking for Dune again
+Why: these are my friends, so a waiting period feels unfriendly. If Sam asks too often, I can text them
+
+## 2026-11-02 — Sam can take back a request before I answer
+Chose: Sam can cancel a waiting request. Dune goes back to being free for anyone to ask for
+Other option: Sam has to wait for me to say no
+Why: otherwise Dune stays "asked for" for nothing, and the request keeps counting toward Sam's 3
+
+## 2026-11-02 — Answered and cancelled requests are kept
+Chose: every request stays as a record. Sam's page shows things like "Dune — declined: rereading it" or "Dune — cancelled". A yes points to the loan it started
+Other option: a request disappears once it's answered or cancelled
+Why: it matches loans, which stay after the book comes back. And Sam can still read my note later
+
+## 2026-11-02 — A waiting request never runs out by itself
+Chose: Sam's request waits until I answer it or Sam cancels it
+Other option: after 7 days it's turned down automatically
+Why: an automatic no could feel like I said no. Sam can cancel if they get tired of waiting
+
+## 2026-11-02 — I see requests in a list at the top of my page
+Chose: when I sign in, a "Requests" list shows "Sam asked for Dune" with Approve and Decline buttons. Nothing is sent to me
+Other option: also get an email every time someone asks
+Why: sending emails is a separate chunk of work. It can be its own ticket later
+
+## 2026-11-02 — I can still lend a book without a request
+Chose: the lend form I use today stays. Requests are an extra way to start a loan, not the only way
+Other option: every loan has to start as a request
+Why: it's how I lend today, and not every friend will bother signing in
+
+## 2026-11-02 — I answer Sam's request before lending that book to someone else
+Chose: if Sam has asked for Dune, the lend form tells me "Sam has asked for this book". I decline Sam first (maybe with a note), then lend Dune to Alex
+Other option: lend Dune to Alex, and Sam's request is turned down automatically
+Why: it's one extra click, and Sam never gets a no I didn't choose
+
+## 2026-11-02 — I can't delete a book anyone has ever asked for
+Chose: if anyone has ever asked for Dune, even if I said no, Dune can't be deleted. Same as books that have been lent
+Other option: delete Dune and its old requests with it
+Why: it's the rule I already have for loans, and Sam's history never ends up with holes in it
+
+## 2026-11-02 — "Can't delete a friend with history" is its own ticket
+Chose: write it up as a separate issue: I can't delete Sam if Sam has ever borrowed or asked for a book
+Other option: fix it as part of the requests work
+Why: it's broken today, with or without requests. Keeping it apart keeps each change small and easy to follow
+
+## 2026-11-02 — A friend's email is optional
+Chose: I can leave out a friend's email. Friends without one can't sign in, and I lend to them like today
+Other option: every friend must have an email
+Why: not everyone will sign in, like my gran. My friends already in the app keep working without me filling anything in
+
+## 2026-11-02 — Friend requests come in five tickets
+Chose: 1) I sign in, 2) friends sign in, 3) Sam asks and cancels, 4) I approve or decline, 5) can't delete a book anyone asked for
+Other option: one big ticket, or friends first and me later
+Why: each ticket works on its own. Locking my side first means the app is never open to strangers, even halfway through
+
+## 2026-11-02 — The page shows the Google button, and sends the sign-in with every request
+Chose: Google gives the page a sign-in after I click its button. The page keeps it in the browser and sends it along every time it talks to the server. The server asks Google "is this real, and whose is it?"
+Other option: the server remembers me after the first sign-in, with a cookie
+Why: the server doesn't have to remember anyone, and Google does the hard checking. A cookie means more setup, because the page and server live at different addresses
+
+## 2026-11-02 — A sign-in lasts about an hour
+Chose: Google's sign-in runs out after about an hour. After that, the server says "I don't know you" and the page goes back to the Google button
+Other option: keep me signed in for weeks, with something extra that quietly renews the sign-in
+Why: it's the simplest thing that's safe. Reloading within the hour keeps me in. If signing in every hour gets annoying, renewing can be its own ticket later
+
+## 2026-11-02 — A stranger is told they're not on the list
+Chose: the server tells apart "a real Google sign-in, but not on the list" and "no sign-in, or an old one". A stranger sees "You're not on the list." An old sign-in just says "Please sign in."
+Other option: one message for both
+Why: if my own sign-in runs out, I shouldn't be told I'm not on the list. That would be scary and wrong
+
+## 2026-11-02 — Every address is locked, except the health check
+Chose: one gatekeeper stands in front of every address. Only /health stays open
+Other option: lock each address one by one
+Why: a new address is locked by itself, so I can't forget one. /health stays open so Render can check the server is awake
