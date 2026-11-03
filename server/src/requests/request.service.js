@@ -46,7 +46,6 @@ async function cancelRequest(requestId, friendId) {
     // nothing was cancelled: either it isn't Sam's (or isn't there at all), or it's not waiting any more
     const request = await requestDao.findByIdForFriend(requestId, friendId);
     if (!request) return null;
-    if (request.status === 'cancelled') throw ruleBroken('This request was already cancelled');
     throw notWaiting(request);
 }
 
