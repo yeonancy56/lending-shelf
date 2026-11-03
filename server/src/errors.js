@@ -23,4 +23,8 @@ function answerKnownMistake(res, err) {
     res.status(err.status).json({ error: err.message }); // 400 for a bad request, 409 for a broken rule
 }
 
-module.exports = { badRequest, ruleBroken, answerKnownMistake };
+// the database's own code for "that would break a one-only rule", like a second active loan of Dune.
+// Shared, because books, friends, loans and requests each have a one-only rule the database guards
+const DUPLICATE_KEY = 11000;
+
+module.exports = { badRequest, ruleBroken, answerKnownMistake, DUPLICATE_KEY };

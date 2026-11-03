@@ -154,6 +154,20 @@ describe('a friend\'s Google email', () => {
         expect(res.body.error).toBe("That's your own email. A friend needs their own.");
     });
 
+    test('adding Sam and Alex with the same email at the same moment: only one gets it, with the usual message', async () => {
+        await Friend.init(); // make sure the database's own "one friend per email" rule is in place
+
+        const answers = await Promise.all([
+            owner.post('/friends').send({ name: 'Sam', email: 'sam@gmail.com' }),
+            owner.post('/friends').send({ name: 'Alex', email: 'sam@gmail.com' }),
+        ]);
+
+        expect(answers.map((a) => a.status).sort()).toEqual([201, 400]);
+        const saved = answers.find((a) => a.status === 201).body;
+        expect(answers.find((a) => a.status === 400).body.error).toBe(`${saved.name} already has this email.`);
+        expect(await Friend.countDocuments({ email: 'sam@gmail.com' })).toBe(1);
+    });
+
     test('editing a friend that doesn\'t exist says so (404)', async () => {
         const res = await owner.put('/friends/000000000000000000000000').send({ name: 'Sam', email: 'sam@gmail.com' });
 

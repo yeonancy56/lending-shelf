@@ -2,7 +2,7 @@ const loanDao = require ('./loan.dao');
 const bookDao = require('../books/book.dao');
 const friendDao = require('../friends/friend.dao');
 const requestDao = require('../requests/request.dao'); // "has someone asked for Dune?" and "how many is Sam waiting on?"
-const { badRequest, ruleBroken } = require('../errors');
+const { badRequest, ruleBroken, DUPLICATE_KEY } = require('../errors');
 
 const MAX_LOANS = 3;
 const LOAN_DAYS = 14;
@@ -89,8 +89,14 @@ async function lendBook(bookId, friendId) {
 
 // saves the new loan of Dune to Sam. The lending rules must already have said yes:
 // my lend form checks them just above, and approving a request checks them before calling this
-function startLoan(bookId, friendId) {
-    return loanDao.create({ book: bookId, friend: friendId });
+async function startLoan(bookId, friendId) {
+    try {
+        return await loanDao.create({ book: bookId, friend: friendId });
+    } catch (err) {
+        // another loan of Dune was saved a moment before this one, so the database said no
+        if (err.code === DUPLICATE_KEY) throw ruleBroken(RULE_WORDS.owner.lentOut);
+        throw err;
+    }
 }
 
 async function returnBook(loanId) {

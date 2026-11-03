@@ -2,9 +2,8 @@ const requestDao = require('./request.dao');
 const bookDao = require('../books/book.dao');
 const loanService = require('../loans/loan.service');
 const friendDao = require('../friends/friend.dao');
-const { badRequest, ruleBroken } = require('../errors');
+const { badRequest, ruleBroken, DUPLICATE_KEY } = require('../errors');
 
-const SAME_KEY = 11000; // the database's own code for "that would break a one-only rule"
 const NOTE_LIMIT = 200; // a decline note is a few words, not a letter
 
 // Sam asks for Dune. Sam is always the friend from the sign-in, never from what the page sent.
@@ -16,7 +15,7 @@ async function askForBook(bookId, friendId) {
         return await requestDao.create({ book: bookId, friend: friendId });
     } catch (err) {
         // Alex's request was saved a moment before Sam's, so the database said no to Sam's
-        if (err.code === SAME_KEY) throw ruleBroken('Someone has already asked for this book');
+        if (err.code === DUPLICATE_KEY) throw ruleBroken('Someone has already asked for this book');
         throw err;
     }
 }

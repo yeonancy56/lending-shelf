@@ -158,6 +158,24 @@ test('after a broken approve puts the request back, approving again lends Dune (
     expect(await Loan.countDocuments({ book: dune.id })).toBe(1);
 });
 
+test('if my lend form lends Dune to Alex a moment before my approve saves, Sam\'s request goes back to waiting (409)', async () => {
+    await Loan.init(); // make sure the database's own "one active loan per book" rule is in place
+    const asked = await Request.create({ book: dune.id, friend: sam.id });
+    // both passed the lending rules, but Alex's loan of Dune is saved just before Sam's
+    const realCreate = Loan.create.bind(Loan);
+    jest.spyOn(Loan, 'create').mockImplementationOnce(async (data) => {
+        await realCreate({ book: dune.id, friend: alex.id });
+        return realCreate(data);
+    });
+
+    const res = await asMe.post(`/requests/${asked.id}/approve`);
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toBe('This book is already lent out');
+    expect(await Loan.countDocuments({ book: dune.id, returnedAt: null })).toBe(1); // only Alex's
+    expect((await Request.findById(asked.id)).status).toBe('waiting');
+});
+
 test('approving a request Sam cancelled is refused (409)', async () => {
     const asked = await Request.create({ book: dune.id, friend: sam.id, status: 'cancelled', cancelledAt: new Date() });
 
