@@ -820,12 +820,17 @@ Chose: Sam can rate the signed Dune after he has returned it at least once, even
 Other option: let Sam rate while he still has it the first time, or let me rate my own books too
 Why: he should finish the book before rating it. My own stars would mix with what my friends think, and a 5 from me on my favourite would push its average up
 
-## 2026-11-03 — The average shows with how many rated it
-Chose: each copy shows "★ 4.5 · 2 ratings" ("1 rating" for one), and nothing at all when no one has rated it. I see only the average. Sam sees the average and his own stars, never what Priya gave
-Other option: show just "★ 4.5", show "0 stars" for no ratings, or show me who gave what
-Why: 5 stars from one friend means less than 4.5 from six, so the count matters. "0 stars" would look like everyone hated it. If friends could see each other's stars, Priya might feel awkward giving a low one
-
 ## 2026-11-03 — Sam rates on the shelf list, by clicking a star
 Chose: on Sam's shelf list, a copy he can rate but hasn't rated yet shows five empty stars ☆☆☆☆☆. Clicking one saves right away, with no Save button. His own stars are labelled "your stars" so they don't get mixed up with the average
 Other option: rate from the "had before" list of returned loans
-Why: a book Sam borrowed twice appears twice in "had before", so he'd see the same stars on two rows. On the shelf list each copy appears once, right next to its average
+Why: a book Sam borrowed twice appears twice in "had before", so he'd see the same stars on two rows. On the shelf list each copy appears once
+
+## 2026-11-03 — Sam's shelf says where he can rate, and only his own stars
+Chose: when Sam opens his page, the shelf the server sends marks each copy he has returned as one he can rate, with his own stars if he gave some. A copy he can't rate says nothing about stars. The server works out it's Sam from his sign-in, so Alex's stars never reach Sam's page
+Other option: a separate list of Sam's ratings that the page matches up with the shelf
+Why: the page already gets the shelf to draw each book, so the stars come along with it. One list means the page never has to match two lists up, and can't show stars on the wrong Dune
+
+## 2026-11-03 — The review can picture Sam's page too
+Chose: picture mode has a second page, /phone?as=friend, that shows Sam's page with pretend answers: one copy he rated 4, one he can rate but hasn't, and the long book name with stars under it. Plain /phone still shows my shelf
+Other option: only picture my page, and check Sam's stars by hand
+Why: the stars only show on Sam's page, so a picture of my page would never show them. Pretend answers mean no Google sign-in is needed for Sam either

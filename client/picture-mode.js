@@ -55,6 +55,7 @@ export function pictureAnswer(path, who = 'owner') {
 
 // the pretend sign-in for each page. /phone?as=friend pictures Sam's page, plain /phone pictures mine
 const PRETEND_SIGN_IN = { owner: 'picture-mode', friend: 'picture-mode-friend' };
+const AS_FRIEND = 'as=friend'; // the bit of the address that asks for Sam's page
 
 // /phone shows my shelf in a frame as wide as a phone (375), with no gaps around it, and /phone?as=friend shows Sam's page.
 // Chrome's picture-taker can't make its own window narrower than 500, but it can picture this frame
@@ -71,7 +72,7 @@ export function pictureMode() {
     configureServer(server) {
       server.middlewares.use('/phone', (req, res) => {
         res.setHeader('Content-Type', 'text/html');
-        res.end(phonePage(req.url.includes('as=friend') ? '?as=friend' : ''));
+        res.end(phonePage(req.url.includes(AS_FRIEND) ? '?' + AS_FRIEND : ''));
       });
       server.middlewares.use('/api', (req, res) => {
         // the page sends its pretend sign-in, so it's Sam's answers for Sam's page
@@ -84,7 +85,7 @@ export function pictureMode() {
     },
     // a pretend sign-in in the browser, so the page skips the Google button. Sam's when the address says ?as=friend
     transformIndexHtml() {
-      const signIn = `location.search.includes('as=friend') ? '${PRETEND_SIGN_IN.friend}' : '${PRETEND_SIGN_IN.owner}'`;
+      const signIn = `location.search.includes('${AS_FRIEND}') ? '${PRETEND_SIGN_IN.friend}' : '${PRETEND_SIGN_IN.owner}'`;
       return [{ tag: 'script', children: `localStorage.setItem('${SIGN_IN_KEY}', ${signIn});`, injectTo: 'head-prepend' }];
     },
   };

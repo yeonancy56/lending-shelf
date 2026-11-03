@@ -199,7 +199,7 @@ function FriendPage({ name, onSignOut }) {
   const [myLoans, setMyLoans] = useState(null); // null while the server hasn't answered yet
   const [myRequests, setMyRequests] = useState(null); // null while the server hasn't answered yet
   const [listErrors, setListErrors] = useState({});
-  const [requestError, setRequestError] = useState(''); // the red message for Ask, Cancel and the stars
+  const [clickError, setClickError] = useState(''); // the red message for whatever Sam just clicked: Ask, Cancel or a star
   const listError = Object.values(listErrors).find((error) => error);
 
   // fill in (or fill in again) the shelf and Sam's requests: asking or cancelling changes both
@@ -216,21 +216,21 @@ function FriendPage({ name, onSignOut }) {
   // Sam clicks Ask on Dune. If a lending rule says no (like already having 3), Sam sees why straight away
   async function handleAsk(bookId) {
     const result = await askForBook(bookId);
-    setRequestError(result.error || '');
+    setClickError(result.error || '');
     if (!result.error) loadShelfAndRequests();
   }
 
   // Sam clicks Cancel on a waiting request: Dune is free again, and it stops counting toward Sam's 3
   async function handleCancel(requestId) {
     const result = await cancelRequest(requestId);
-    setRequestError(result.error || '');
+    setClickError(result.error || '');
     if (!result.error) loadShelfAndRequests();
   }
 
   // Sam clicks a star on Dune: it's saved straight away, and the shelf shows his new stars
   async function handleRate(bookId, stars) {
     const result = await rateBook(bookId, stars);
-    setRequestError(result.error || '');
+    setClickError(result.error || '');
     if (!result.error) loadShelfAndRequests();
   }
 
@@ -241,7 +241,7 @@ function FriendPage({ name, onSignOut }) {
       <h2>Hi, {name}</h2>
       <button onClick={onSignOut}>Sign out</button>
       <ErrorMessage message={listError} />
-      <ErrorMessage message={requestError} />
+      <ErrorMessage message={clickError} />
       <section>
         <h2 id="friend-shelf">Books</h2>
         {/* each book says "at home", "lent out" or "asked for", but never who: the server doesn't send that */}

@@ -27,10 +27,8 @@ async function hasEverBorrowed(friendId) {
     return (await Loan.exists({ friend: friendId })) !== null;
 }
 
-// rating: has this friend ever brought this book back? Sam can rate Dune once he has, even if he has it again now.
-// An ID in the wrong shape, like "abc", can't belong to any book, so Sam never returned it
+// rating: has this friend ever brought this book back? Sam can rate Dune once he has, even if he has it again now
 async function hasReturned(bookId, friendId) {
-    if (!mongoose.isValidObjectId(bookId)) return false;
     return (await Loan.exists({ book: bookId, friend: friendId, returnedAt: { $ne: null } })) !== null;
 }
 

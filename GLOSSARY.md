@@ -94,10 +94,6 @@ _Avoid_: check in, give back
 The 1 to 5 stars a friend gives one copy of a book. Sam can rate the signed Dune once he has returned it at least once, even if he has it again now. Each friend has at most one rating per copy, so if Sam borrows the signed Dune twice, he still has one rating for it. He can change it later but can't take it away. Two copies of Dune get separate ratings, because one copy can be nicer to read than the other. Only friends rate. I don't.
 _Avoid_: review, score, vote
 
-**Average rating**:
-All the friends' stars for one copy, averaged, shown with how many friends rated it, like "★ 4.5 · 2 ratings". A copy no one has rated shows nothing. Sam sees the average and his own stars, never what Priya gave.
-_Avoid_: score, overall rating
-
 ## Rules
 
 **Lending rules**:

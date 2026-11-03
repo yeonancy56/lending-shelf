@@ -40,7 +40,7 @@ test('Sam can\'t rate Dune while he has it for the first time: he hasn\'t return
     const res = await asSam.put('/me/ratings/' + dune.id).send({ stars: 4 });
 
     expect(res.status).toBe(409);
-    expect(res.body).toEqual({ error: 'You can rate a book once you\'ve returned it' });
+    expect(res.body).toEqual({ error: 'This book can be rated once you\'ve returned it' });
 });
 
 test('Sam can\'t rate Mum\'s copy, which only Alex has borrowed (409)', async () => {
@@ -96,12 +96,23 @@ test('a stranger can\'t rate (401)', async () => {
     expect(res.status).toBe(401);
 });
 
-test('a book ID in the wrong shape, like "abc", is a book Sam never returned (409)', async () => {
+test('a book ID in the wrong shape, like "abc", is "Book not found" (404)', async () => {
     await samReturnedDune();
 
     const res = await asSam.put('/me/ratings/abc').send({ stars: 4 });
 
-    expect(res.status).toBe(409);
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual({ error: 'Book not found' });
+});
+
+test('Sam can\'t rate a book that was deleted, even if an old loan says he returned it (404)', async () => {
+    const { dune } = await samReturnedDune();
+    await Book.deleteOne({ _id: dune.id }); // before 2 November, a lent book could still be deleted
+
+    const res = await asSam.put('/me/ratings/' + dune.id).send({ stars: 4 });
+
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual({ error: 'Book not found' });
 });
 
 // the shelf tells Sam where he can rate, and his own stars, through GET /shelf
@@ -120,6 +131,18 @@ describe('Sam\'s stars on the shelf', () => {
             { _id: mumsDune.id, title: 'Dune', author: 'Frank Herbert', copyNote: "Mum's copy", state: 'at home', canRate: true },
             { _id: matilda.id, title: 'Matilda', author: 'Roald Dahl', state: 'at home' },
         ]);
+    });
+
+    test('the signed Dune and Mum\'s copy each keep their own stars', async () => {
+        const { sam, dune } = await samReturnedDune();
+        const mumsDune = await Book.create({ title: 'Dune', author: 'Frank Herbert', copyNote: "Mum's copy" });
+        await Loan.create({ book: mumsDune.id, friend: sam.id, returnedAt: new Date() });
+        await asSam.put('/me/ratings/' + dune.id).send({ stars: 5 });
+        await asSam.put('/me/ratings/' + mumsDune.id).send({ stars: 2 });
+
+        const res = await asSam.get('/shelf');
+
+        expect(res.body.map((book) => book.myStars)).toEqual([5, 2]);
     });
 
     test('rating Dune again changes Sam\'s stars from 3 to 5, and the first stars are gone', async () => {

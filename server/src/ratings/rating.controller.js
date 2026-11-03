@@ -13,7 +13,9 @@ async function rate(req, res) {
         return res.status(400).json({ error: `Pick from ${LEAST_STARS} to ${MOST_STARS} stars` });
     }
     try {
-        res.json(await ratingService.rateBook(req.params.bookId, req.who.friendId, stars));
+        const rating = await ratingService.rateBook(req.params.bookId, req.who.friendId, stars);
+        if (!rating) return res.status(404).json({ error: 'Book not found' });
+        res.json(rating);
     } catch (err) {
         answerKnownMistake(res, err);
     }

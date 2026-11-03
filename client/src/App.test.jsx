@@ -895,13 +895,15 @@ test('Sam changes his 3 stars on Dune to 5', async () => {
 
 test('when rating fails, Sam sees the red message', async () => {
     signedInAsSam({ shelf: [{ ...DUNE, state: 'at home', canRate: true }] });
-    api.rateBook.mockResolvedValue({ error: "You can rate a book once you've returned it" });
+    api.rateBook.mockResolvedValue({ error: "This book can be rated once you've returned it" });
 
     const user = userEvent.setup();
     render(<App />);
-    await user.click(await screen.findByRole('button', { name: '4 stars' }));
+    const fourth = await screen.findByRole('button', { name: '4 stars' });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    await user.click(fourth);
 
-    expect(await screen.findByRole('alert')).toHaveTextContent("You can rate a book once you've returned it");
+    expect(await screen.findByRole('alert')).toHaveTextContent("This book can be rated once you've returned it");
 });
 
 test('signing in as me still shows my page', async () => {
