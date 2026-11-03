@@ -723,3 +723,8 @@ Why: no test looked at the words, which is how the space slipped in unnoticed. N
 Chose: the server now has the lint check too, with the same basic rules the page (client) uses. It runs on every push, and if it finds a mistake, the pull request can't be merged. It knows test files may use Jest's words, like "test" and "expect"
 Other option: a stricter rule set, or no checker and rely on tests and review
 Why: it catches small slips, like a leftover variable or a name used without being brought in, before they reach Sam. Using the same rules as the page keeps both halves of the app checked the same way. The server code already passed, so no rules had to be switched off
+
+## 2026-11-03 — A check for duplicates that would switch off the database rules
+Chose: a small check I run by hand from the server folder. It lists any book with more than one active loan, any friends sharing an email, and whether each database rule is really on. It only reads, it never changes anything
+Other option: look through the database by hand, or have the server fix duplicates by itself
+Why: if Dune already has two active loans, the database quietly skips the "one active loan per book" rule, and nothing warns me. The rules went live on 2 November, so they may already be off. Fixing a duplicate means choosing which loan or friend is the real one, and only I know that. "Sam@Gmail.com" and "sam@gmail.com" count as the same email, like everywhere else in the app, and the check shows how each was saved. Two friends saved with an empty email count too, because the database treats that as an email. Before 2 November I could delete a book that was still lent out, so the check still finds loans whose book is gone
