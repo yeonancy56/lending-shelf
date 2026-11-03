@@ -96,7 +96,7 @@ test('does not lend Sam a 4th book (409)', async () => {
     const res = await owner.post('/loans').send({ bookId: dune.id, friendId: sam.id });
 
     expect(res.status).toBe(409);
-    expect(res.body.error).toBe('this friend already has 3 books');
+    expect(res.body.error).toBe('This friend already has 3 books');
 });
 
 test('does not lend to Sam when Sam has an overdue book (409)', async () => {
@@ -149,7 +149,7 @@ test('does not lend Sam a book when Sam has 2 books and 1 waiting request (409)'
     const res = await owner.post('/loans').send({ bookId: dune.id, friendId: sam.id });
 
     expect(res.status).toBe(409);
-    expect(res.body.error).toBe('this friend already has 3 books');
+    expect(res.body.error).toBe('This friend already has 3 books');
 });
 
 test('does not return Dune twice (409)', async () => {

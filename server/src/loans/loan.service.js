@@ -42,12 +42,12 @@ async function listFriendLoans(friendId) {
 }
 
 // The lending rules, worded for whoever is reading the red message:
-// me at the lend form ("this friend…"), or Sam asking for a book ("you…")
+// me at the lend form ("This friend…"), or Sam asking for a book ("you…")
 const RULE_WORDS = {
     [ROLE.OWNER]: {
         lentOut: 'This book is already lent out',
         askedFor: (friendName) => `${friendName} has asked for this book`, // I need to know who to answer first
-        limit: 'this friend already has 3 books',
+        limit: 'This friend already has 3 books',
         overdue: 'This friend has an overdue book',
     },
     [ROLE.FRIEND]: {
