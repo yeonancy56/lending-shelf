@@ -687,4 +687,4 @@ Why: it needs a click and a broken database in the same fraction of a second. Ke
 ## 2026-11-03 — Deleting a book first checks the book is there
 Chose: before deleting, the server checks the book exists, the same check editing uses. An address like /books/abc now gets "Book not found" instead of a crash
 Other option: catch the crash and turn it into "Book not found"
-Why: editing and deleting a friend already work this way, so all three match. Checking first is plainer than waiting for something to break
+Why: editing a book already works this way, so delete now matches it. Checking first is plainer than waiting for something to break
