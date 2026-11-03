@@ -3,16 +3,19 @@
 jest.mock('./loan.dao');
 jest.mock('../books/book.dao');
 jest.mock('../friends/friend.dao');
+jest.mock('../requests/request.dao');
 const loanDao = require('./loan.dao');
 const bookDao = require('../books/book.dao');
 const friendDao = require('../friends/friend.dao');
+const requestDao = require('../requests/request.dao');
 const loanService = require('./loan.service');
 
 const DUNE = 'dune-id';
 const SAM = 'sam-id';
 const DUNE_LOAN = 'dune-loan-id';
 
-// Before each test: the fake DAOs say "all clear" (Dune and Sam exist, Dune is free, Sam has no books out).
+// Before each test: the fake DAOs say "all clear" (Dune and Sam exist, Dune is free and not asked for,
+// Sam has no books out and no waiting requests).
 // Each test then changes only the one answer it cares about.
 beforeEach(() => {
     jest.resetAllMocks();
@@ -21,6 +24,8 @@ beforeEach(() => {
     loanDao.findActiveByBook.mockResolvedValue(null);
     loanDao.countActiveByFriend.mockResolvedValue(0);
     loanDao.findActiveByFriend.mockResolvedValue([]);
+    requestDao.findWaitingByBook.mockResolvedValue(null);
+    requestDao.countWaitingByFriend.mockResolvedValue(0);
 });
 
 afterEach(() => {

@@ -94,6 +94,27 @@ export async function getMyLoans() {
     return send('/me/loans');
 }
 
+// the friend page: Sam's own requests, newest first, each "waiting" or "cancelled"
+export async function getMyRequests() {
+    return send('/me/requests');
+}
+
+// the friend page: Sam asks for Dune. Only the book is sent: the server knows it's Sam from the sign-in
+export async function askForBook(bookId) {
+    return send('/requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookId: bookId }),
+    });
+}
+
+// the friend page: Sam takes back a waiting request. The ID goes in the address, like returnLoan
+export async function cancelRequest(id) {
+    return send('/requests/' + id + '/cancel', {
+        method: 'POST',
+    });
+}
+
 //GET: look at all books (like curl with no -X):
 export async function getBooks() {
     return send('/books');

@@ -7,6 +7,7 @@ const { friendSignIn } = require('../auth/who-is-this');
 const Book = require('./book.model');
 const Friend = require('../friends/friend.model');
 const Loan = require('../loans/loan.model');
+const Request = require('../requests/request.model');
 const testDb = require('../../test-db');
 
 // every request in this file is sent signed in as Sam
@@ -34,6 +35,22 @@ test('Sam sees every book, with "lent out" on Dune (out with Alex) and "on the s
         { _id: matilda.id, title: 'Matilda', author: 'Roald Dahl', state: 'on the shelf' },
         { _id: hobbit.id, title: 'The Hobbit', author: 'J.R.R. Tolkien', state: 'on the shelf' },
     ]);
+});
+
+test('Dune says "asked for" while Alex\'s request waits, and "on the shelf" again once it\'s cancelled', async () => {
+    await Friend.create({ name: 'Sam', email: 'sam@gmail.com' });
+    const alex = await Friend.create({ name: 'Alex', email: 'alex@gmail.com' });
+    const dune = await Book.create({ title: 'Dune', author: 'Frank Herbert' });
+    const request = await Request.create({ book: dune.id, friend: alex.id });
+
+    const waiting = await asSam.get('/shelf');
+    await Request.updateOne({ _id: request._id }, { status: 'cancelled', cancelledAt: new Date() });
+    const cancelled = await asSam.get('/shelf');
+
+    expect(waiting.body[0].state).toBe('asked for');
+    expect(JSON.stringify(waiting.body)).not.toContain('Alex');
+    expect(JSON.stringify(waiting.body)).not.toContain(alex.id);
+    expect(cancelled.body[0].state).toBe('on the shelf');
 });
 
 test('the shelf never says who has a book: no friend names or ids anywhere in it', async () => {

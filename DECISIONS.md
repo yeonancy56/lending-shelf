@@ -628,3 +628,8 @@ Why: it works the same way as editing a book, so there's nothing new to learn. T
 Chose: the friend shelf view and "my loans" answer only a signed-in friend. If I ask for them, the server says "Only a friend can do that." Each address belongs to one side: mine, or a friend's
 Other option: let me see the friend shelf view too, since it shows nothing secret
 Why: I have no loans of my own, so "my loans" means nothing for me. And one simple rule, "every address is mine or a friend's", is easier to check than a mix
+
+## 2026-11-02 — Sam's own request also stops my lend form lending Dune to Sam
+Chose: if Sam is waiting on Dune, my lend form says "Sam has asked for this book", even when I pick Sam. I answer Sam's request instead
+Other option: let the lend form lend Dune to Sam, since Sam is the one who asked
+Why: otherwise Sam would have Dune and a request for Dune still waiting at the same time. Saying yes to the request does the same lending, and keeps the two connected

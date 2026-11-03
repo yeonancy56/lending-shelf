@@ -21,6 +21,10 @@ const bookController = require('./books/book.controller');
 const loanController = require('./loans/loan.controller');
 app.get('/shelf', onlyFriend, bookController.shelf);          // every book, "on the shelf" or "lent out", with no names
 app.get('/me/loans', onlyFriend, loanController.listMine);    // Sam's own loans
+const requestController = require('./requests/request.controller');
+app.get('/me/requests', onlyFriend, requestController.listMine); // Sam's own requests, newest first
+app.post('/requests', onlyFriend, requestController.ask);     // Sam asks for a book
+app.post('/requests/:id/cancel', onlyFriend, requestController.cancel); // Sam takes back Sam's own waiting request
 
 // my addresses. A friend gets 403 on every one of them
 const bookRoutes = require('./books/book.routes');
