@@ -6,6 +6,8 @@ const app = require('../app');
 // every request in this file is sent signed in as the owner, like me using the page
 const owner = request.agent(app).set('Authorization', 'Bearer owner-sign-in');
 const Friend = require('./friend.model');
+const Book = require('../books/book.model');
+const Loan = require('../loans/loan.model');
 const testDb = require('../../test-db');
 
 beforeAll(testDb.start, 60000); // the first run downloads the pretend database, so allow up to a minute
@@ -41,4 +43,50 @@ test('POST /friends with only spaces as the name asks for one (400)', async () =
     expect(res.status).toBe(400);
     expect(res.body.error).toBe("Every friend needs a name");
     expect(await Friend.countDocuments()).toBe(0);
+});
+
+test('DELETE /friends/:id refuses to delete Sam while Sam has Dune (409)', async () => {
+    const sam = await Friend.create({ name: 'Sam' });
+    const dune = await Book.create({ title: 'Dune', author: 'Frank Herbert' });
+    await Loan.create({ book: dune._id, friend: sam._id });
+
+    const res = await owner.delete(`/friends/${sam._id}`);
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toBe("This friend has borrowed before, so they can't be deleted. Their loans need them.");
+    const friends = await owner.get('/friends');
+    expect(friends.body).toHaveLength(1); // Sam is still on the list
+});
+
+test('DELETE /friends/:id refuses to delete Sam after Sam gave Dune back, because the past loan needs Sam (409)', async () => {
+    const sam = await Friend.create({ name: 'Sam' });
+    const dune = await Book.create({ title: 'Dune', author: 'Frank Herbert' });
+    await Loan.create({ book: dune._id, friend: sam._id, returnedAt: new Date() });
+
+    const res = await owner.delete(`/friends/${sam._id}`);
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toBe("This friend has borrowed before, so they can't be deleted. Their loans need them.");
+    const friends = await owner.get('/friends');
+    expect(friends.body).toHaveLength(1); // Sam is still on the list
+});
+
+test('DELETE /friends/:id deletes Alex, who never borrowed (204)', async () => {
+    const alex = await Friend.create({ name: 'Alex' });
+
+    const res = await owner.delete(`/friends/${alex._id}`);
+
+    expect(res.status).toBe(204);
+    const friends = await owner.get('/friends');
+    expect(friends.body).toHaveLength(0); // Alex is gone
+});
+
+test('DELETE /friends/:id for a friend who isn\'t there says so (404)', async () => {
+    const gone = await Friend.create({ name: 'Sam' });
+    await Friend.findByIdAndDelete(gone._id);
+
+    const res = await owner.delete(`/friends/${gone._id}`);
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe('Friend not found');
 });

@@ -17,6 +17,11 @@ async function hasEverBeenLent(bookId) {
     return (await Loan.exists({ book: bookId })) !== null;
 }
 
+// has this friend ever borrowed? Counts loans that are out now and ones that came back
+async function hasEverBorrowed(friendId) {
+    return (await Loan.exists({ friend: friendId })) !== null;
+}
+
 // rule 2: how mayn books does this friend out?
 function countActiveByFriend(friendId) {
     return Loan.countDocuments({ friend: friendId, returnedAt: null });
@@ -37,4 +42,4 @@ function markReturned(id) {
     return Loan.findByIdAndUpdate(id, { returnedAt: new Date() }, { returnDocument: 'after' });
 }
 
-module.exports = {findAll, findById, create, findActiveByBook, hasEverBeenLent, countActiveByFriend, findActiveByFriend, findByFriend, markReturned}
+module.exports = {findAll, findById, create, findActiveByBook, hasEverBeenLent, hasEverBorrowed, countActiveByFriend, findActiveByFriend, findByFriend, markReturned}
