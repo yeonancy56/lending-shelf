@@ -1,10 +1,18 @@
 const friendDao = require('./friend.dao')
+const loanDao = require('../loans/loan.dao');
 const tidyEmail = require('../auth/tidy-email');
-const { badRequest } = require('../errors');
+const { badRequest, ruleBroken } = require('../errors');
 
 function listFriends()             { return friendDao.findAll(); }
 function getFriend(id)             { return friendDao.findById(id); }
-function deleteFriend(id)          {return friendDao.remove(id); }
+
+// a friend who's borrowed can't be deleted, because their loans (out now or returned) still need them
+async function deleteFriend(id) {
+    if (await loanDao.hasEverBorrowed(id)) {
+        throw ruleBroken("This friend has borrowed before, so they can't be deleted. Their loans need them.");
+    }
+    return friendDao.remove(id);
+}
 
 // one email means one friend, and my own email is never a friend's, so sign-in always knows who it is.
 // The email is already tidied, so "SAM@gmail.com " has become "sam@gmail.com".

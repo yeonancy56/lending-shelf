@@ -50,9 +50,13 @@ async function update(req, res) {
 }
 
 async function remove(req, res) {
-    const friend = await friendService.deleteFriend(req.params.id);
-    if (!friend) return res.status(404).json({error: 'Friend not found'});
-    res.status(204).end();
+    try {
+        const friend = await friendService.deleteFriend(req.params.id);
+        if (!friend) return res.status(404).json({error: 'Friend not found'});
+        res.status(204).end();
+    } catch (err) {
+        answerKnownMistake(res, err);
+    }
 }
 
 module.exports = {list, getOne, create, update, remove};
