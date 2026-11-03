@@ -11,13 +11,13 @@
   --on-wood: #fbf1e1; /* words on the wooden band */
   --field: #fffaf0; /* inside the boxes for typing */
   --field-edge: #8a5a35; /* the edge of the boxes for typing */
-  --green: #4f7a4a;
-  --on-green: #fff;
+  --button: #4f7a4a;
+  --on-button: #fff;
   --error: #b0402b; /* the one shared red for every error message */
   /* spines: dark enough that the cream and gold words are easy to read */
-  --spine-1: #3f6a3a; /* green */
-  --spine-2: #7a3f2e; /* rust */
-  --spine-3: #7a5a22; /* deep gold */
+  --spine-green: #3f6a3a;
+  --spine-rust: #7a3f2e;
+  --spine-gold: #7a5a22; /* deep gold */
   --spine-title: #fff6e5;
   --spine-author: #ffe3a8;
 
@@ -39,11 +39,11 @@
     --on-wood: #f1e2c9;
     --field: #2a221b;
     --field-edge: #9a6a42; /* lighter, so you can see where each box is */
-    --green: #8fb886;
-    --on-green: #17120e;
+    --button: #8fb886;
+    --on-button: #17120e;
     --error: #f2907c; /* lighter, so it's still easy to read on the dark page */
-    --spine-1: #3c5a38;
-    --spine-2: #6e3a2c;
+    --spine-green: #3c5a38;
+    --spine-rust: #6e3a2c;
   }
 }
 
@@ -117,8 +117,8 @@ select {
 
 /* round green buttons */
 button {
-  background: var(--green);
-  color: var(--on-green);
+  background: var(--button);
+  color: var(--on-button);
   border: none;
   border-radius: 999px;
   padding: 8px 18px;
@@ -164,7 +164,7 @@ li button {
 .books-list li {
   writing-mode: vertical-rl; /* the words run up the spine... */
   transform: rotate(180deg); /* ...reading bottom to top, like a real shelf */
-  background: var(--spine-1);
+  background: var(--spine-green);
   padding: 0; /* the spine button inside fills the whole spine */
   border-radius: 3px;
   min-inline-size: 120px;
@@ -174,10 +174,10 @@ li button {
 
 /* the colors take turns: green, rust, deep gold */
 .books-list li:nth-child(3n + 2) {
-  background: var(--spine-2);
+  background: var(--spine-rust);
 }
 .books-list li:nth-child(3n) {
-  background: var(--spine-3);
+  background: var(--spine-gold);
 }
 
 /* the whole spine is a button: click it to edit that book. It keeps the spine's look, not the round green one */

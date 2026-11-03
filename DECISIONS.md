@@ -771,3 +771,8 @@ Why: with two copies, one could change and the other wouldn't, and they'd quietl
 Chose: a test reads the colors from the styles file and checks the book's name and the author on every spine (today green, rust and gold), in light and dark mode. The word color must be at least 4.5 times brighter than the spine color, the usual rule for easy reading. If a color is written in a way the test can't read, the test fails instead of skipping it. Before, I checked this by hand
 Other option: open the page in a real browser and measure the colors there, or keep checking by hand
 Why: if I change a spine color later, the test tells me right away when a name like "Dune (signed)" gets hard to read. Reading the file is quick and needs no browser. It would miss a color set somewhere else, but today every color is in that one file
+
+## 2026-11-03 — Color names say what they're for
+Chose: in the styles file, the button color is called "button" instead of "green", and the words on it "on button" instead of "on green". The three spine colors are called "spine green", "spine rust" and "spine gold" instead of "spine 1, 2, 3"
+Other option: only rename the button color, and keep the spines numbered with a note next to each one saying its color
+Why: a name like "green" doesn't say it's for buttons, and "spine 2" doesn't say it's rust. Now the name alone tells me, with no note to read. The spine test finds the spines by name now, not by number
