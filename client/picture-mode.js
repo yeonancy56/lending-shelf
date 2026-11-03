@@ -11,6 +11,7 @@ const longBook = {
 };
 const dune = { _id: 'book-dune', title: 'Dune', author: 'Frank Herbert', copyNote: 'signed' };
 const matilda = { _id: 'book-matilda', title: 'Matilda', author: 'Roald Dahl' };
+const holes = { _id: 'book-holes', title: 'Holes', author: 'Louis Sachar' };
 const sam = { _id: 'friend-sam', name: 'Sam', email: 'sam@example.com' };
 const ana = { _id: 'friend-ana', name: 'Ana' };
 
@@ -25,11 +26,17 @@ const samsPastLoans = [
   { _id: 'loan-3', book: matilda, lentAt: '2026-08-01T12:00:00.000Z', returnedAt: '2026-08-12T12:00:00.000Z' },
 ];
 
+// Sam has Holes now (not overdue), and he's asked for Matilda again, so his page has something under "Has now" and "My requests".
+// Dune stays Ana's: only one friend can ask for a book at a time
+const samsActiveLoan = { _id: 'loan-4', book: holes, lentAt: '2026-11-01T12:00:00.000Z', dueBack: '2026-11-15T12:00:00.000Z' };
+const samsRequest = { _id: 'request-2', book: matilda, status: 'waiting' };
+
 // the averages: the long book has 2 ratings (Sam's 4 and someone's 5), Dune has 1, and Matilda has none
 const longBookAverage = { averageStars: 4.5, ratingCount: 2 };
 const duneAverage = { averageStars: 3, ratingCount: 1 };
 
 // what the server would say to each question a page asks: mine (owner), or Sam's (friend).
+// The two pages are pictured apart, so they don't have to agree: on mine Sam's long book is overdue, on his it's back home.
 // Anything else gets "not found"
 const ANSWERS = {
   owner: {
@@ -44,10 +51,11 @@ const ANSWERS = {
     '/shelf': [
       { ...longBook, state: 'at home', canRate: true, myStars: 4, ...longBookAverage },
       { ...dune, state: 'asked for', ...duneAverage },
-      { ...matilda, state: 'at home', canRate: true },
+      { ...matilda, state: 'asked for', canRate: true },
+      { ...holes, state: 'lent out' },
     ],
-    '/me/loans': { active: [], returned: samsPastLoans, limit: 3 },
-    '/me/requests': [],
+    '/me/loans': { active: [samsActiveLoan], returned: samsPastLoans, limit: 3 },
+    '/me/requests': [samsRequest],
   },
 };
 

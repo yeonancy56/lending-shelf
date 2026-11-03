@@ -859,3 +859,8 @@ Why: on a phone the short box cut its hint off at "Search by title or auth". One
 Chose: picture mode opens on 5174, and the real app stays on 5173. The browser keeps each door's saved things apart, so picture mode's pretend sign-in stays on 5174. The real app never sees it, and my real sign-in on 5173 is never touched
 Other option: keep both on 5173, and teach the real app to look for the pretend sign-in in a separate place first
 Why: changing the door is one small change inside picture mode, and the real app's code doesn't change at all. A bonus: picture mode can now run while the real app is running too
+
+## 2026-11-03 — Sam's picture shows every part of his page
+Chose: in picture mode, Sam now has a book with him right now (Holes), and he's asked to borrow Matilda again. Now every list on his page has something in it. He doesn't ask for Dune, because Ana already did, and only one friend can ask for a book at a time. Rule 6 now says to picture /phone?as=friend when a ticket changes Sam's page
+Other option: leave his "Has now" and "My requests" lists empty, and leave rule 6 naming only my page
+Why: an empty list only says "Nothing right now", so a picture would never show how a loan or a request looks on a phone, or whether its Cancel button fits
