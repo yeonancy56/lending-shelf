@@ -316,6 +316,8 @@ function Shelf({ onSignOut }) { //these are memory boxes
   const[listErrors, setListErrors] = useState({}); // which lists couldn't load, like { loans: 'Something went wrong. Try again.' }
   const listError = Object.values(listErrors).find((error) => error); // the red message at the top, if any list is broken
   const shelfBooks = books.filter((book) => matchesSearch(book, search)); // the books on the shelf right now
+  // the books that are out right now, like Dune while Sam has it. The loans list keeps returned ones too, so skip those
+  const lentOutIds = new Set(loans.filter((loan) => !loan.returnedAt).map((loan) => loan.book?._id));
 
   function loadBooks() { //load function, fill a list from the server
     return getBooks().then((result) => fillList(result, 'books', setBooks, setListErrors)); // fill the list in once the server answers
@@ -522,10 +524,13 @@ return (
     {search.trim() && shelfBooks.length === 0 && <p>No books match '{search.trim()}'</p>}
     <ul className="books-list"> {/* the books stand on the shelf as spines. Only the ones that match the search */}
       {shelfBooks.map((book) => (
-        <li key = {book._id}>
+        // a lent-out book's spine is darker and faded (see index.css)
+        <li key = {book._id} className={lentOutIds.has(book._id) ? 'lent-out' : undefined}>
           {/* a button, so the spine can be clicked, or reached with the keyboard. aria-pressed = this one is in the form */}
           <button className="spine" aria-pressed={book._id === editingId} onClick={() => startEditing(book)}>
             <span className="book-name">{bookName(book)}</span> <span className="book-author">by {book.author}</span>
+            {/* the fading can't be heard, so a screen reader hears "lent out" instead. Hidden from eyes */}
+            {lentOutIds.has(book._id) && <span className="hidden-words">, lent out</span>}
             <AverageRating book={book} />
           </button>
         </li>

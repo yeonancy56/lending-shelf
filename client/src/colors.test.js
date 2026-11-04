@@ -112,3 +112,35 @@ test('dark mode: every spine is lighter than the page', () => {
         expect(brightness(dark[spine]), `${spine} is ${dark[spine]}`).toBeGreaterThan(brightness(dark['--page']));
     }
 });
+
+// a book that's lent out, like Dune while Sam has it, stands on the shelf darker and faded
+const LENT = '--spine-lent';
+const AT_HOME_SPINES = SPINES.filter((spine) => spine !== LENT);
+
+// how much colour there is, from 0 (a grey) to 1 (pure red, green or blue): the gap between the strongest and weakest of the three
+function colourfulness(hex) {
+    const h = sixLetters(hex);
+    const [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+    return Math.max(r, g, b) - Math.min(r, g, b);
+}
+
+test('the colourfulness check gives the known answers: a grey is 0, pure red is 1', () => {
+    expect(colourfulness('#3a3a3a')).toBe(0);
+    expect(colourfulness('#ff0000')).toBe(1);
+});
+
+for (const [mode, colors] of [['light', light], ['dark', dark]]) {
+    test(`${mode} mode: the lent-out spine is darker than every spine at home`, () => {
+        expect(colors[LENT], LENT).toMatch(PLAIN_HEX);
+        for (const spine of AT_HOME_SPINES) {
+            expect(brightness(colors[LENT]), `${LENT} vs ${spine}`).toBeLessThan(brightness(colors[spine]));
+        }
+    });
+}
+
+// at night every spine is already grey, so "faded" only shows in the day look
+test('light mode: the lent-out spine is faded, with less colour than every spine at home', () => {
+    for (const spine of AT_HOME_SPINES) {
+        expect(colourfulness(light[LENT]), `${LENT} vs ${spine}`).toBeLessThan(colourfulness(light[spine]));
+    }
+});

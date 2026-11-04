@@ -22,6 +22,7 @@
   --spine-green: light-dark(#3f6a3a, #3a3a3a);
   --spine-rust: light-dark(#7a3f2e, #474747);
   --spine-gold: light-dark(#7a5a22, #545454); /* deep gold */
+  --spine-lent: light-dark(#4a4239, #2e2e2e); /* a lent-out book: darker and faded, a dusty brown / a darker grey, still lighter than the page */
   --spine-title: light-dark(#fff6e5, #ececec);
   --spine-author: light-dark(#ffe3a8, #cfcfcf);
 
@@ -217,6 +218,22 @@ li .star {
 }
 .books-list li:nth-child(3n) {
   background: var(--spine-gold);
+}
+
+/* a book that's lent out, like Dune while Sam has it: darker and faded, whatever color its turn would give it.
+   It comes after the three colors, so it wins */
+.books-list li.lent-out {
+  background: var(--spine-lent);
+}
+
+/* words only a screen reader hears, like "lent out" on a faded spine. Kept on the page but too small to see */
+.hidden-words {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 /* the whole spine is a button: click it to edit that book. It keeps the spine's look, not the round green one */
