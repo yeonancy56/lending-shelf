@@ -864,3 +864,18 @@ Why: changing the door is one small change inside picture mode, and the real app
 Chose: in picture mode, Sam now has a book with him right now (Holes), and he's asked to borrow Matilda again. Now every list on his page has something in it. He doesn't ask for Dune, because Ana already did, and only one friend can ask for a book at a time. Rule 6 now says to picture /phone?as=friend when a ticket changes Sam's page
 Other option: leave his "Has now" and "My requests" lists empty, and leave rule 6 naming only my page
 Why: an empty list only says "Nothing right now", so a picture would never show how a loan or a request looks on a phone, or whether its Cancel button fits
+
+## 2026-11-03 — Ana asks for a second copy of the long book in the picture
+Chose: picture mode now has a paperback copy of the long book, sitting at home, and Ana asks for it. So the Requests list shows the long name too
+Other option: have Ana ask for the Grandma copy, the one Sam has
+Why: that copy is lent out, and the app never lets anyone ask for a lent-out book. A picture of something that can't happen could hide a real problem, or show one that isn't real
+
+## 2026-11-03 — The picture opens Sam's panel by itself
+Chose: on my page, picture mode clicks Sam's name as soon as it shows up, so his panel is open in the picture. His panel has the long book in "Has now", "Past loans" and an old request I said no to, with my note
+Other option: teach the real app to open a panel from the web address, like /?open=sam
+Why: the click lives only in picture mode, so the real app's code doesn't change at all. It's the same idea as picture mode's pretend sign-in
+
+## 2026-11-03 — The phone picture is 3000 tall, not 2400
+Chose: the phone frame and the picture are now 3000 tall
+Other option: keep 2400, and leave things out of the picture so my page stays short
+Why: with Sam's panel open and a second request, my page got longer, and the Return button at the bottom was cut in half. A taller picture shows the whole page, and the empty space at the bottom does no harm
