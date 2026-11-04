@@ -939,7 +939,7 @@ Other option: say "No friend has that username" when the username is wrong
 Why: a stranger could try lots of names to find out which ones are my friends. One message gives nothing away
 
 ## 2026-11-03 — 5 wrong tries means a 15-minute wait
-Chose: after 5 wrong tries for one username, that username has to wait 15 minutes, even with the right password: "Too many tries. Try again in 15 minutes." Signing in right starts the count again. The count lives in the server's memory, so a restart forgets it
+Chose: after 5 wrong tries for one username, that username has to wait 15 minutes from the 5th try, even with the right password: "Too many tries. Try again in 15 minutes." Slips spread out over time still add up, until 15 quiet minutes pass. Signing in right starts the count again. The count lives in the server's memory, so a restart forgets it
 Other option: no limit, or save the count in the database
 Why: without a limit, someone could guess Gran's password over and over. Keeping the count in memory is simple, and a restart now and then only gives a guesser a few more tries
 

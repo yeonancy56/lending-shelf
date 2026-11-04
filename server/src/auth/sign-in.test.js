@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 const app = require('../app');
 const Friend = require('../friends/friend.model');
 const friendService = require('../friends/friend.service');
-const { forgetWrongTries } = require('./wrong-tries');
+const { forgetAllWrongTries } = require('./wrong-tries');
 const testDb = require('../../test-db');
 
 const page = request(app); // the sign-in page, with no one signed in yet
@@ -19,7 +19,7 @@ let sam;
 beforeAll(testDb.start, 60000);
 beforeEach(async () => {
     await testDb.clear();
-    forgetWrongTries(); // every test starts with no wrong tries counted
+    forgetAllWrongTries(); // every test starts with no wrong tries counted
     process.env.SIGN_IN_SECRET = 'a-long-made-up-secret-for-tests';
     // only the clock is pretend, so the database and supertest keep working as usual
     jest.useFakeTimers({ now: new Date('2026-11-03T10:00:00Z'), doNotFake: ['nextTick', 'setImmediate', 'clearImmediate', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'queueMicrotask', 'hrtime', 'performance'] });
@@ -85,6 +85,21 @@ test('after 5 wrong tries, the 6th is refused even with the right password, and 
 
     jest.setSystemTime(Date.now() + 14 * MINUTE);
     expect((await signIn('sam', SAMS_PASSWORD)).status).toBe(429); // not yet
+
+    jest.setSystemTime(Date.now() + 1 * MINUTE);
+    expect((await signIn('sam', SAMS_PASSWORD)).status).toBe(200);
+});
+
+test('the 15 minutes start at the 5th wrong try, even when the tries were spread out', async () => {
+    for (let tries = 0; tries < 5; tries++) {
+        await signIn('sam', 'not-his-password');
+        jest.setSystemTime(Date.now() + 3 * MINUTE); // one slip every 3 minutes
+    }
+    // the 5th try was 3 minutes ago, and the first one 15 minutes ago: still 12 minutes to wait
+    expect((await signIn('sam', SAMS_PASSWORD)).status).toBe(429);
+
+    jest.setSystemTime(Date.now() + 11 * MINUTE);
+    expect((await signIn('sam', SAMS_PASSWORD)).status).toBe(429);
 
     jest.setSystemTime(Date.now() + 1 * MINUTE);
     expect((await signIn('sam', SAMS_PASSWORD)).status).toBe(200);

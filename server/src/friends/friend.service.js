@@ -24,15 +24,12 @@ async function deleteFriend(id) {
 
 // bcrypt's "how hard to scramble". 10 is bcrypt's usual choice: slow enough to make guessing hard, fast enough to sign in
 const SCRAMBLE_ROUNDS = 10;
-const SHORTEST_PASSWORD = 8;
 
-// the password I typed for Gran, scrambled. An empty box (or only spaces) means no new password,
-// so editing Sam without typing one keeps his old one. The password isn't trimmed: spaces inside it count
+// the password I typed for Gran, scrambled. The controller already checked it's words and long enough.
+// An empty box (or only spaces) means no new password, so editing Sam without typing one keeps his old one.
+// The password isn't trimmed: spaces inside it count
 async function scrambledPassword(password) {
-    if (password === undefined || password === null) return undefined;
-    if (typeof password !== 'string') throw badRequest('The password must be words.');
-    if (password.trim() === '') return undefined;
-    if (password.length < SHORTEST_PASSWORD) throw badRequest(`A password needs at least ${SHORTEST_PASSWORD} characters.`);
+    if (typeof password !== 'string' || password.trim() === '') return undefined;
     return bcrypt.hash(password, SCRAMBLE_ROUNDS);
 }
 

@@ -17,6 +17,24 @@ async function getOne(req, res) {
     res.json(friend);
 }
 
+const SHORTEST_PASSWORD = 8;
+
+// what's wrong with the password I typed, or '' when it's fine. An empty box is fine: it means no new password
+function passwordMistake(password) {
+    if (password === undefined || password === null) return '';
+    if (typeof password !== 'string') return 'The password must be words.';
+    if (password.trim() === '') return '';
+    if (password.length < SHORTEST_PASSWORD) return `A password needs at least ${SHORTEST_PASSWORD} characters.`;
+    return '';
+}
+
+// the checks that need no look in the database: a name, and a password that's words and long enough
+function formMistake(body) {
+    // ?. = if nothing was sent at all, don't crash, just treat the name as missing
+    if (isBlank(body?.name)) return "Every friend needs a name";
+    return passwordMistake(body?.password);
+}
+
 // the friend form: a name, and a Google email, a username and a password if there are any.
 // The service tidies the email and username, and scrambles the password
 function readFriendForm(body) {
@@ -25,8 +43,8 @@ function readFriendForm(body) {
 }
 
 async function create(req, res) {
-    // ?. = if nothing was sent at all, don't crash, just treat the name as missing
-    if (isBlank(req.body?.name)) return res.status(400).json({ error: "Every friend needs a name" });
+    const mistake = formMistake(req.body);
+    if (mistake) return res.status(400).json({ error: mistake });
 
     try {
         const friend = await friendService.addFriend(readFriendForm(req.body));
@@ -37,7 +55,8 @@ async function create(req, res) {
 }
 
 async function update(req, res) {
-    if (isBlank(req.body?.name)) return res.status(400).json({ error: "Every friend needs a name" });
+    const mistake = formMistake(req.body);
+    if (mistake) return res.status(400).json({ error: mistake });
 
     try {
         const friend = await friendService.updateFriend(req.params.id, readFriendForm(req.body));
