@@ -1,5 +1,5 @@
-// Checks that the words on every book spine stay easy to read, in light and dark mode,
-// and that dark mode is the black-and-white "Charcoal library" look.
+// Checks that each color is written once, as a day and night pair, that the words on every book spine
+// stay easy to read in both, and that night is the black-and-white "Charcoal library" look.
 // It reads the colors straight from index.css, so changing a color there is checked too.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -12,16 +12,11 @@ const WORDS = ['--spine-title', '--spine-author']; // the book's name, and the a
 const EASY_TO_READ = 4.5; // the usual rule for normal-size words
 const PLAIN_HEX = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i; // like #fff or #3f6a3a, the only way this test can read a color
 
-// every "--name: value;" inside one :root { ... } block
-function colorsIn(block) {
-    return Object.fromEntries([...(block ?? '').matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]));
-}
-
-// light mode is the :root at the top. Dark mode starts from light and swaps in what its own :root changes
-const lightOwn = colorsIn(css.match(/^:root\s*\{([^}]*)\}/m)?.[1]);
-const darkOwn = colorsIn(css.match(/@media\s*\(\s*prefers-color-scheme:\s*dark\s*\)\s*\{\s*:root\s*\{([^}]*)\}/)?.[1]);
-const light = lightOwn;
-const dark = { ...light, ...darkOwn };
+// every "--name: light-dark(day, night);" in the :root at the top: each color is written once, as a day and night pair
+const PAIR = /(--[\w-]+)\s*:\s*light-dark\(\s*([^,]+?)\s*,\s*([^)]+?)\s*\)\s*;/g;
+const pairs = [...(css.match(/^:root\s*\{([^}]*)\}/m)?.[1] ?? '').matchAll(PAIR)];
+const light = Object.fromEntries(pairs.map(([, name, day]) => [name, day]));
+const dark = Object.fromEntries(pairs.map(([, name, , night]) => [name, night]));
 
 // the spines are --spine-green, --spine-rust, ... however many index.css has. The two word colors also start with --spine-, so leave them out.
 // Any other --spine- name counts as a spine, so a new color for words on a spine must go in WORDS
@@ -58,16 +53,17 @@ test('finds at least the three spines: green, rust and deep gold', () => {
     expect(SPINES.length).toBeGreaterThanOrEqual(3);
 });
 
-test('finds dark mode\'s own spine colors, not just the light ones', () => {
-    expect(Object.keys(darkOwn).some((name) => name.startsWith('--spine-'))).toBe(true);
+// a color written twice (like a night copy in another block) could drift apart, so each one is written exactly once, as a pair
+test('every color is written once, as a day and night pair, in the :root at the top', () => {
+    const everyColor = [...css.matchAll(/(--[\w-]+)\s*:/g)].map((m) => m[1]);
+    expect(pairs.length).toBeGreaterThan(0);
+    expect(everyColor.sort()).toEqual(Object.keys(light).sort());
 });
 
-// a spine or word color written another way, like rgb(...), fails here instead of being skipped
-for (const [mode, own] of [['light', lightOwn], ['dark', darkOwn]]) {
-    test(`${mode} mode: every spine and word color is written like #3f6a3a, so this test can read it`, () => {
-        for (const [name, value] of Object.entries(own)) {
-            if (name.startsWith('--spine-')) expect(value, `${name} in ${mode} mode`).toMatch(PLAIN_HEX);
-        }
+// a color written another way, like rgb(...), fails here instead of being skipped
+for (const [mode, colors] of [['light', light], ['dark', dark]]) {
+    test(`${mode} mode: every color is written like #3f6a3a, so this test can read it`, () => {
+        for (const [name, value] of Object.entries(colors)) expect(value, `${name} in ${mode} mode`).toMatch(PLAIN_HEX);
     });
 }
 
