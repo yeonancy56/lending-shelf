@@ -672,6 +672,14 @@ function signedInAsSam({ shelf = [], myLoans = { active: [], returned: [], limit
     api.getMyRequests.mockResolvedValue(myRequests);
 }
 
+// open Sam's page and click one of his tabs, like Requests. Gives back the user, for more clicks
+async function openSamsTab(tab) {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: tab }));
+    return user;
+}
+
 test('signing in with Sam\'s Google account shows the friend page, not mine', async () => {
     api.isSignedIn.mockReturnValue(false);
     signedInAsSam();
@@ -713,14 +721,18 @@ test('the friend page shows none of my buttons or boxes: no lend, return, add, e
         myLoans: { active: [{ _id: 'loan-1', book: DUNE, lentAt: '2026-11-01T10:00:00Z', dueBack: '2026-11-15T10:00:00Z', overdue: false }], returned: [], limit: 3 },
     });
 
+    const user = userEvent.setup();
     render(<App />);
-    await screen.findByRole('heading', { name: 'Hi, Sam' });
-    await screen.findByText(/due back/);
+    await screen.findByText(/Dune by Frank Herbert/);
 
-    // Sign out is the only button, and there's nothing to type in
-    expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual(['Sign out']);
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
-    expect(screen.queryByRole('combobox')).not.toBeInTheDocument(); // no "Pick a book" or "Pick a friend"
+    // on every tab, Sign out and the menu's tabs are the only buttons, and there's nothing to type in
+    for (const tab of ['Books', 'Loans', 'Requests']) {
+        await user.click(screen.getByRole('button', { name: tab }));
+        expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual(['Sign out', 'Books', 'Loans', 'Requests']);
+        expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+        expect(screen.queryByRole('combobox')).not.toBeInTheDocument(); // no "Pick a book" or "Pick a friend"
+    }
+    expect(screen.getByText(/due back/)).toBeInTheDocument(); // Dune's loan showed on Loans, with no Return button
 });
 
 test('Sam sees Dune with its due back day and overdue, and Matilda as a past loan', async () => {
@@ -730,7 +742,9 @@ test('Sam sees Dune with its due back day and overdue, and Matilda as a past loa
         limit: 3,
     } });
 
+    const user = userEvent.setup();
     render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Loans' }));
 
     const myLoans = await screen.findByRole('region', { name: 'My loans' });
     expect(await within(myLoans).findByText('1 of 3 books')).toBeInTheDocument();
@@ -767,10 +781,11 @@ test('Sam clicks Ask on Matilda: it\'s sent, then Matilda says "asked for" and s
     await user.click(ask);
 
     expect(api.askForBook).toHaveBeenCalledWith('matilda-id');
-    const myRequests = await screen.findByRole('list', { name: 'My requests' });
-    expect(await within(myRequests).findByText(/Matilda/)).toHaveTextContent('Matilda · waiting');
-    expect(screen.getByRole('list', { name: 'Books' })).toHaveTextContent('Matilda by Roald Dahl · asked for');
+    expect(await screen.findByText('Matilda by Roald Dahl · asked for')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Ask' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Requests' }));
+    const myRequests = screen.getByRole('list', { name: 'My requests' });
+    expect(within(myRequests).getByText(/Matilda/)).toHaveTextContent('Matilda · waiting');
 });
 
 test('when a lending rule says no to Sam\'s Ask, Sam sees the red message', async () => {
@@ -790,7 +805,7 @@ test('My requests lists every request with its status, and only waiting ones get
         { _id: 'request-1', book: MATILDA, status: 'cancelled', askedAt: '2026-10-01T10:00:00Z', cancelledAt: '2026-10-02T10:00:00Z' },
     ] });
 
-    render(<App />);
+    await openSamsTab('Requests');
 
     const items = await within(await screen.findByRole('list', { name: 'My requests' })).findAllByRole('listitem');
     expect(items[0]).toHaveTextContent('Dune · waiting');
@@ -802,7 +817,7 @@ test('My requests lists every request with its status, and only waiting ones get
 test('My requests says so when Sam has never asked for anything', async () => {
     signedInAsSam();
 
-    render(<App />);
+    await openSamsTab('Requests');
 
     const myRequests = await screen.findByRole('region', { name: 'My requests' });
     expect(await within(myRequests).findByText('No requests yet')).toBeInTheDocument();
@@ -815,8 +830,7 @@ test('Sam cancels the waiting request for Dune: it\'s sent, then it shows as can
     });
     api.cancelRequest.mockResolvedValue({ _id: 'request-1', status: 'cancelled' });
 
-    const user = userEvent.setup();
-    render(<App />);
+    const user = await openSamsTab('Requests');
     const cancel = await screen.findByRole('button', { name: 'Cancel' });
     api.getShelf.mockResolvedValue([{ ...DUNE, state: 'at home' }]);
     api.getMyRequests.mockResolvedValue([{ _id: 'request-1', book: DUNE, status: 'cancelled', askedAt: '2026-11-02T10:00:00Z', cancelledAt: '2026-11-02T11:00:00Z' }]);
@@ -824,16 +838,16 @@ test('Sam cancels the waiting request for Dune: it\'s sent, then it shows as can
 
     expect(api.cancelRequest).toHaveBeenCalledWith('request-1');
     expect(await screen.findByText('Dune · cancelled')).toBeInTheDocument();
-    expect(await screen.findByRole('button', { name: 'Ask' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Books' }));
+    expect(await screen.findByRole('button', { name: 'Ask' })).toBeInTheDocument();
 });
 
 test('when Cancel fails, Sam sees the red message', async () => {
     signedInAsSam({ myRequests: [{ _id: 'request-1', book: DUNE, status: 'waiting', askedAt: '2026-11-02T10:00:00Z' }] });
     api.cancelRequest.mockResolvedValue({ error: 'This request was cancelled' });
 
-    const user = userEvent.setup();
-    render(<App />);
+    const user = await openSamsTab('Requests');
     await user.click(await screen.findByRole('button', { name: 'Cancel' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('This request was cancelled');
@@ -1073,7 +1087,7 @@ test('Sam sees a declined request as declined, with my note, and no Cancel butto
         { _id: 'request-1', book: MATILDA, status: 'declined', note: '', askedAt: '2026-11-01T10:00:00Z' },
     ] });
 
-    render(<App />);
+    await openSamsTab('Requests');
 
     const items = await within(await screen.findByRole('list', { name: 'My requests' })).findAllByRole('listitem');
     expect(items[0]).toHaveTextContent("Dune · declined · “I'm rereading it this week”");
@@ -1115,7 +1129,7 @@ test('declining while Sam\'s panel is open shows the declined request and my not
 test('Sam sees an approved request as approved, with no Cancel button', async () => {
     signedInAsSam({ myRequests: [{ _id: 'request-1', book: DUNE, status: 'approved', askedAt: '2026-11-02T10:00:00Z' }] });
 
-    render(<App />);
+    await openSamsTab('Requests');
 
     expect(await screen.findByText('Dune · approved')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument();
@@ -1225,7 +1239,7 @@ test('while the shelf is on the way to Sam\'s page, there\'s no count', async ()
     signedInAsSam();
     api.getShelf.mockReturnValue(new Promise(() => {})); // the server never answers
 
-    render(<App />);
+    await openSamsTab('Requests');
     await screen.findByText('No requests yet'); // Sam's requests have loaded, but the shelf hasn't
 
     expect(screen.queryByText(BOOK_COUNT)).not.toBeInTheDocument();
@@ -1283,4 +1297,68 @@ test('Sam sees the average next to his own stars, labelled apart; an unrated cop
     expect(within(dune).getByRole('group', { name: 'Your stars for Dune' })).not.toHaveTextContent('3.7'); // the average is not inside his stars
     expect(matilda).not.toHaveTextContent('rating');
     expect(within(matilda).getByRole('group', { name: 'Your stars for Matilda' })).toHaveTextContent('your stars ☆☆☆☆☆');
+});
+
+// the footer: the same line of text at the bottom of every page
+const FOOTER = "Lending Shelf · Books are due back 14 days after they're lent.";
+
+test('the footer shows on the sign-in screen, my page and Sam\'s page', async () => {
+    api.isSignedIn.mockReturnValue(false);
+    const { unmount } = render(<App />);
+    expect(screen.getByRole('contentinfo')).toHaveTextContent(FOOTER);
+    unmount();
+
+    api.isSignedIn.mockReturnValue(true);
+    api.getBooks.mockResolvedValue([DUNE]);
+    api.getFriends.mockResolvedValue([SAM]);
+    api.getLoans.mockResolvedValue([]);
+    const mine = render(<App />);
+    await screen.findByRole('button', { name: /Dune/ });
+    expect(screen.getByRole('contentinfo')).toHaveTextContent(FOOTER);
+    mine.unmount();
+
+    signedInAsSam();
+    render(<App />);
+    await screen.findByRole('heading', { name: 'Hi, Sam' });
+    expect(screen.getByRole('contentinfo')).toHaveTextContent(FOOTER);
+});
+
+// Sam's menu: three tabs, and only the picked tab's part shows
+const SAM_SHELF = [{ ...MATILDA, state: 'at home' }];
+const SAM_LOANS = { active: [{ _id: 'loan-1', book: DUNE, lentAt: '2026-11-01T10:00:00Z', dueBack: '2026-11-15T10:00:00Z', overdue: false }], returned: [], limit: 3 };
+const SAM_REQUESTS = [{ _id: 'request-1', book: DUNE, status: 'approved', askedAt: '2026-11-01T09:00:00Z' }];
+
+test('Sam\'s page opens on Books: the Books tab is picked, and only the shelf shows', async () => {
+    signedInAsSam({ shelf: SAM_SHELF, myLoans: SAM_LOANS, myRequests: SAM_REQUESTS });
+
+    render(<App />);
+
+    await screen.findByText(/Matilda/); // the shelf has loaded
+    expect(screen.getByRole('list', { name: 'Books' })).toHaveTextContent('Matilda by Roald Dahl · at home');
+    expect(screen.getByRole('button', { name: 'Books' })).toHaveAttribute('aria-current', 'true');
+    expect(screen.getByRole('button', { name: 'Loans' })).not.toHaveAttribute('aria-current');
+    expect(screen.getByRole('button', { name: 'Requests' })).not.toHaveAttribute('aria-current');
+    expect(screen.queryByRole('region', { name: 'My loans' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'My requests' })).not.toBeInTheDocument();
+});
+
+test('clicking Loans shows only My loans, and clicking Requests shows only My requests', async () => {
+    signedInAsSam({ shelf: SAM_SHELF, myLoans: SAM_LOANS, myRequests: SAM_REQUESTS });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText(/Matilda/); // the shelf has loaded
+
+    await user.click(screen.getByRole('button', { name: 'Loans' }));
+    expect(screen.getByRole('region', { name: 'My loans' })).toHaveTextContent('Dune, due back 15 Nov');
+    expect(screen.getByRole('button', { name: 'Loans' })).toHaveAttribute('aria-current', 'true');
+    expect(screen.getByRole('button', { name: 'Books' })).not.toHaveAttribute('aria-current');
+    expect(screen.queryByRole('list', { name: 'Books' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'My requests' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Requests' }));
+    expect(screen.getByRole('region', { name: 'My requests' })).toHaveTextContent('Dune · approved');
+    expect(screen.getByRole('button', { name: 'Requests' })).toHaveAttribute('aria-current', 'true');
+    expect(screen.queryByRole('list', { name: 'Books' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'My loans' })).not.toBeInTheDocument();
 });

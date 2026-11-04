@@ -259,3 +259,52 @@ li .star {
   display: block;
   font-size: 14px;
 }
+
+/* ---------- Sam's menu ---------- */
+/* the top row: "Hi, Sam" on the left, Sign out on the right */
+.menu-top {
+  display: flex;
+  flex-wrap: wrap; /* a very long name pushes Sign out onto its own line instead of off the edge */
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.menu-top h2 {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* the three tabs, side by side, sharing the width */
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+/* a tab that isn't picked: just a green outline */
+.tab {
+  flex: 1 1 0;
+  min-width: 0;
+  background: none;
+  color: var(--button);
+  border: 2px solid var(--button);
+  padding: 6px 8px;
+}
+
+/* the picked tab: filled in, like the other buttons */
+.tab[aria-current='true'] {
+  background: var(--button);
+  color: var(--on-button);
+}
+
+/* ---------- the footer ---------- */
+/* the small line at the bottom of every page */
+.footer {
+  margin-top: 32px;
+  text-align: center;
+  color: var(--quiet);
+  font-size: 14px;
+}

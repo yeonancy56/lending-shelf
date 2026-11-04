@@ -183,23 +183,41 @@ function App() {
     setMe(null); // the next person to sign in might be someone else
   }
 
-  if (!signedIn) return <SignInScreen message={signInMessage} onSignIn={handleSignIn} />;
-  if (!me) return <p>Loading…</p>; // "who am I?" is still on the way
-  if (me.error) {
-    // the server broke while saying who I am, so there's no page to show yet. Sign out lets me try again
-    return (
-      <div>
-        <h1>Lending Shelf</h1>
-        <ErrorMessage message={me.error} />
-        <button onClick={handleSignOut}>Sign out</button>
-      </div>
-    );
+  // which page to show right now. The footer goes under whichever one it is
+  function currentPage() {
+    if (!signedIn) return <SignInScreen message={signInMessage} onSignIn={handleSignIn} />;
+    if (!me) return <p>Loading…</p>; // "who am I?" is still on the way
+    if (me.error) {
+      // the server broke while saying who I am, so there's no page to show yet. Sign out lets me try again
+      return (
+        <div>
+          <h1>Lending Shelf</h1>
+          <ErrorMessage message={me.error} />
+          <button onClick={handleSignOut}>Sign out</button>
+        </div>
+      );
+    }
+    if (me.who === 'friend') return <FriendPage name={me.name} onSignOut={handleSignOut} />;
+    return <Shelf onSignOut={handleSignOut} />;
   }
-  if (me.who === 'friend') return <FriendPage name={me.name} onSignOut={handleSignOut} />;
-  return <Shelf onSignOut={handleSignOut} />;
+
+  return (
+    <>
+      {currentPage()}
+      <Footer />
+    </>
+  );
 }
 
-// Sam's page: every book on the shelf, Sam's own loans, and Sam's own requests.
+// the line at the bottom of every page: my page, Sam's page and the sign-in screen. Just words, no buttons
+function Footer() {
+  return <footer className="footer">Lending Shelf · Books are due back 14 days after they're lent.</footer>;
+}
+
+// the tabs in the menu on Sam's page, in order. Each one shows one part of his page
+const TABS = ['Books', 'Loans', 'Requests'];
+
+// Sam's page: every book on the shelf, Sam's own loans, and Sam's own requests, one tab at a time.
 // Sam can ask for a book that's at home, and cancel a waiting request. Nothing else,
 // because lending, returning, adding and editing are only for me
 function FriendPage({ name, onSignOut }) {
@@ -208,6 +226,8 @@ function FriendPage({ name, onSignOut }) {
   const [myRequests, setMyRequests] = useState(null); // null while the server hasn't answered yet
   const [listErrors, setListErrors] = useState({});
   const [clickError, setClickError] = useState(''); // the red message for whatever Sam just clicked: Ask, Cancel or a star
+  // which tab is open. Only the page's memory, so a reload starts on Books again
+  const [openTab, setOpenTab] = useState('Books');
   const listError = Object.values(listErrors).find((error) => error);
 
   // fill in (or fill in again) the shelf and Sam's requests: asking or cancelling changes both
@@ -246,11 +266,22 @@ function FriendPage({ name, onSignOut }) {
     <div>
       <h1>Lending Shelf</h1>
       <BookCount books={shelf} arrived={listErrors.shelf === ''} /> {/* '' means the shelf arrived with no error */}
-      <h2>Hi, {name}</h2>
-      <button onClick={onSignOut}>Sign out</button>
+      <div className="menu-top">
+        <h2>Hi, {name}</h2>
+        <button onClick={onSignOut}>Sign out</button>
+      </div>
+      <nav aria-label="Menu" className="tabs">
+        {TABS.map((tab) => (
+          // aria-current tells a screen reader which tab Sam is on, and the page draws it as picked
+          <button key={tab} className="tab" aria-current={tab === openTab ? 'true' : undefined} onClick={() => setOpenTab(tab)}>
+            {tab}
+          </button>
+        ))}
+      </nav>
+      {/* above the tabs' parts, so a red message shows whichever tab Sam is on */}
       <ErrorMessage message={listError} />
       <ErrorMessage message={clickError} />
-      <section>
+      {openTab === 'Books' && <section>
         <h2 id="friend-shelf">Books</h2>
         {/* each book says "at home", "lent out" or "asked for", but never who: the server doesn't send that */}
         <ul aria-labelledby="friend-shelf">
@@ -263,14 +294,14 @@ function FriendPage({ name, onSignOut }) {
             </li>
           ))}
         </ul>
-      </section>
-      <section aria-labelledby="my-loans">
+      </section>}
+      {openTab === 'Loans' && <section aria-labelledby="my-loans">
         <h2 id="my-loans">My loans</h2>
         {!myLoans && <p>Loading…</p>}
         <ErrorMessage message={myLoans?.error} />
         {myLoans && !myLoans.error && <FriendLoans loans={myLoans} />} {/* the same lists as Sam's panel on my page */}
-      </section>
-      <section aria-labelledby="my-requests">
+      </section>}
+      {openTab === 'Requests' && <section aria-labelledby="my-requests">
         <h2 id="my-requests">My requests</h2>
         {!myRequests && <p>Loading…</p>}
         <ErrorMessage message={myRequests?.error} />
@@ -283,7 +314,7 @@ function FriendPage({ name, onSignOut }) {
             </li>
           ))}
         </ul>
-      </section>
+      </section>}
     </div>
   );
 }

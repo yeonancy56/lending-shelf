@@ -910,3 +910,18 @@ Why: I want to pick the look myself without changing my computer's settings. The
 Chose: every color in index.css is one line with two halves, the day color and the night color, like "the page is cream by day, charcoal at night". The Day / Night button just tells the page which half to use
 Other option: keep the day colors in one list and the night colors in a second list, and copy one of the lists again for the button, like the prototype did
 Why: with copies, changing the cream in one place could leave the old cream in another. One line per color means the day and night halves always sit side by side and can't drift apart
+
+## 2026-11-03 — A footer on every page
+Chose: one small line at the bottom of every page, mine, Sam's and the sign-in page: "Lending Shelf · Books are due back 14 days after they're lent." Just words, no buttons
+Other option: no footer, or a footer with links and buttons
+Why: it makes the app feel finished, and it reminds Sam that books come back after 14 days. Words only keep it simple, since there's nowhere to link to yet
+
+## 2026-11-03 — Sam's page has a menu with three tabs
+Chose: at the top of Sam's page, "Hi, Sam" and Sign out, then three tabs: Books, Loans and Requests. Only the tab he picks shows its part. He starts on Books, and a reload goes back to Books. Red messages show above the tabs, so he sees them whichever tab he's on
+Other option: keep one long page, or give each tab its own web address so a reload stays on the same tab
+Why: on a phone, one long page means lots of scrolling to find "My requests". Remembering the tab only while the page is open needs no extra library and no new web addresses, and starting on the shelf is what Sam wants most
+
+## 2026-11-03 — The picked tab is marked as "current"
+Chose: the picked tab is filled in green and the others are just an outline. It also carries a hidden "this is the current one" mark, so a screen reader says which tab Sam is on
+Other option: the "pressed" mark that the spines and stars use
+Why: "pressed" means a switch that's on or off. A tab isn't a switch, it's where Sam is right now, and "current" says exactly that
