@@ -742,9 +742,7 @@ test('Sam sees Dune with its due back day and overdue, and Matilda as a past loa
         limit: 3,
     } });
 
-    const user = userEvent.setup();
-    render(<App />);
-    await user.click(await screen.findByRole('button', { name: 'Loans' }));
+    await openSamsTab('Loans');
 
     const myLoans = await screen.findByRole('region', { name: 'My loans' });
     expect(await within(myLoans).findByText('1 of 3 books')).toBeInTheDocument();
@@ -1348,6 +1346,7 @@ test('clicking Loans shows only My loans, and clicking Requests shows only My re
     const user = userEvent.setup();
     render(<App />);
     await screen.findByText(/Matilda/); // the shelf has loaded
+    expect(screen.queryByRole('region', { name: 'My loans' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Loans' }));
     expect(screen.getByRole('region', { name: 'My loans' })).toHaveTextContent('Dune, due back 15 Nov');
