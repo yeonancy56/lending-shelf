@@ -14,10 +14,24 @@ describe('picture mode', () => {
     expect(titles.some((title) => title.length > 60)).toBe(true);
   });
 
+  it('has a request for a book with a long name, to see if the Requests list cuts it off', () => {
+    const titles = pictureAnswer('/requests').body.map((request) => request.book.title);
+    expect(titles.some((title) => title.length > 60)).toBe(true);
+  });
+
   it('answers every list my shelf asks for when it opens', () => {
     for (const path of ['/books', '/friends', '/loans', '/requests']) {
       expect(pictureAnswer(path).status).toBe(200);
     }
+  });
+
+  it('Sam\'s panel on my page has the long name in what he has now, his past loans and his requests', () => {
+    const isLong = (item) => item.book.title.length > 60;
+    const loans = pictureAnswer('/friends/friend-sam/loans');
+    const requests = pictureAnswer('/friends/friend-sam/requests');
+    expect(loans.body.active.some(isLong)).toBe(true);
+    expect(loans.body.returned.some(isLong)).toBe(true);
+    expect(requests.body.some(isLong)).toBe(true);
   });
 
   it('as Sam, says he is a friend, so the page shows his page', () => {
@@ -35,6 +49,11 @@ describe('picture mode', () => {
     expect(shelf.some((book) => book.canRate && book.myStars)).toBe(true);
     expect(shelf.some((book) => book.canRate && !book.myStars)).toBe(true);
     expect(shelf.some((book) => book.canRate && book.title.length > 60)).toBe(true);
+  });
+
+  it('as Sam, his own past loans have the long name too', () => {
+    const { returned } = pictureAnswer('/me/loans', 'friend').body;
+    expect(returned.some((loan) => loan.book.title.length > 60)).toBe(true);
   });
 
   it('as Sam, he has a book now, and his shelf says it\'s "lent out"', () => {

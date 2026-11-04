@@ -44,7 +44,7 @@ A MERN app for tracking books I lend to friends.
    (picture both if it changes both). Both pages show the shelf in a frame 375
    wide, because Chrome won't make its own window narrower than 500.
    Headless Chrome works:
-   `--headless=new --hide-scrollbars --window-size=375,2400 --virtual-time-budget=5000 --screenshot=<file>`.
+   `--headless=new --hide-scrollbars --window-size=375,3000 --virtual-time-budget=5000 --screenshot=<file>`.
    Show me the picture, and say if anything is cut off or spills over.
 7. **When a ticket is merged, after the rule 3 questions, tell me to /clear.** If we're stopping mid-work,
    or my status line shows 140k, write a handoff note first, then tell me:

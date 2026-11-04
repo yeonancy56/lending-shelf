@@ -9,6 +9,8 @@ const longBook = {
   author: 'Robert Louis Stevenson',
   copyNote: 'falling apart, from Grandma',
 };
+// a second copy of the long book, at home, so Ana can ask for it: the Grandma copy is lent out, and a lent-out book can't be asked for
+const longBookPaperback = { ...longBook, _id: 'book-long-paperback', copyNote: 'paperback' };
 const dune = { _id: 'book-dune', title: 'Dune', author: 'Frank Herbert', copyNote: 'signed' };
 const matilda = { _id: 'book-matilda', title: 'Matilda', author: 'Roald Dahl' };
 const holes = { _id: 'book-holes', title: 'Holes', author: 'Louis Sachar' };
@@ -19,6 +21,7 @@ const lentAt = '2026-10-01T12:00:00.000Z';
 const dueBack = '2026-10-15T12:00:00.000Z';
 const samsLoan = { _id: 'loan-1', book: longBook, friend: sam, lentAt, dueBack, overdue: true };
 const anasRequest = { _id: 'request-1', book: dune, friend: ana, status: 'waiting' };
+const anasLongRequest = { _id: 'request-3', book: longBookPaperback, friend: ana, status: 'waiting' };
 
 // Sam's page: he's returned the long book (and rated it 4) and Matilda (not rated yet), so both get his stars
 const samsPastLoans = [
@@ -31,6 +34,13 @@ const samsPastLoans = [
 const samsActiveLoan = { _id: 'loan-4', book: holes, lentAt: '2026-11-01T12:00:00.000Z', dueBack: '2026-11-15T12:00:00.000Z' };
 const samsRequest = { _id: 'request-2', book: matilda, status: 'waiting' };
 
+// Sam's panel on my page: he has the long book now (overdue), he had it before too, and I once said no when he asked for it.
+// No waiting request: his long book is overdue, so he couldn't ask for anything
+const samsPanelLoans = { active: [samsLoan], returned: samsPastLoans, limit: 3 };
+const samsPanelRequests = [
+  { _id: 'request-4', book: longBook, status: 'declined', note: "I'm rereading it this week" },
+];
+
 // the averages: the long book has 2 ratings (Sam's 4 and someone's 5), Dune has 1, and Matilda has none
 const longBookAverage = { averageStars: 4.5, ratingCount: 2 };
 const duneAverage = { averageStars: 3, ratingCount: 1 };
@@ -41,10 +51,12 @@ const duneAverage = { averageStars: 3, ratingCount: 1 };
 const ANSWERS = {
   owner: {
     '/me': { who: 'owner' },
-    '/books': [{ ...longBook, ...longBookAverage }, { ...dune, ...duneAverage }, matilda],
+    '/books': [{ ...longBook, ...longBookAverage }, longBookPaperback, { ...dune, ...duneAverage }, matilda],
     '/friends': [sam, ana],
     '/loans': [samsLoan],
-    '/requests': [anasRequest],
+    '/requests': [anasRequest, anasLongRequest],
+    '/friends/friend-sam/loans': samsPanelLoans,
+    '/friends/friend-sam/requests': samsPanelRequests,
   },
   friend: {
     '/me': { who: 'friend', name: 'Sam' },
@@ -72,7 +84,7 @@ const AS_FRIEND = 'as=friend'; // the bit of the address that asks for Sam's pag
 // /phone shows my shelf in a frame as wide as a phone (375), with no gaps around it, and /phone?as=friend shows Sam's page.
 // Chrome's picture-taker can't make its own window narrower than 500, but it can picture this frame
 const PHONE_WIDTH = 375;
-const PHONE_HEIGHT = 2400; // keep in step with --window-size in CLAUDE.md rule 6, or the bottom is left out of the picture
+const PHONE_HEIGHT = 3000; // keep in step with --window-size in CLAUDE.md rule 6, or the bottom is left out of the picture
 const phonePage = (search) => `<!doctype html><title>Phone width</title>
 <body style="margin:0"><iframe src="/${search}" width="${PHONE_WIDTH}" height="${PHONE_HEIGHT}" style="border:0;display:block"></iframe></body>`;
 
@@ -103,10 +115,18 @@ export function pictureMode() {
         res.end(JSON.stringify(body));
       });
     },
-    // a pretend sign-in in the browser, so the page skips the Google button. Sam's when the address says ?as=friend
+    // a pretend sign-in in the browser, so the page skips the Google button. Sam's when the address says ?as=friend.
+    // On my page it also clicks Sam's name once it shows up, so the picture has his panel open
     transformIndexHtml() {
-      const signIn = `location.search.includes('${AS_FRIEND}') ? '${PRETEND_SIGN_IN.friend}' : '${PRETEND_SIGN_IN.owner}'`;
-      return [{ tag: 'script', children: `localStorage.setItem('${SIGN_IN_KEY}', ${signIn});`, injectTo: 'head-prepend' }];
+      const asFriend = `location.search.includes('${AS_FRIEND}')`;
+      const signIn = `${asFriend} ? '${PRETEND_SIGN_IN.friend}' : '${PRETEND_SIGN_IN.owner}'`;
+      const openSamsPanel = `if (!${asFriend}) {
+        const waiting = setInterval(() => {
+          const samsName = [...document.querySelectorAll('button')].find((button) => button.textContent === '${sam.name}');
+          if (samsName) { clearInterval(waiting); samsName.click(); }
+        }, 50);
+      }`;
+      return [{ tag: 'script', children: `localStorage.setItem('${SIGN_IN_KEY}', ${signIn});\n${openSamsPanel}`, injectTo: 'head-prepend' }];
     },
   };
 }
