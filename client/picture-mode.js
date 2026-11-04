@@ -104,7 +104,7 @@ export function pictureMode() {
     configureServer(server) {
       server.middlewares.use('/phone', (req, res) => {
         res.setHeader('Content-Type', 'text/html');
-        res.end(phonePage(req.url.includes(AS_FRIEND) ? '?' + AS_FRIEND : ''));
+        res.end(phonePage(req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '')); // PROTOTYPE: pass ?variant= on too
       });
       server.middlewares.use('/api', (req, res) => {
         // the page sends its pretend sign-in, so it's Sam's answers for Sam's page

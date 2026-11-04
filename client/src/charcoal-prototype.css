@@ -1,0 +1,64 @@
+/* PROTOTYPE, throw me away: three "Charcoal library" night looks, picked with ?variant=A, B or C.
+   They show even if the computer is in light mode, so they're easy to compare. */
+
+/* the parts all three share: charcoal page, grey shelf board, light grey words */
+:root[data-charcoal] {
+  --page: #1e1e1e;
+  --ink: #d6d6d6;
+  --heading: #f0f0f0;
+  --wood: #4a4a4a;
+  --wood-dark: #333333;
+  --on-wood: #ececec;
+  --field: #2a2a2a;
+  --field-edge: #8a8a8a;
+  --error: #f2907c;
+  --quiet: #a3a3a3;
+  --button: #d0d0d0;
+  --on-button: #1e1e1e;
+  /* dark grey spines with light grey words */
+  --spine-green: #2f2f2f;
+  --spine-rust: #444444;
+  --spine-gold: #525252;
+  --spine-title: #ececec;
+  --spine-author: #cfcfcf;
+  color-scheme: dark;
+}
+
+/* B: the same, but the buttons stay soft green */
+:root[data-charcoal='B'] {
+  --button: #8fb886;
+  --on-button: #17120e;
+}
+
+/* C: light grey spines with dark words, like pale cloth covers */
+:root[data-charcoal='C'] {
+  --spine-green: #9a9a9a;
+  --spine-rust: #b0b0b0;
+  --spine-gold: #c6c6c6;
+  --spine-title: #1a1a1a;
+  --spine-author: #2a2a2a;
+}
+
+/* the switcher bar: not part of the design */
+.charcoal-switcher {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 10px;
+  background: #ff0;
+  color: #000;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px #0008;
+  font: 13px system-ui;
+  z-index: 10;
+}
+.charcoal-switcher button {
+  background: #000;
+  color: #ff0;
+  padding: 2px 10px;
+  margin: 0;
+}
