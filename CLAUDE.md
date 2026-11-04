@@ -51,6 +51,10 @@ A MERN app for tracking books I lend to friends.
    "Handoff saved, type /clear, then say: read the handoff note and continue."
    The note is `HANDOFF.md` at the project root. It's kept out of git, and
    each new note replaces the old one. If it's missing, say so.
+8. **Don't stop to ask before the next normal step** (branch, commit, PR,
+   waiting for CI, fixing review findings, filing agreed tickets). Just do it
+   and tell me what you did. Only stop for: a real design choice, something
+   risky or hard to undo, or merging.
 
 ## DECISIONS.md format
 

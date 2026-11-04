@@ -910,3 +910,8 @@ Why: I want to pick the look myself without changing my computer's settings. The
 Chose: every color in index.css is one line with two halves, the day color and the night color, like "the page is cream by day, charcoal at night". The Day / Night button just tells the page which half to use
 Other option: keep the day colors in one list and the night colors in a second list, and copy one of the lists again for the button, like the prototype did
 Why: with copies, changing the cream in one place could leave the old cream in another. One line per color means the day and night halves always sit side by side and can't drift apart
+
+## 2026-11-03 — Claude keeps going on the usual steps
+Chose: Claude does the usual next steps without asking first, like making a branch, saving the work, opening the pull request, waiting for the checks, fixing what the review found, and filing tickets I already said yes to. Then it tells me what it did. It still stops for a real design choice, anything risky or hard to undo, and merging
+Other option: Claude asks me before every step
+Why: saying "yes" to the same steps every time slows me down and doesn't teach me anything. I still get to decide the things that matter
