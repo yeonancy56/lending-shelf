@@ -903,3 +903,8 @@ Why: a grey error looks like any other line, so I could miss that Sam's book is 
 Chose: a small button in the top corner of every page switches between the cream day look and the charcoal night look. The first time, it matches my computer. After I click it, it remembers my pick. It gets its own ticket, after the grey night colors and before the lent-out look
 Other option: no button, so the page always follows my computer. Or put the button in the same ticket as the grey colors
 Why: I want to pick the look myself without changing my computer's settings. The button is new behaviour, not just colors, so it's easier to follow as its own step
+
+## 2026-11-03 — Each color is written once, as a day and night pair
+Chose: every color in index.css is one line with two halves, the day color and the night color, like "the page is cream by day, charcoal at night". The Day / Night button just tells the page which half to use
+Other option: keep the day colors in one list and the night colors in a second list, and copy one of the lists again for the button, like the prototype did
+Why: with copies, changing the cream in one place could leave the old cream in another. One line per color means the day and night halves always sit side by side and can't drift apart

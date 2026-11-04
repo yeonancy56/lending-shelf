@@ -2,56 +2,42 @@
    Books, Friends and Loans, and the books standing on their shelf as spines. */
 
 /* ---------- colors, all in one place ---------- */
+/* each color is a pair: light-dark(day, night). The day look is cream and wood,
+   the night look is the black-and-white "Charcoal library" */
 :root {
-  --page: #f3ead9; /* cream, like old paper */
-  --ink: #3d2e20; /* dark brown words */
-  --heading: #6a4224;
-  --wood: #8a5a35;
-  --wood-dark: #6a4224; /* the shadow under each shelf board */
-  --on-wood: #fbf1e1; /* words on the wooden band */
-  --field: #fffaf0; /* inside the boxes for typing */
-  --field-edge: #8a5a35; /* the edge of the boxes for typing */
-  --button: #4f7a4a;
-  --on-button: #fff;
-  --error: #b0402b; /* the one shared red for every error message */
-  --quiet: #76604b; /* soft brown for small side notes, like the book count */
-  /* spines: dark enough that the cream and gold words are easy to read */
-  --spine-green: #3f6a3a;
-  --spine-rust: #7a3f2e;
-  --spine-gold: #7a5a22; /* deep gold */
-  --spine-title: #fff6e5;
-  --spine-author: #ffe3a8;
+  --page: light-dark(#f3ead9, #1e1e1e); /* cream like old paper / charcoal */
+  --ink: light-dark(#3d2e20, #d6d6d6); /* dark brown words / light grey words */
+  --heading: light-dark(#6a4224, #f0f0f0);
+  --wood: light-dark(#8a5a35, #4a4a4a); /* the shelf board: wood / grey */
+  --wood-dark: light-dark(#6a4224, #333333); /* the shadow under each shelf board */
+  --on-wood: light-dark(#fbf1e1, #ececec); /* words on the band at the top */
+  --field: light-dark(#fffaf0, #2a2a2a); /* inside the boxes for typing */
+  --field-edge: light-dark(#8a5a35, #8a8a8a); /* the edge of the boxes: lighter at night, so you can see where each box is */
+  --button: light-dark(#4f7a4a, #d0d0d0); /* green / light grey with dark words */
+  --on-button: light-dark(#fff, #1e1e1e);
+  --error: light-dark(#b0402b, #f2907c); /* the one shared red for every error message, the one color left at night */
+  --quiet: light-dark(#76604b, #a3a3a3); /* soft brown / soft grey for small side notes, like the book count */
+  /* spines: dark enough that the words on them are easy to read. They keep their day names,
+     but at night they're three dark greys. The darkest is still lighter than the page, so it doesn't blend in */
+  --spine-green: light-dark(#3f6a3a, #3a3a3a);
+  --spine-rust: light-dark(#7a3f2e, #474747);
+  --spine-gold: light-dark(#7a5a22, #545454); /* deep gold */
+  --spine-title: light-dark(#fff6e5, #ececec);
+  --spine-author: light-dark(#ffe3a8, #cfcfcf);
 
   font: 16px/1.5 system-ui, 'Segoe UI', Roboto, sans-serif;
-  color-scheme: light dark;
+  color-scheme: light dark; /* with no pick from the Day / Night button, match the computer */
   color: var(--ink);
   background: var(--page);
   -webkit-font-smoothing: antialiased;
 }
 
-/* the "Charcoal library" look, all greys, when the computer is in dark mode */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --page: #1e1e1e; /* charcoal */
-    --ink: #d6d6d6; /* light grey words */
-    --heading: #f0f0f0;
-    --wood: #4a4a4a; /* a grey shelf board */
-    --wood-dark: #333333;
-    --on-wood: #ececec;
-    --field: #2a2a2a;
-    --field-edge: #8a8a8a; /* lighter, so you can see where each box is */
-    --button: #d0d0d0; /* light grey buttons with dark words */
-    --on-button: #1e1e1e;
-    --error: #f2907c; /* the one color left: lighter, so it's still easy to read on the dark page */
-    --quiet: #a3a3a3;
-    /* the spines keep their day names, but at night they're three dark greys.
-       The darkest is still a bit lighter than the page, so it doesn't blend in */
-    --spine-green: #3a3a3a;
-    --spine-rust: #474747;
-    --spine-gold: #545454;
-    --spine-title: #ececec;
-    --spine-author: #cfcfcf;
-  }
+/* the Day / Night button's pick wins over the computer */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
 }
 
 /* ---------- the page ---------- */
@@ -60,9 +46,19 @@ body {
 }
 
 #root {
+  position: relative; /* so the Day / Night button sits in the corner of the shelf, not of the whole window */
   max-width: 720px;
   margin: 0 auto;
   padding: 32px 16px 64px; /* 16px on the sides keeps it off the edge on a phone */
+}
+
+/* the small Day / Night button, in the top corner just above the band at the top */
+.theme-toggle {
+  position: absolute;
+  top: 4px;
+  right: 16px;
+  padding: 2px 12px;
+  font-size: 14px;
 }
 
 /* the wooden band at the top */
