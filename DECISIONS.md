@@ -318,6 +318,7 @@ Why: I decided before that the copy note must show everywhere, so I can tell my 
 Chose: the book's name (like "Dune (signed)") is cream and a bit bold. The author is a soft gold and smaller. The gold spine got darker so the words on it are easy to read
 Other option: one color for both
 Why: it's easier to see where the name ends and the author starts. The author is also smaller, so people who can't tell colors apart still see the difference
+Replaced by: "At night, the page is all greys, buttons too" (2026-11-03). Only at night: there, the author is a light grey instead of gold
 
 ## 2026-11-02 — All red messages use one shared red
 Chose: the red messages under Books, Friends and Loans all use one softer red, set in one place. It's a bit lighter in dark mode so it's still easy to read
@@ -338,6 +339,7 @@ Why: the tests can't see colors from the styles file. Checking for the alert mar
 Chose: the boxes are a soft cream in light mode and a dark brown in dark mode. In dark mode, their edge is a lighter brown
 Other option: one see-through white for both, with the same wood-brown edge, like in my first try-out of the look
 Why: in dark mode, see-through white turns the boxes grey, and my light words on grey were hard to read. The darker edge almost disappeared against the dark page, so I couldn't see where a box was
+Replaced by: "At night, the page is all greys, buttons too" (2026-11-03). Only at night: there, the boxes are dark grey with a lighter grey edge
 
 ## 2026-11-02 — CI runs the lint check too
 Chose: every pull request now runs the lint check (a tool that reads the code and points out common mistakes), right after the tests. If it finds a mistake, the pull request can't be merged
@@ -794,6 +796,7 @@ This changes the earlier choice of words: two entries from 2 November ("Sam can 
 Chose: a small soft-brown line under the Lending Shelf title says how many books are on my shelf, lent out ones too. It says "1 book" for one and "0 books" for none. Friends like Sam see it on their page too
 Other option: count only books at home, or show "2 of 12 books" while I search
 Why: I wanted to know how big my shelf is at a glance. Each book already says if it's lent out, so the count doesn't need to. Searching doesn't change what I own, so the number stays the same. Sam can already count the books, so showing the number gives nothing away. The plan said grey, but the page has no grey, only warm browns and cream, so grey looked cold. I picked a new soft brown that's still easy to read in light and dark mode
+Replaced by: "At night, the page is all greys, buttons too" (2026-11-03). Only at night: there, the line is a soft grey instead of brown
 
 ## 2026-11-03 — No count until the books arrive
 Chose: the count shows nothing while the books are on the way, and nothing if they can't load
@@ -881,12 +884,13 @@ Other option: keep 2400, and leave things out of the picture so my page stays sh
 Why: with Sam's panel open and a second request, my page got longer, and the Return button at the bottom was cut in half. A taller picture shows the whole page, and the empty space at the bottom does no harm
 
 ## 2026-11-03 — The "Charcoal library" night look is two tickets
-Chose: ticket 1 only changes the night colours to greys: a charcoal page, a grey shelf board, spines in different greys, and light grey words. Ticket 2 makes lent-out spines look darker and faded
+Chose: ticket 1 only changes the night colors to greys: a charcoal page, a grey shelf board, spines in different greys, and light grey words. Ticket 2 makes lent-out spines look darker and faded
 Other option: do it all in one ticket
-Why: right now a lent-out book like Dune looks the same as a book at home. Showing the difference changes how the shelf works, not just its colours, so it's easier to follow as its own step
+Why: right now a lent-out book like Dune looks the same as a book at home. Showing the difference changes how the shelf works, not just its colors, so it's easier to follow as its own step
+Replaced by: "A Day / Night button, as its own ticket" (2026-11-03). Now it's three tickets: the grey colors, then the button, then the lent-out look
 
 ## 2026-11-03 — At night, the page is all greys, buttons too
-Chose: the "Charcoal library" night look: a charcoal page, a grey shelf board, dark grey spines with light grey words, and light grey buttons with dark words. This replaces the brown "dim reading room" night colours. The daytime cream look stays the same
+Chose: the "Charcoal library" night look: a charcoal page, a grey shelf board, dark grey spines with light grey words, and light grey buttons with dark words. This replaces the brown "dim reading room" night colors. The daytime cream look stays the same
 Other option: keep the buttons soft green, or use pale grey spines with dark words
 Why: I tried all three on my real page. All greys is the black-and-white look I wanted. Dark spines also leave room for lent-out books to look darker and faded later
 
@@ -896,6 +900,6 @@ Other option: make them light grey like everything else
 Why: a grey error looks like any other line, so I could miss that Sam's book is overdue. One small splash of red still fits a black-and-white page
 
 ## 2026-11-03 — A Day / Night button, as its own ticket
-Chose: a small button in the top corner of every page switches between the cream day look and the charcoal night look. The first time, it matches my computer. After I click it, it remembers my pick. It gets its own ticket, after the grey night colours and before the lent-out look
-Other option: no button, so the page always follows my computer. Or put the button in the same ticket as the grey colours
-Why: I want to pick the look myself without changing my computer's settings. The button is new behaviour, not just colours, so it's easier to follow as its own step
+Chose: a small button in the top corner of every page switches between the cream day look and the charcoal night look. The first time, it matches my computer. After I click it, it remembers my pick. It gets its own ticket, after the grey night colors and before the lent-out look
+Other option: no button, so the page always follows my computer. Or put the button in the same ticket as the grey colors
+Why: I want to pick the look myself without changing my computer's settings. The button is new behaviour, not just colors, so it's easier to follow as its own step

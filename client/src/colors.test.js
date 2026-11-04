@@ -27,10 +27,15 @@ const dark = { ...light, ...darkOwn };
 // Any other --spine- name counts as a spine, so a new color for words on a spine must go in WORDS
 const SPINES = Object.keys(light).filter((name) => name.startsWith('--spine-') && !WORDS.includes(name));
 
+// #fff and #ffffff are the same color: always give back the 6-letter one, without the #
+function sixLetters(hex) {
+    const h = hex.slice(1);
+    return h.length === 3 ? [...h].map((c) => c + c).join('') : h;
+}
+
 // how bright a color looks to the eye, from 0 (black) to 1 (white)
 function brightness(hex) {
-    let h = hex.slice(1);
-    if (h.length === 3) h = [...h].map((c) => c + c).join('');
+    const h = sixLetters(hex);
     const [r, g, b] = [0, 2, 4].map((i) => {
         const c = parseInt(h.slice(i, i + 2), 16) / 255;
         return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
@@ -80,8 +85,7 @@ for (const [mode, colors] of [['light', light], ['dark', dark]]) {
 
 // a grey has the same amount of red, green and blue, like #3a3a3a
 function isGrey(hex) {
-    let h = hex.slice(1);
-    if (h.length === 3) h = [...h].map((c) => c + c).join('');
+    const h = sixLetters(hex);
     return h.slice(0, 2) === h.slice(2, 4) && h.slice(2, 4) === h.slice(4, 6);
 }
 
@@ -104,4 +108,11 @@ test('dark mode: every color is a grey, except the error red', () => {
 test('dark mode: the error color is not a grey', () => {
     expect(dark['--error']).toMatch(PLAIN_HEX);
     expect(isGrey(dark['--error']), `--error is ${dark['--error']}`).toBe(false);
+});
+
+// the darkest spine (like Matilda's) must not blend into the charcoal page
+test('dark mode: every spine is lighter than the page', () => {
+    for (const spine of SPINES) {
+        expect(brightness(dark[spine]), `${spine} is ${dark[spine]}`).toBeGreaterThan(brightness(dark['--page']));
+    }
 });
