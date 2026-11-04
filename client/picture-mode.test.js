@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { pictureAnswer, pictureMode } from './picture-mode';
 
+// a name longer than this might spill over on a phone, so picture mode needs one to catch it
+const isLongName = (title) => title.length > 60;
+
 // what Sam's shelf says about one book: "at home", "lent out" or "asked for"
 const stateOnSamsShelf = (bookId) => pictureAnswer('/shelf', 'friend').body.find((book) => book._id === bookId).state;
 
@@ -11,12 +14,12 @@ describe('picture mode', () => {
 
   it('has a book with a long name, to see if the spine cuts it off', () => {
     const titles = pictureAnswer('/books').body.map((book) => book.title);
-    expect(titles.some((title) => title.length > 60)).toBe(true);
+    expect(titles.some(isLongName)).toBe(true);
   });
 
   it('has a request for a book with a long name, to see if the Requests list cuts it off', () => {
     const titles = pictureAnswer('/requests').body.map((request) => request.book.title);
-    expect(titles.some((title) => title.length > 60)).toBe(true);
+    expect(titles.some(isLongName)).toBe(true);
   });
 
   it('answers every list my shelf asks for when it opens', () => {
@@ -26,7 +29,7 @@ describe('picture mode', () => {
   });
 
   it('Sam\'s panel on my page has the long name in what he has now, his past loans and his requests', () => {
-    const isLong = (item) => item.book.title.length > 60;
+    const isLong = (item) => isLongName(item.book.title);
     const loans = pictureAnswer('/friends/friend-sam/loans');
     const requests = pictureAnswer('/friends/friend-sam/requests');
     expect(loans.body.active.some(isLong)).toBe(true);
@@ -48,12 +51,12 @@ describe('picture mode', () => {
     const shelf = pictureAnswer('/shelf', 'friend').body;
     expect(shelf.some((book) => book.canRate && book.myStars)).toBe(true);
     expect(shelf.some((book) => book.canRate && !book.myStars)).toBe(true);
-    expect(shelf.some((book) => book.canRate && book.title.length > 60)).toBe(true);
+    expect(shelf.some((book) => book.canRate && isLongName(book.title))).toBe(true);
   });
 
   it('as Sam, his own past loans have the long name too', () => {
     const { returned } = pictureAnswer('/me/loans', 'friend').body;
-    expect(returned.some((loan) => loan.book.title.length > 60)).toBe(true);
+    expect(returned.some((loan) => isLongName(loan.book.title))).toBe(true);
   });
 
   it('as Sam, he has a book now, and his shelf says it\'s "lent out"', () => {

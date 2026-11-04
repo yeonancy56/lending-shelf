@@ -120,11 +120,13 @@ export function pictureMode() {
     transformIndexHtml() {
       const asFriend = `location.search.includes('${AS_FRIEND}')`;
       const signIn = `${asFriend} ? '${PRETEND_SIGN_IN.friend}' : '${PRETEND_SIGN_IN.owner}'`;
+      // gives up after 5 seconds (as long as the picture waits), so it never keeps looking forever
       const openSamsPanel = `if (!${asFriend}) {
         const waiting = setInterval(() => {
           const samsName = [...document.querySelectorAll('button')].find((button) => button.textContent === '${sam.name}');
           if (samsName) { clearInterval(waiting); samsName.click(); }
         }, 50);
+        setTimeout(() => clearInterval(waiting), 5000);
       }`;
       return [{ tag: 'script', children: `localStorage.setItem('${SIGN_IN_KEY}', ${signIn});\n${openSamsPanel}`, injectTo: 'head-prepend' }];
     },
