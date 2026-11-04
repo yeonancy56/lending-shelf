@@ -879,3 +879,23 @@ Why: the click lives only in picture mode, so the real app's code doesn't change
 Chose: the phone frame and the picture are now 3000 tall
 Other option: keep 2400, and leave things out of the picture so my page stays short
 Why: with Sam's panel open and a second request, my page got longer, and the Return button at the bottom was cut in half. A taller picture shows the whole page, and the empty space at the bottom does no harm
+
+## 2026-11-03 — The "Charcoal library" night look is two tickets
+Chose: ticket 1 only changes the night colours to greys: a charcoal page, a grey shelf board, spines in different greys, and light grey words. Ticket 2 makes lent-out spines look darker and faded
+Other option: do it all in one ticket
+Why: right now a lent-out book like Dune looks the same as a book at home. Showing the difference changes how the shelf works, not just its colours, so it's easier to follow as its own step
+
+## 2026-11-03 — At night, the page is all greys, buttons too
+Chose: the "Charcoal library" night look: a charcoal page, a grey shelf board, dark grey spines with light grey words, and light grey buttons with dark words. This replaces the brown "dim reading room" night colours. The daytime cream look stays the same
+Other option: keep the buttons soft green, or use pale grey spines with dark words
+Why: I tried all three on my real page. All greys is the black-and-white look I wanted. Dark spines also leave room for lent-out books to look darker and faded later
+
+## 2026-11-03 — Red messages stay red at night
+Chose: in the all-grey night look, error messages like "This book is already lent out" stay soft red
+Other option: make them light grey like everything else
+Why: a grey error looks like any other line, so I could miss that Sam's book is overdue. One small splash of red still fits a black-and-white page
+
+## 2026-11-03 — A Day / Night button, as its own ticket
+Chose: a small button in the top corner of every page switches between the cream day look and the charcoal night look. The first time, it matches my computer. After I click it, it remembers my pick. It gets its own ticket, after the grey night colours and before the lent-out look
+Other option: no button, so the page always follows my computer. Or put the button in the same ticket as the grey colours
+Why: I want to pick the look myself without changing my computer's settings. The button is new behaviour, not just colours, so it's easier to follow as its own step

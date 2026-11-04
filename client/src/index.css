@@ -29,23 +29,28 @@
   -webkit-font-smoothing: antialiased;
 }
 
-/* cozy dark colors, like a dim reading room, when the computer is in dark mode */
+/* the "Charcoal library" look, all greys, when the computer is in dark mode */
 @media (prefers-color-scheme: dark) {
   :root {
-    --page: #1b1612;
-    --ink: #eadcc6;
-    --heading: #e2b98b;
-    --wood: #5c3c24;
-    --wood-dark: #3e2816;
-    --on-wood: #f1e2c9;
-    --field: #2a221b;
-    --field-edge: #9a6a42; /* lighter, so you can see where each box is */
-    --button: #8fb886;
-    --on-button: #17120e;
-    --error: #f2907c; /* lighter, so it's still easy to read on the dark page */
-    --quiet: #b3a08a;
-    --spine-green: #3c5a38;
-    --spine-rust: #6e3a2c;
+    --page: #1e1e1e; /* charcoal */
+    --ink: #d6d6d6; /* light grey words */
+    --heading: #f0f0f0;
+    --wood: #4a4a4a; /* a grey shelf board */
+    --wood-dark: #333333;
+    --on-wood: #ececec;
+    --field: #2a2a2a;
+    --field-edge: #8a8a8a; /* lighter, so you can see where each box is */
+    --button: #d0d0d0; /* light grey buttons with dark words */
+    --on-button: #1e1e1e;
+    --error: #f2907c; /* the one color left: lighter, so it's still easy to read on the dark page */
+    --quiet: #a3a3a3;
+    /* the spines keep their day names, but at night they're three dark greys.
+       The darkest is still a bit lighter than the page, so it doesn't blend in */
+    --spine-green: #3a3a3a;
+    --spine-rust: #474747;
+    --spine-gold: #545454;
+    --spine-title: #ececec;
+    --spine-author: #cfcfcf;
   }
 }
 

@@ -1,4 +1,5 @@
-// Checks that the words on every book spine stay easy to read, in light and dark mode.
+// Checks that the words on every book spine stay easy to read, in light and dark mode,
+// and that dark mode is the black-and-white "Charcoal library" look.
 // It reads the colors straight from index.css, so changing a color there is checked too.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -76,3 +77,31 @@ for (const [mode, colors] of [['light', light], ['dark', dark]]) {
         }
     }
 }
+
+// a grey has the same amount of red, green and blue, like #3a3a3a
+function isGrey(hex) {
+    let h = hex.slice(1);
+    if (h.length === 3) h = [...h].map((c) => c + c).join('');
+    return h.slice(0, 2) === h.slice(2, 4) && h.slice(2, 4) === h.slice(4, 6);
+}
+
+test('the grey check knows a grey from a colour', () => {
+    expect(isGrey('#3a3a3a')).toBe(true);
+    expect(isGrey('#fff')).toBe(true);
+    expect(isGrey('#3c5a38')).toBe(false); // the old dark green spine
+});
+
+// the page, shelf board, words, spines and buttons. Only the error red is left out
+test('dark mode: every color is a grey, except the error red', () => {
+    for (const [name, value] of Object.entries(dark)) {
+        if (name === '--error') continue;
+        expect(value, name).toMatch(PLAIN_HEX);
+        expect(isGrey(value), `${name} is ${value}`).toBe(true);
+    }
+});
+
+// a grey error would look like any other line, so I could miss that Sam's book is overdue
+test('dark mode: the error color is not a grey', () => {
+    expect(dark['--error']).toMatch(PLAIN_HEX);
+    expect(isGrey(dark['--error']), `--error is ${dark['--error']}`).toBe(false);
+});
