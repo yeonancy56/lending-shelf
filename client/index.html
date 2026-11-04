@@ -5,6 +5,14 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lending Shelf</title>
+    <!-- my Day / Night pick, put on the page before anything is drawn, so a reload never flashes the other look.
+         "theme" is the name ThemeToggle.jsx saves it under -->
+    <script>
+      try {
+        const pick = localStorage.getItem('theme');
+        if (pick === 'light' || pick === 'dark') document.documentElement.dataset.theme = pick;
+      } catch {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

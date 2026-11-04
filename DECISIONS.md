@@ -303,6 +303,7 @@ Why: the app is one page, and writing the styles myself is the basic thing to le
 Chose: if my computer is set to dark mode, the page still turns dark. There will be two sets of cozy colors: cream for light, and a dim reading-room look for dark
 Other option: only one set of colors, always light
 Why: it already works today, so dropping it would be a step back for anyone who reads at night
+Replaced by: "At night, the page is all greys, buttons too" and "A Day / Night button, as its own ticket" (2026-11-03). The night look is charcoal now, not a dim reading room, and my pick on the button wins over the computer
 
 ## 2026-11-02 — The page gets the "wooden shelf" look
 Chose: a wooden band at the top with the app's name, and a wooden shelf board under Books, Friends and Loans. Books stand on the shelf like spines. Round green buttons
@@ -775,6 +776,7 @@ Why: with two copies, one could change and the other wouldn't, and they'd quietl
 Chose: a test reads the colors from the styles file and checks the book's name and the author on every spine (today green, rust and gold), in light and dark mode. The word color must be at least 4.5 times brighter than the spine color, the usual rule for easy reading. If a color is written in a way the test can't read, the test fails instead of skipping it. Before, I checked this by hand
 Other option: open the page in a real browser and measure the colors there, or keep checking by hand
 Why: if I change a spine color later, the test tells me right away when a name like "Dune (signed)" gets hard to read. Reading the file is quick and needs no browser. It would miss a color set somewhere else, but today every color is in that one file
+Replaced by: "Each color is written once, as a day and night pair" (2026-11-03). The test now also checks that every color is written once as a pair, and that night is all greys except the red
 
 ## 2026-11-03 — Color names say what they're for
 Chose: in the styles file, the button color is called "button" instead of "green", and the words on it "on button" instead of "on green". The three spine colors are called "spine green", "spine rust" and "spine gold" instead of "spine 1, 2, 3"
