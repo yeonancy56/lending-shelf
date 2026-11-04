@@ -28,13 +28,15 @@ function sixLetters(hex) {
     return h.length === 3 ? [...h].map((c) => c + c).join('') : h;
 }
 
+// the red, green and blue in a color, each from 0 (none) to 1 (full)
+function redGreenBlue(hex) {
+    const h = sixLetters(hex);
+    return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+}
+
 // how bright a color looks to the eye, from 0 (black) to 1 (white)
 function brightness(hex) {
-    const h = sixLetters(hex);
-    const [r, g, b] = [0, 2, 4].map((i) => {
-        const c = parseInt(h.slice(i, i + 2), 16) / 255;
-        return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-    });
+    const [r, g, b] = redGreenBlue(hex).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
     return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
@@ -110,5 +112,36 @@ test('dark mode: the error color is not a grey', () => {
 test('dark mode: every spine is lighter than the page', () => {
     for (const spine of SPINES) {
         expect(brightness(dark[spine]), `${spine} is ${dark[spine]}`).toBeGreaterThan(brightness(dark['--page']));
+    }
+});
+
+// a book that's lent out, like Dune while Sam has it, stands on the shelf darker and faded
+const LENT = '--spine-lent';
+const NOT_LENT_SPINES = SPINES.filter((spine) => spine !== LENT); // green, rust and deep gold
+
+// how much color there is, from 0 (a grey) to 1 (pure red, green or blue): the gap between the strongest and weakest of the three
+function howColorful(hex) {
+    const rgb = redGreenBlue(hex);
+    return Math.max(...rgb) - Math.min(...rgb);
+}
+
+test('the color check gives the known answers: a grey is 0, pure red is 1', () => {
+    expect(howColorful('#3a3a3a')).toBe(0);
+    expect(howColorful('#ff0000')).toBe(1);
+});
+
+for (const [mode, colors] of [['light', light], ['dark', dark]]) {
+    test(`${mode} mode: the lent-out spine is darker than every other spine`, () => {
+        expect(colors[LENT], LENT).toMatch(PLAIN_HEX);
+        for (const spine of NOT_LENT_SPINES) {
+            expect(brightness(colors[LENT]), `${LENT} vs ${spine}`).toBeLessThan(brightness(colors[spine]));
+        }
+    });
+}
+
+// at night every spine is already grey, so there "faded" just means darker
+test('light mode: the lent-out spine is faded, with less color than every other spine', () => {
+    for (const spine of NOT_LENT_SPINES) {
+        expect(howColorful(light[LENT]), `${LENT} vs ${spine}`).toBeLessThan(howColorful(light[spine]));
     }
 });

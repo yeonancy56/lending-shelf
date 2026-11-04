@@ -1284,3 +1284,28 @@ test('Sam sees the average next to his own stars, labelled apart; an unrated cop
     expect(matilda).not.toHaveTextContent('rating');
     expect(within(matilda).getByRole('group', { name: 'Your stars for Matilda' })).toHaveTextContent('your stars ☆☆☆☆☆');
 });
+
+test('Dune\'s spine says "lent out" while Sam has it, still opens for editing, and goes back to normal when Dune comes back', async () => {
+    api.getBooks.mockResolvedValue([DUNE, MATILDA]);
+    api.getFriends.mockResolvedValue([SAM]);
+    // Dune is with Sam. Matilda is at home
+    api.getLoans.mockResolvedValue([{ _id: 'loan-id', book: DUNE, friend: SAM, dueBack: '2026-11-16T12:00:00.000Z' }]);
+
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByRole('button', { name: 'Return' }); // the loans have loaded
+
+    expect(spine('Dune')).toHaveAccessibleName('Dune by Frank Herbert, lent out'); // a screen reader hears it
+    expect(spine('Matilda')).toHaveAccessibleName('Matilda by Roald Dahl'); // a book at home doesn't say it
+
+    await user.click(spine('Dune')); // a lent-out spine still opens the book for editing
+    expect(spine('Dune')).toHaveAttribute('aria-pressed', 'true');
+
+    // Sam brings Dune back: the server now says the loan is returned
+    api.returnLoan.mockResolvedValue({ _id: 'loan-id' });
+    api.getLoans.mockResolvedValue([{ _id: 'loan-id', book: DUNE, friend: SAM, returnedAt: '2026-11-03T12:00:00.000Z' }]);
+    await user.click(screen.getByRole('button', { name: 'Return' }));
+
+    expect(await screen.findByText(/\(returned\)/)).toBeInTheDocument();
+    expect(spine('Dune')).toHaveAccessibleName('Dune by Frank Herbert');
+});

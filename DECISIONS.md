@@ -910,3 +910,8 @@ Why: I want to pick the look myself without changing my computer's settings. The
 Chose: every color in index.css is one line with two halves, the day color and the night color, like "the page is cream by day, charcoal at night". The Day / Night button just tells the page which half to use
 Other option: keep the day colors in one list and the night colors in a second list, and copy one of the lists again for the button, like the prototype did
 Why: with copies, changing the cream in one place could leave the old cream in another. One line per color means the day and night halves always sit side by side and can't drift apart
+
+## 2026-11-03 — A lent-out book gets one dusty spine color
+Chose: when a book is lent out, like Dune while Sam has it, its spine turns one shared color: a dusty dark brown by day, a darker grey at night. It goes back to its usual color when Dune comes back. A screen reader also hears "lent out", since it can't see the fading
+Other option: keep each spine's own color (green, rust or gold) and just dim it with a see-through or "make it greyer" effect
+Why: dimming would also dim the words on the spine, and then they're hard to read. One shared color is easy to check: a test makes sure the words on it are still easy to read, and that it's darker and duller than every book that isn't lent out. At night every spine is already grey, so there "faded" just means darker
