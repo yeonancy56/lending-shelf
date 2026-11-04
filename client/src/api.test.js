@@ -1,7 +1,7 @@
 // Tests how api.js reads the server's answer. No server needed:
 // fetch (the browser's way of calling the server) is swapped for a fake one.
 import { afterEach, expect, test, vi } from 'vitest';
-import { addBook, addFriend, updateFriend, getBooks, getFriends, getLoans, getShelf, getMyLoans, getMyRequests, askForBook, cancelRequest, getWaitingRequests, approveRequest, declineRequest, getFriendRequests, whoAmI, isSignedIn, lendBook, returnLoan, saveSignIn, signOut, whenSignedOut } from './api';
+import { addBook, addFriend, updateFriend, getBooks, getFriends, getLoans, getShelf, getMyLoans, getMyRequests, askForBook, cancelRequest, getWaitingRequests, approveRequest, declineRequest, getFriendRequests, whoAmI, isSignedIn, lendBook, returnLoan, saveSignIn, signInWithPassword, signOut, whenSignedOut } from './api';
 
 const DUNE = { title: 'Dune', author: 'Frank Herbert' };
 
@@ -218,4 +218,36 @@ test('a late 401 for an old sign-in doesn\'t sign out the new one', async () => 
 
     expect(isSignedIn()).toBe(true); // still signed in with the new one
     expect(signedOut).not.toHaveBeenCalled();
+});
+
+test('signing in with a password sends the username and password to /sign-in, and hands back the sign-in', async () => {
+    const fetch = vi.fn().mockResolvedValue(answer(200, JSON.stringify({ signIn: 'a-password-sign-in' })));
+    vi.stubGlobal('fetch', fetch);
+
+    expect(await signInWithPassword('Sam', 'dune-fan-1965')).toEqual({ signIn: 'a-password-sign-in' });
+    const [address, options] = fetch.mock.calls[0];
+    expect(address).toBe('/api/sign-in');
+    expect(options.method).toBe('POST');
+    expect(JSON.parse(options.body)).toEqual({ username: 'Sam', password: 'dune-fan-1965' });
+});
+
+test.each([
+    [401, 'Wrong username or password.'],
+    [429, 'Too many tries. Try again in 15 minutes.'],
+    [503, "Password sign-in isn't set up yet."],
+])('a password sign-in the server says no to (%s) keeps the server\'s words, and isn\'t a sign-out', async (status, message) => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(answer(status, JSON.stringify({ error: message }))));
+    const signedOut = vi.fn();
+    whenSignedOut(signedOut);
+
+    expect(await signInWithPassword('sam', 'not-his-password')).toEqual({ error: message });
+    expect(signedOut).not.toHaveBeenCalled(); // the sign-in page stays as it is, with what was typed
+});
+
+test('a password sign-in says something went wrong when the server breaks or can\'t be reached', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(answer(500, '<html>Internal Server Error</html>')));
+    expect(await signInWithPassword('sam', 'dune-fan-1965')).toEqual({ error: 'Something went wrong. Try again.' });
+
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+    expect(await signInWithPassword('sam', 'dune-fan-1965')).toEqual({ error: 'Something went wrong. Try again.' });
 });

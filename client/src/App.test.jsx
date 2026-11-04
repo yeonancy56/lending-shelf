@@ -539,6 +539,69 @@ test('Sign out forgets me and goes back to the sign-in button', async () => {
     expect(screen.queryByRole('button', { name: /Dune/ })).not.toBeInTheDocument();
 });
 
+test('the sign-in page has the shelf name, a welcome line, the Google button, "or", then a username and password', () => {
+    api.isSignedIn.mockReturnValue(false);
+
+    render(<App />);
+
+    expect(screen.getByRole('heading', { name: 'Lending Shelf' })).toBeInTheDocument();
+    expect(screen.getByText('Sign in to see the shelf')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sign in with Google' })).toBeInTheDocument();
+    expect(screen.getByText('or')).toBeInTheDocument();
+    expect(screen.getByLabelText('Username')).toBeInTheDocument();
+    expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password'); // dots, not the letters
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument();
+});
+
+test('Sam signs in with his username and password, and sees his page', async () => {
+    api.isSignedIn.mockReturnValue(false);
+    signedInAsSam();
+    api.signInWithPassword.mockResolvedValue({ signIn: 'a-password-sign-in' });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.type(screen.getByLabelText('Username'), 'Sam');
+    await user.type(screen.getByLabelText('Password'), 'dune-fan-1965');
+    await user.click(screen.getByRole('button', { name: 'Sign in' }));
+
+    expect(api.signInWithPassword).toHaveBeenCalledWith('Sam', 'dune-fan-1965');
+    expect(api.saveSignIn).toHaveBeenCalledWith('a-password-sign-in'); // kept just like a Google one
+    expect(await screen.findByRole('heading', { name: 'Hi, Sam' })).toBeInTheDocument();
+});
+
+test('a wrong username or password shows the red message and keeps the username, ready to try again', async () => {
+    api.isSignedIn.mockReturnValue(false);
+    api.saveSignIn.mockClear();
+    api.signInWithPassword.mockResolvedValue({ error: 'Wrong username or password.' });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.type(screen.getByLabelText('Username'), 'sam');
+    await user.type(screen.getByLabelText('Password'), 'not-his-password');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Sign in' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Wrong username or password.');
+    expect(screen.getByLabelText('Username')).toHaveValue('sam');
+    expect(api.saveSignIn).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument(); // still on the sign-in page
+});
+
+test('when Sam\'s password sign-in runs out after an hour, the page goes back to the sign-in page', async () => {
+    signedInAsSam();
+    // an hour later, the server says 401 to the old sign-in, and api.js tells the page
+    api.getShelf.mockImplementation(async () => {
+        api.whenSignedOut.mock.lastCall[0]('Please sign in.');
+        return { error: 'Please sign in.' };
+    });
+
+    render(<App />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Please sign in.');
+    expect(screen.getByLabelText('Username')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Hi, Sam' })).not.toBeInTheDocument();
+});
+
 const EMAIL_BOX = 'Google email (optional)';
 
 test('adding Sam sends the Google email I typed, then empties the form', async () => {
@@ -554,7 +617,7 @@ test('adding Sam sends the Google email I typed, then empties the form', async (
     await user.type(screen.getByPlaceholderText(EMAIL_BOX), 'Sam@Gmail.com');
     await user.click(screen.getByRole('button', { name: 'Add Friend' }));
 
-    expect(api.addFriend).toHaveBeenCalledWith({ name: 'Sam', email: 'Sam@Gmail.com' });
+    expect(api.addFriend).toHaveBeenCalledWith({ name: 'Sam', email: 'Sam@Gmail.com', username: '', password: '' });
     expect(screen.getByPlaceholderText('Name')).toHaveValue('');
     expect(screen.getByPlaceholderText(EMAIL_BOX)).toHaveValue('');
 });
@@ -615,7 +678,7 @@ test('emptying Sam\'s email box and saving removes Sam\'s email, then the form g
     await user.clear(screen.getByPlaceholderText(EMAIL_BOX));
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
-    expect(api.updateFriend).toHaveBeenCalledWith('sam-id', { name: 'Sam', email: '' });
+    expect(api.updateFriend).toHaveBeenCalledWith('sam-id', { name: 'Sam', email: '', username: '', password: '' });
     expect(await screen.findByRole('button', { name: 'Add Friend' })).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Name')).toHaveValue('');
     expect(api.getFriends).toHaveBeenCalledTimes(2); // the friends list reloads
@@ -638,7 +701,7 @@ test('changing Sam\'s email to my own shows the red message, and keeps it in the
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(message);
-    expect(api.updateFriend).toHaveBeenCalledWith('sam-id', { name: 'Sam', email: 'nancy@gmail.com' });
+    expect(api.updateFriend).toHaveBeenCalledWith('sam-id', { name: 'Sam', email: 'nancy@gmail.com', username: '', password: '' });
     expect(screen.getByPlaceholderText(EMAIL_BOX)).toHaveValue('nancy@gmail.com');
     expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
 });
@@ -662,6 +725,86 @@ test('Cancel empties the friend form without saving', async () => {
     expect(screen.getByPlaceholderText(EMAIL_BOX)).toHaveValue('');
     expect(screen.getByRole('button', { name: 'Add Friend' })).toBeInTheDocument();
     expect(api.updateFriend).not.toHaveBeenCalled();
+});
+
+const USERNAME_BOX = 'Username (optional)';
+const PASSWORD_BOX = 'Password (optional)';
+const NEW_PASSWORD_BOX = 'New password (optional)';
+
+test('adding Gran with a username and password sends both, then empties the boxes', async () => {
+    api.getBooks.mockResolvedValue([]);
+    api.getFriends.mockResolvedValue([]);
+    api.getLoans.mockResolvedValue([]);
+    api.addFriend.mockResolvedValue({ _id: 'gran-id', name: 'Gran', username: 'gran', hasPassword: true });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.type(await screen.findByPlaceholderText('Name'), 'Gran');
+    await user.type(screen.getByPlaceholderText(USERNAME_BOX), 'Gran');
+    await user.type(screen.getByPlaceholderText(PASSWORD_BOX), 'knitting-123');
+    await user.click(screen.getByRole('button', { name: 'Add Friend' }));
+
+    expect(screen.getByPlaceholderText(PASSWORD_BOX)).toHaveAttribute('type', 'password'); // dots, not the letters
+    expect(api.addFriend).toHaveBeenCalledWith({ name: 'Gran', email: '', username: 'Gran', password: 'knitting-123' });
+    expect(screen.getByPlaceholderText(USERNAME_BOX)).toHaveValue('');
+    expect(screen.getByPlaceholderText(PASSWORD_BOX)).toHaveValue('');
+});
+
+test('a password that\'s too short shows the red message, and keeps what I typed', async () => {
+    api.getBooks.mockResolvedValue([]);
+    api.getFriends.mockResolvedValue([]);
+    api.getLoans.mockResolvedValue([]);
+    api.addFriend.mockResolvedValue({ error: 'A password needs at least 8 characters.' });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.type(await screen.findByPlaceholderText('Name'), 'Gran');
+    await user.type(screen.getByPlaceholderText(USERNAME_BOX), 'gran');
+    await user.type(screen.getByPlaceholderText(PASSWORD_BOX), 'short');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Add Friend' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('A password needs at least 8 characters.');
+    expect(screen.getByPlaceholderText(USERNAME_BOX)).toHaveValue('gran');
+    expect(screen.getByPlaceholderText(PASSWORD_BOX)).toHaveValue('short');
+});
+
+test('Sam\'s panel says "Has a password" when he has one, and never shows it', async () => {
+    api.getBooks.mockResolvedValue([]);
+    api.getFriends.mockResolvedValue([{ ...SAM, username: 'sam', hasPassword: true }, { _id: 'alex-id', name: 'Alex', hasPassword: false }]);
+    api.getLoans.mockResolvedValue([]);
+    samsPanelIsEmpty();
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Sam' }));
+    expect(within(await screen.findByRole('region', { name: "Sam's loans" })).getByText('Has a password')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Alex' }));
+    expect(within(await screen.findByRole('region', { name: "Alex's loans" })).queryByText('Has a password')).not.toBeInTheDocument();
+});
+
+test('Edit puts Sam\'s username in the form but not a password, and saving with it empty keeps his old one', async () => {
+    api.getBooks.mockResolvedValue([]);
+    api.getFriends.mockResolvedValue([{ ...SAM, username: 'sam', hasPassword: true }]);
+    api.getLoans.mockResolvedValue([]);
+    samsPanelIsEmpty();
+    api.updateFriend.mockResolvedValue({ ...SAM, name: 'Sammy', username: 'sam', hasPassword: true });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Sam' }));
+    await user.click(within(await screen.findByRole('region', { name: "Sam's loans" })).getByRole('button', { name: 'Edit' }));
+
+    expect(screen.getByPlaceholderText(USERNAME_BOX)).toHaveValue('sam');
+    expect(screen.getByPlaceholderText(NEW_PASSWORD_BOX)).toHaveValue('');
+    expect(screen.getByText('An empty password keeps the old one.')).toBeInTheDocument();
+    await user.clear(screen.getByPlaceholderText('Name'));
+    await user.type(screen.getByPlaceholderText('Name'), 'Sammy');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(api.updateFriend).toHaveBeenCalledWith('sam-id', { name: 'Sammy', email: '', username: 'sam', password: '' });
+    expect(within(screen.getByRole('region', { name: "Sammy's loans" })).getByText('Has a password')).toBeInTheDocument();
 });
 
 // Sam is signed in. The "server" says who Sam is, what's on the shelf, and Sam's own loans and requests

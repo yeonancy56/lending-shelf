@@ -150,6 +150,47 @@ button {
   margin-top: 8px;
 }
 
+/* a quiet line under a form, like "An empty password keeps the old one." */
+.form-hint {
+  color: var(--quiet);
+  font-size: 15px;
+  margin-top: 8px;
+}
+
+/* ---------- the sign-in page ---------- */
+/* everything in one column down the middle: welcome line, Google, "or", username and password */
+.sign-in {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.sign-in h1 {
+  align-self: stretch; /* the wooden band still goes all the way across */
+  margin-bottom: 0;
+}
+
+.sign-in-or {
+  color: var(--quiet);
+}
+
+/* the username and password boxes, each with its name above it */
+.password-sign-in {
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  max-width: 320px;
+  text-align: left;
+}
+
+.password-sign-in label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .overdue { /* an overdue loan's whole line, in the same shared red */
   color: var(--error);
 }

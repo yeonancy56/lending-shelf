@@ -7,6 +7,10 @@ app.get ('/health', (req,res) => {       // health route, open to anyone, so Ren
    res.send('ok')
 });
 
+// signing in with a username and password, like Gran. Open to anyone, because she isn't signed in yet
+const signInWithPassword = require('./auth/sign-in');
+app.post('/sign-in', express.json(), signInWithPassword);
+
 // every address below this line needs a sign-in: mine, or a friend's like Sam's
 const { signedIn, onlyOwner, whoAmI } = require('./auth/gatekeeper');
 app.use(signedIn);

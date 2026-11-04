@@ -1,10 +1,12 @@
-// "Who is this?": takes the Google sign-in the page sends with each request,
-// and answers who is asking. This is the only file that talks to Google.
-// Tests swap it for the pretend one in __mocks__/who-is-this.js.
+// "Who is this?": takes the sign-in the page sends with each request, and answers who is asking.
+// The sign-in is either our server's own (from a username and password, see own-sign-in.js) or Google's.
+// This is the only file that talks to Google.
+// Most tests swap it for the pretend one in __mocks__/who-is-this.js.
 const { OAuth2Client } = require('google-auth-library');
 const tidyEmail = require('../tidy-email');
 const ROLE = require('./role');
 const friendDao = require('../friends/friend.dao');
+const ownSignIn = require('./own-sign-in');
 
 const google = new OAuth2Client();
 
@@ -25,13 +27,21 @@ async function checkedEmail(signIn) {
     }
 }
 
+// one of our own sign-ins: the friend whose id is inside it. Never the owner, because I only sign in with Google.
+// Made up, over an hour old, or the friend is gone? Then it's nobody
+async function friendFromOwnSignIn(signIn) {
+    const friend = await friendDao.findById(ownSignIn.readSignIn(signIn));
+    return friend ? { role: ROLE.FRIEND, friendId: friend.id, name: friend.name } : { role: ROLE.NOBODY };
+}
+
 // The answer is one of (see role.js):
 //   { role: 'owner' }     my own Google email
-//   { role: 'friend', friendId, name }  the Google email I added to a friend, like Sam
+//   { role: 'friend', friendId, name }  the Google email I added to a friend, like Sam, or a friend's password sign-in
 //   { role: 'stranger' }  a real Google sign-in, but not an email on the list
-//   { role: 'nobody' }    no sign-in, or one Google turns down (like an old one)
+//   { role: 'nobody' }    no sign-in, or one that's turned down (like an old one)
 async function whoIsThis(signIn) {
     if (!signIn) return { role: ROLE.NOBODY };
+    if (ownSignIn.isOurs(signIn)) return friendFromOwnSignIn(signIn); // ours never goes to Google
     const email = await checkedEmail(signIn);
     if (!email) return { role: ROLE.NOBODY };
     const ownerEmail = tidyEmail(process.env.OWNER_EMAIL);

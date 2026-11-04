@@ -287,3 +287,155 @@ test('PUT /friends/:id with an ID in the wrong shape says the friend isn\'t ther
     expect(res.status).toBe(404);
     expect(res.body.error).toBe('Friend not found');
 });
+
+// Usernames and passwords: what I give a friend like Gran, who has no Google account, so she can sign in
+describe('a friend\'s username and password', () => {
+    test('are optional: Sam saves with neither, and has no password', async () => {
+        const res = await owner.post('/friends').send({ name: 'Sam' });
+
+        expect(res.status).toBe(201);
+        expect(res.body.username).toBeUndefined();
+        expect(res.body.hasPassword).toBe(false);
+    });
+
+    test('the username is saved without the extra spaces and in small letters', async () => {
+        const res = await owner.post('/friends').send({ name: 'Sam', username: ' Sam ' });
+
+        expect(res.status).toBe(201);
+        expect(res.body.username).toBe('sam');
+    });
+
+    test('the page only hears "has a password", never the password, scrambled or not', async () => {
+        const res = await owner.post('/friends').send({ name: 'Sam', username: 'sam', password: 'dune-fan-1965' });
+
+        expect(res.status).toBe(201);
+        expect(res.body.hasPassword).toBe(true);
+        expect(JSON.stringify(res.body)).not.toContain('dune-fan-1965');
+        expect(res.body.passwordHash).toBeUndefined();
+        expect(res.body.password).toBeUndefined();
+    });
+
+    test('the friends list, Sam on his own, my loans and my requests never show the scrambled password either', async () => {
+        const sam = await owner.post('/friends').send({ name: 'Sam', username: 'sam', password: 'dune-fan-1965' });
+        const dune = await Book.create({ title: 'Dune', author: 'Frank Herbert' });
+        const matilda = await Book.create({ title: 'Matilda', author: 'Roald Dahl' });
+        await Loan.create({ book: dune._id, friend: sam.body._id });
+        await Request.create({ book: matilda._id, friend: sam.body._id });
+
+        const answers = await Promise.all(['/friends', '/friends/' + sam.body._id, '/loans', '/requests'].map((path) => owner.get(path)));
+
+        for (const answer of answers) {
+            expect(answer.status).toBe(200);
+            expect(JSON.stringify(answer.body)).not.toMatch(/passwordHash|\$2[aby]\$/); // $2b$ is how a bcrypt scramble starts
+        }
+        expect(answers[0].body[0].hasPassword).toBe(true);
+        expect(answers[2].body[0].friend.name).toBe('Sam'); // the loan still shows who has Dune
+    });
+
+    test('a password under 8 characters is refused with a plain message (400)', async () => {
+        const res = await owner.post('/friends').send({ name: 'Sam', username: 'sam', password: 'short' });
+
+        expect(res.status).toBe(400);
+        expect(res.body.error).toBe('A password needs at least 8 characters.');
+        expect(await Friend.countDocuments()).toBe(0);
+    });
+
+    test('a username another friend has is refused, ignoring capitals and spaces (400)', async () => {
+        await owner.post('/friends').send({ name: 'Sam', username: 'sam' });
+
+        const res = await owner.post('/friends').send({ name: 'Alex', username: ' SAM ' });
+
+        expect(res.status).toBe(400);
+        expect(res.body.error).toBe('Sam already has this username.');
+        expect(await Friend.countDocuments()).toBe(1);
+    });
+
+    test('two friends without a username is fine', async () => {
+        await owner.post('/friends').send({ name: 'Gran', username: '  ' });
+        const res = await owner.post('/friends').send({ name: 'Grandad' });
+
+        expect(res.status).toBe(201);
+    });
+
+    test.each([5, { an: 'object' }])('a username or password that isn\'t words, like %p, is refused (400)', async (value) => {
+        const username = await owner.post('/friends').send({ name: 'Sam', username: value });
+        const password = await owner.post('/friends').send({ name: 'Sam', password: value });
+
+        expect(username.status).toBe(400);
+        expect(username.body.error).toBe('The username must be words.');
+        expect(password.status).toBe(400);
+        expect(password.body.error).toBe('The password must be words.');
+        expect(await Friend.countDocuments()).toBe(0);
+    });
+
+    test('editing Sam can add a username and password he didn\'t have', async () => {
+        const sam = await owner.post('/friends').send({ name: 'Sam' });
+
+        const res = await owner.put('/friends/' + sam.body._id).send({ name: 'Sam', username: 'Sam', password: 'dune-fan-1965' });
+
+        expect(res.status).toBe(200);
+        expect(res.body.username).toBe('sam');
+        expect(res.body.hasPassword).toBe(true);
+    });
+
+    test('editing Sam with an empty password box keeps his old password', async () => {
+        const sam = await owner.post('/friends').send({ name: 'Sam', username: 'sam', password: 'dune-fan-1965' });
+
+        const res = await owner.put('/friends/' + sam.body._id).send({ name: 'Sammy', username: 'sam', password: '' });
+
+        expect(res.status).toBe(200);
+        expect(res.body.name).toBe('Sammy');
+        expect(res.body.hasPassword).toBe(true);
+    });
+
+    test('saving Sam with his own username again isn\'t a clash with Sam', async () => {
+        const sam = await owner.post('/friends').send({ name: 'Sam', username: 'sam' });
+
+        const res = await owner.put('/friends/' + sam.body._id).send({ name: 'Sam', username: 'SAM' });
+
+        expect(res.status).toBe(200);
+    });
+
+    test('changing to a username another friend has is refused, and Sam keeps his', async () => {
+        await owner.post('/friends').send({ name: 'Alex', username: 'alex' });
+        const sam = await owner.post('/friends').send({ name: 'Sam', username: 'sam' });
+
+        const res = await owner.put('/friends/' + sam.body._id).send({ name: 'Sam', username: 'Alex' });
+
+        expect(res.status).toBe(400);
+        expect(res.body.error).toBe('Alex already has this username.');
+        expect((await owner.get('/friends/' + sam.body._id)).body.username).toBe('sam');
+    });
+
+    test('emptying the username box removes it, and another friend can use it', async () => {
+        const sam = await owner.post('/friends').send({ name: 'Sam', username: 'sam' });
+
+        await owner.put('/friends/' + sam.body._id).send({ name: 'Sam', username: '' });
+
+        expect((await owner.get('/friends/' + sam.body._id)).body.username).toBeUndefined();
+        expect((await owner.post('/friends').send({ name: 'Alex', username: 'sam' })).status).toBe(201);
+    });
+
+    test('a short new password on edit is refused, and Sam keeps his old one', async () => {
+        const sam = await owner.post('/friends').send({ name: 'Sam', username: 'sam', password: 'dune-fan-1965' });
+
+        const res = await owner.put('/friends/' + sam.body._id).send({ name: 'Sam', username: 'sam', password: 'short' });
+
+        expect(res.status).toBe(400);
+        expect(res.body.error).toBe('A password needs at least 8 characters.');
+        expect((await owner.get('/friends/' + sam.body._id)).body.hasPassword).toBe(true);
+    });
+
+    test('adding Sam and Alex with the same username at the same moment: only one gets it, with the usual message', async () => {
+        await Friend.init(); // make sure the database's own "one friend per username" rule is in place
+
+        const answers = await Promise.all([
+            owner.post('/friends').send({ name: 'Sam', username: 'sam' }),
+            owner.post('/friends').send({ name: 'Alex', username: 'sam' }),
+        ]);
+
+        expect(answers.map((a) => a.status).sort()).toEqual([201, 400]);
+        const saved = answers.find((a) => a.status === 201).body;
+        expect(answers.find((a) => a.status === 400).body.error).toBe(`${saved.name} already has this username.`);
+    });
+});

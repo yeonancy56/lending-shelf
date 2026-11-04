@@ -17,10 +17,11 @@ async function getOne(req, res) {
     res.json(friend);
 }
 
-// the friend form: a name, and a Google email if there is one. The service tidies the email
+// the friend form: a name, and a Google email, a username and a password if there are any.
+// The service tidies the email and username, and scrambles the password
 function readFriendForm(body) {
-    const { name, email } = body ?? {}; // ?? {} = if nothing was sent at all, treat it as an empty form
-    return { name, email };
+    const { name, email, username, password } = body ?? {}; // ?? {} = if nothing was sent at all, treat it as an empty form
+    return { name, email, username, password };
 }
 
 async function create(req, res) {

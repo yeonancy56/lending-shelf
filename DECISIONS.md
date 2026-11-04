@@ -491,6 +491,7 @@ Why: I want friends to use the app too, not just me. Signing in is a big new pie
 Chose: Sam uses "Sign in with Google" to prove it's Sam
 Other option: a secret link just for Sam, or an email and password
 Why: a secret link works for anyone Sam forwards it to. Passwords mean I'd have to keep them safe and build "forgot my password". Google does that part for me, even though setting it up is fiddly
+Changed by: "Friends can sign in with a username and password too" (2026-11-03). Google still works, but it's no longer the only way
 
 ## 2026-11-02 — Only friends I've added can sign in
 Chose: I type Sam's Google email when I add Sam. Only someone signing in with that email is Sam. Anyone else is turned away
@@ -613,6 +614,7 @@ Why: if my own sign-in runs out, I shouldn't be told I'm not on the list. That w
 Chose: one gatekeeper stands in front of everything the server does. Only the health check stays open
 Other option: lock each part (books, friends, loans) one by one
 Why: anything new I add is locked by itself, so I can't forget one. The health check is a tiny "are you awake?" question Render asks the server. It shows no books, so it can stay open
+Changed by: "The sign-in address is open, like the health check" (2026-11-03). POST /sign-in is open too
 
 ## 2026-11-02 — Sign-in gets its own folder, without the usual layers
 Chose: a new "auth" folder on the server holds the gatekeeper and the part that asks Google "who is this?"
@@ -910,3 +912,58 @@ Why: I want to pick the look myself without changing my computer's settings. The
 Chose: every color in index.css is one line with two halves, the day color and the night color, like "the page is cream by day, charcoal at night". The Day / Night button just tells the page which half to use
 Other option: keep the day colors in one list and the night colors in a second list, and copy one of the lists again for the button, like the prototype did
 Why: with copies, changing the cream in one place could leave the old cream in another. One line per color means the day and night halves always sit side by side and can't drift apart
+
+## 2026-11-03 — Friends can sign in with a username and password too
+Chose: under the Google button, the sign-in page has Username and Password boxes. I give a friend like Gran a username and password in her panel. This changes "Friends sign in with Google" (2026-11-02): Google still works, it just isn't the only way any more
+Other option: Google only, like before
+Why: Gran has no Google account, so she couldn't get in at all. I make up her password myself and can type a new one if she forgets, so I still don't need "forgot my password" emails
+
+## 2026-11-03 — The server only keeps a scrambled password
+Chose: the server scrambles each password (with bcrypt) before saving it, and never sends it to the page, not even scrambled. The page only hears "has a password", so Gran's panel says "Has a password"
+Other option: keep the password as I typed it, so her panel could show it
+Why: if anyone ever saw the database, they still couldn't read Gran's password. Scrambling can't be undone, so the server checks a sign-in by scrambling what was typed and comparing
+
+## 2026-11-03 — A blank password box keeps the old one
+Chose: when I edit Sam, the password box starts empty. If I leave it empty, Sam keeps his password. If I type a new one, it replaces the old one. A line under the form says so
+Other option: make me type his password again every time I edit him
+Why: his password never comes back from the server, so I couldn't fill the box in. And I mostly edit Sam to fix his name or email, not his password
+
+## 2026-11-03 — Passwords need 8 characters, usernames are one per friend
+Chose: a password under 8 characters is refused with "A password needs at least 8 characters." A username is saved in small letters without extra spaces, and one another friend has is refused with "Sam already has this username."
+Other option: allow any password, and let two friends share a username
+Why: short passwords are easy to guess. And if two friends had the username "sam", the server wouldn't know which Sam is signing in
+
+## 2026-11-03 — Every wrong try says the same thing
+Chose: a wrong username and a wrong password both say "Wrong username or password." The server even takes the same time to answer
+Other option: say "No friend has that username" when the username is wrong
+Why: a stranger could try lots of names to find out which ones are my friends. One message gives nothing away
+
+## 2026-11-03 — 5 wrong tries means a 15-minute wait
+Chose: after 5 wrong tries for one username, that username has to wait 15 minutes, even with the right password: "Too many tries. Try again in 15 minutes." Signing in right starts the count again. The count lives in the server's memory, so a restart forgets it
+Other option: no limit, or save the count in the database
+Why: without a limit, someone could guess Gran's password over and over. Keeping the count in memory is simple, and a restart now and then only gives a guesser a few more tries
+
+## 2026-11-03 — The server makes its own sign-in for a password friend
+Chose: a right username and password gets a sign-in our server makes and signs itself, with a secret from the settings (SIGN_IN_SECRET). It holds only the friend, and lasts 1 hour like Google's. The page saves it and sends it exactly like a Google one
+Other option: make the page send the username and password with every request
+Why: then Gran's password would travel with every click. A sign-in that runs out after an hour works the same way Google's does, so the rest of the page didn't need to change
+
+## 2026-11-03 — "Who is this?" checks our own sign-in first, then Google
+Chose: "who is this?" first looks at whether the sign-in is one our server made. If it is, it checks our signature and looks the friend up. If the friend has been deleted, it's nobody. Anything else goes to Google like before. A password sign-in can never make someone the owner
+Other option: a separate gatekeeper for password friends
+Why: one "who is this?" means every address works the same for Gran as for Sam. My own account keeps the stronger lock, because only Google can sign me in
+
+## 2026-11-03 — No SIGN_IN_SECRET means password sign-in is off
+Chose: if the server has no SIGN_IN_SECRET, the sign-in page says "Password sign-in isn't set up yet." and every password sign-in stops working. Google still works
+Other option: say "Wrong username or password." like any other no
+Why: it's the same rule as a missing Google client id: no secret, no way in. A plain message tells me straight away that I forgot the setting on Render, instead of making me think Gran's password is wrong
+
+## 2026-11-03 — The sign-in address is open, like the health check
+Chose: POST /sign-in sits outside the gatekeeper, like /health. Every other address still needs a sign-in. This adds one more exception to "Everything is locked, except the health check"
+Other option: put it behind the gatekeeper
+Why: Gran isn't signed in yet when she types her password, so the gatekeeper would turn her away before she could sign in
+
+## 2026-11-03 — The password scrambler is bcryptjs
+Chose: the server uses bcryptjs to scramble passwords, and jsonwebtoken to make and check its own sign-ins
+Other option: the "bcrypt" package, which is a bit faster
+Why: bcryptjs scrambles exactly the same way, but it's written in plain JavaScript, so it installs on Render and in the CI checks with no extra building. For a few friends, the speed doesn't matter

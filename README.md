@@ -70,3 +70,14 @@ Do Render and Vercel **before** merging the sign-in PR. Without `OWNER_EMAIL`, t
 7. Do steps 2 to 6 once more on https://lending-shelf.vercel.app after merging.
 
 A sign-in lasts about an hour. After that, the next thing I do sends me back to the Google button, and I sign in again.
+
+## Setting up password sign-in
+
+Friends without Google, like Gran, sign in with a username and password I give them in their panel (Edit → Username, Password).
+
+| Where | Setting | Value |
+| --- | --- | --- |
+| `server/.env` | `SIGN_IN_SECRET` | a long random secret: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
+| Render → lending-shelf → Environment | `SIGN_IN_SECRET` | a different long random secret, made the same way |
+
+Without `SIGN_IN_SECRET`, the server says "Password sign-in isn't set up yet." and only Google works. Changing it signs every password friend out.

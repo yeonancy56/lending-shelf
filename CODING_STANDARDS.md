@@ -70,10 +70,11 @@ saying so.
     (The server works out "due back" and "overdue"; "Is it overdue?" is decided
     in one spot; The server answers "what are Sam's loans?")
 12. **Everything is locked.** Every address goes through the sign-in gatekeeper,
-    except the health check. Each address belongs to the owner or to a friend,
+    except the health check and `POST /sign-in` (Gran isn't signed in yet when
+    she types her password). Each address belongs to the owner or to a friend,
     except `/me` ("who am I?"), which both ask to know which page to show.
     (Everything is locked, except the health check; Sam's addresses are only
-    for friends)
+    for friends; The sign-in address is open, like the health check)
 
 ## Page
 

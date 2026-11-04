@@ -1,5 +1,5 @@
-// The gatekeeper: runs before every address except /health.
-// The page sends the Google sign-in in the Authorization header, as "Bearer <sign-in>".
+// The gatekeeper: runs before every address except /health and /sign-in.
+// The page sends the sign-in (Google's, or our own from a password) in the Authorization header, as "Bearer <sign-in>".
 // First step: only people on the list (me, or a friend like Sam) get in at all.
 // Then each address says whose it is: mine (onlyOwner) or a friend's (onlyFriend).
 const whoIsThis = require('./who-is-this');

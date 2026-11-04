@@ -2,6 +2,7 @@
 // The test says what Google would answer for a sign-in, and checks who the app thinks it is.
 jest.mock('google-auth-library');
 const { OAuth2Client } = require('google-auth-library');
+const jwt = require('jsonwebtoken');
 
 // what the pretend Google answers. Set before each test
 let googleSays;
@@ -65,6 +66,16 @@ test('asks Google about this sign-in, made for my app', async () => {
     await whoIsThis('a-sign-in');
 
     expect(OAuth2Client.prototype.verifyIdToken).toHaveBeenCalledWith({ idToken: 'a-sign-in', audience: 'my-app-id' });
+});
+
+test('a Google sign-in still goes to Google, now that our server makes sign-ins of the same kind too', async () => {
+    // a real Google sign-in is a signed code like ours, but Google's name is written inside it
+    const fromGoogle = jwt.sign({ email: 'nancy@gmail.com' }, 'googles-own-key', { issuer: 'https://accounts.google.com' });
+    googleSays = googleChecked('nancy@gmail.com');
+    process.env.SIGN_IN_SECRET = 'a-long-made-up-secret-for-tests';
+
+    expect(await whoIsThis(fromGoogle)).toEqual({ role: 'owner' });
+    expect(OAuth2Client.prototype.verifyIdToken).toHaveBeenCalledWith({ idToken: fromGoogle, audience: 'my-app-id' });
 });
 
 test('a sign-in Google turns down (old, made up, or for another app) is nobody', async () => {

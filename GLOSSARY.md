@@ -35,8 +35,16 @@ Someone who signs in with a real Google account whose email isn't on the list. T
 _Avoid_: guest, unknown user
 
 **Sign-in**:
-What Google hands the page after someone clicks "Sign in with Google": a code with their email inside, checked by Google. The page sends it with every request. It runs out after about an hour.
+The code the page gets when someone signs in, and sends with every request so the server knows who it is. It comes one of two ways. "Sign in with Google" gives a code from Google, with their email inside. A username and password give a code our own server makes, with the friend inside. Either one runs out after about an hour. Only Google can sign me (the owner) in.
 _Avoid_: token, login, session
+
+**Username**:
+The name I give a friend without Google, like Gran, so she can sign in. I set it in her panel. Capitals and spaces don't matter, so "Gran" and "gran" are the same, and no two friends can have the same one.
+_Avoid_: login, handle, user ID
+
+**Password**:
+The secret word I give a friend along with their username. It needs at least 8 characters. The server only keeps it scrambled, so no one can read it, not even me. Her panel only says "Has a password". To change it, I type a new one.
+_Avoid_: passcode, PIN
 
 ## Lending
 

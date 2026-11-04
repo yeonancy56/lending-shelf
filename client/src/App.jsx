@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'; //useState = memory, what should the page remember, useEffect = do something at a certain time
-import { getBooks, addBook, updateBook, getFriends, addFriend, updateFriend, getFriendLoans, getFriendRequests, getWaitingRequests, approveRequest, declineRequest, getLoans, lendBook, returnLoan, getShelf, getMyLoans, getMyRequests, askForBook, cancelRequest, rateBook, whoAmI, isSignedIn, saveSignIn, signOut, whenSignedOut } from './api';
+import { getBooks, addBook, updateBook, getFriends, addFriend, updateFriend, getFriendLoans, getFriendRequests, getWaitingRequests, approveRequest, declineRequest, getLoans, lendBook, returnLoan, getShelf, getMyLoans, getMyRequests, askForBook, cancelRequest, rateBook, whoAmI, isSignedIn, saveSignIn, signInWithPassword, signOut, whenSignedOut } from './api';
 import GoogleSignIn from './GoogleSignIn';
 import ErrorMessage from './ErrorMessage';
 
@@ -87,6 +87,7 @@ function FriendPanel({ friend, loans, requests, onEdit, onClose }) {
   return (
     <section aria-labelledby="friend-panel-title">
       <h3 id="friend-panel-title">{friend.name}'s loans</h3>
+      {friend.hasPassword && <p>Has a password</p>} {/* the server never sends the password itself, so no one can read it */}
       {!loans && <p>Loading…</p>} {/* Sam's loans are still on the way */}
       <ErrorMessage message={loans?.error} />
       {loans && !loans.error && <FriendLoans loans={loans} />}
@@ -98,7 +99,7 @@ function FriendPanel({ friend, loans, requests, onEdit, onClose }) {
           <li key={request._id}>{requestLine(request)}</li>
         ))}
       </ul>
-      <button onClick={onEdit}>Edit</button> {/* puts Sam's name and email in the friend form */}
+      <button onClick={onEdit}>Edit</button> {/* puts Sam's name, email and username in the friend form */}
       <button onClick={onClose}>Close</button>
     </section>
   );
@@ -132,14 +133,51 @@ function FriendLoans({ loans }) {
   );
 }
 
-// what a signed-out visitor sees: the name, the Google button, and why they were sent back here (if they were)
+// what a signed-out visitor sees: the name, a welcome line, why they were sent back here (if they were),
+// the Google button, and under it the username and password I gave a friend like Gran
 function SignInScreen({ message, onSignIn }) {
   return (
-    <div>
+    <div className="sign-in">
       <h1>Lending Shelf</h1>
+      <p>Sign in to see the shelf</p>
       <ErrorMessage message={message} /> {/* like "You're not on the list." */}
       <GoogleSignIn onSignIn={onSignIn} />
+      <p className="sign-in-or">or</p>
+      <PasswordSignIn onSignIn={onSignIn} />
     </div>
+  );
+}
+
+// the username and password boxes. A right one hands the server's sign-in to onSignIn, the same as Google's button does
+function PasswordSignIn({ onSignIn }) {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(''); // like "Wrong username or password."
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    const answer = await signInWithPassword(username, password);
+    if (answer.error) {
+      setError(answer.error); // the username stays in its box, ready to try again
+      return;
+    }
+    onSignIn(answer.signIn);
+  }
+
+  return (
+    <form className="password-sign-in" onSubmit={handleSubmit}>
+      <label>
+        Username
+        {/* autoComplete: the phone can offer to fill in the username and password it remembers */}
+        <input value={username} autoComplete="username" onChange={(e) => setUsername(e.target.value)} />
+      </label>
+      <label>
+        Password
+        <input type="password" value={password} autoComplete="current-password" onChange={(e) => setPassword(e.target.value)} />
+      </label>
+      <button>Sign in</button>
+      <ErrorMessage message={error} />
+    </form>
   );
 }
 
@@ -298,6 +336,8 @@ function Shelf({ onSignOut }) { //these are memory boxes
   const[friends, setFriends] = useState([]);
   const[name, setName] = useState('');
   const[email, setEmail] = useState(''); // optional: Sam's Google email, so Sam can sign in
+  const[username, setUsername] = useState(''); // optional: what Gran types to sign in without Google
+  const[password, setPassword] = useState(''); // optional: a new password for Gran. Empty when editing keeps her old one
   const[editingFriendId, setEditingFriendId] = useState(''); // the friend in the form for editing, or '' when the form adds a new friend
   const[openFriend, setOpenFriend] = useState(null); // the friend whose panel is open, or null when it's closed
   const[friendLoans, setFriendLoans] = useState(null); // that friend's loans, once the server answers
@@ -365,11 +405,14 @@ function Shelf({ onSignOut }) { //these are memory boxes
     setFriendError('');
     setName('');
     setEmail('');
+    setUsername('');
+    setPassword('');
   }
 
   async function handleSaveFriend(e) { // note e = event "the thing that just happened"
     e.preventDefault();
-    const form = { name: name, email: email }; // an empty email box means no email
+    // an empty email or username box means none. An empty password box means no new password
+    const form = { name: name, email: email, username: username, password: password };
     // editing? Then save the changes to that friend. Otherwise add a new one
     const result = editingFriendId ? await updateFriend(editingFriendId, form) : await addFriend(form);
     if (result.error) {
@@ -383,11 +426,14 @@ function Shelf({ onSignOut }) { //these are memory boxes
     if (wasEditing) loadLoans(); // a loan shows the friend's name, so a fixed name shows there too
   }
 
-  // Edit in Sam's panel puts Sam in the form, so I can add, change or remove Sam's email
+  // Edit in Sam's panel puts Sam in the form, so I can add, change or remove Sam's email or username,
+  // or give him a new password. His password never comes back from the server, so its box starts empty
   function startEditingFriend(friend) {
     setEditingFriendId(friend._id);
     setName(friend.name);
     setEmail(friend.email || '');
+    setUsername(friend.username || '');
+    setPassword('');
     setFriendError('');
   }
 
@@ -538,6 +584,15 @@ return (
       <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
       {/* type="email": a phone shows the @ key, and the browser stops a typo like "sam.gmail.com" before it's sent */}
       <input type="email" placeholder="Google email (optional)" value={email} onChange={(e) => setEmail(e.target.value)} />
+      {/* for a friend without Google, like Gran. autoComplete="off" / "new-password": the browser shouldn't fill in my own */}
+      <input placeholder="Username (optional)" autoComplete="off" value={username} onChange={(e) => setUsername(e.target.value)} />
+      <input
+        type="password"
+        autoComplete="new-password"
+        placeholder={editingFriendId ? 'New password (optional)' : 'Password (optional)'}
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
       {editingFriendId ? (
         <>
           <button>Save</button>
@@ -547,6 +602,8 @@ return (
         <button>Add Friend</button>
       )}
      </form>
+     {/* the box is too narrow on a phone to say this itself */}
+     {editingFriendId && <p className="form-hint">An empty password keeps the old one.</p>}
      <ErrorMessage message={friendError} />
      <ul>
       {friends.map((friend) => (

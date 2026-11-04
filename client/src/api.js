@@ -78,6 +78,27 @@ async function send(path, options = {}) {
     return SOMETHING_WENT_WRONG;
 }
 
+// the server's no's to a password sign-in, each with its own words. Keep in step with server/src/auth/sign-in.js:
+// 401 = "Wrong username or password." 429 = too many tries. 503 = password sign-in isn't set up
+const SIGN_IN_NO = [401, 429, 503];
+
+// the sign-in page: Gran types the username and password I gave her. The server hands back { signIn },
+// which the page saves just like a Google one, or { error } with what went wrong.
+// It doesn't use send: there, a 401 means "your sign-in ran out", but here it only means a wrong password
+export async function signInWithPassword(username, password) {
+    try {
+        const res = await fetch(API + '/sign-in', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: username, password: password }),
+        });
+        if (res.ok || SIGN_IN_NO.includes(res.status)) return await res.json();
+    } catch {
+        // no answer at all (wifi down), or an answer that isn't data
+    }
+    return SOMETHING_WENT_WRONG;
+}
+
 // "who am I?": after sign-in, the server says { who: 'owner' } or { who: 'friend', name: 'Sam' },
 // so the page knows whether to show my page or the friend page
 export async function whoAmI() {
