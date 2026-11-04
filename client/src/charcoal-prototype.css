@@ -1,8 +1,8 @@
-/* PROTOTYPE, throw me away: three "Charcoal library" night looks, picked with ?variant=A, B or C.
-   They show even if the computer is in light mode, so they're easy to compare. */
+/* PROTOTYPE, throw me away: the Day / Night button picks the look, whatever the computer is set to.
+   data-theme="dark" is the "Charcoal library" night look (A), data-theme="light" is the cream day look. */
 
-/* the parts all three share: charcoal page, grey shelf board, light grey words */
-:root[data-charcoal] {
+/* the night look: charcoal page, grey shelf board, light grey words */
+:root[data-theme='dark'] {
   --page: #1e1e1e;
   --ink: #d6d6d6;
   --heading: #f0f0f0;
@@ -16,49 +16,41 @@
   --button: #d0d0d0;
   --on-button: #1e1e1e;
   /* dark grey spines with light grey words */
-  --spine-green: #2f2f2f;
-  --spine-rust: #444444;
-  --spine-gold: #525252;
+  --spine-green: #3a3a3a; /* a bit lighter than before, so Matilda doesn't blend into the page */
+  --spine-rust: #474747;
+  --spine-gold: #545454;
   --spine-title: #ececec;
   --spine-author: #cfcfcf;
   color-scheme: dark;
 }
 
-/* B: the same, but the buttons stay soft green */
-:root[data-charcoal='B'] {
-  --button: #8fb886;
-  --on-button: #17120e;
+/* the cream day look, copied from the top of index.css, so it wins even when the computer is in dark mode */
+:root[data-theme='light'] {
+  --page: #f3ead9;
+  --ink: #3d2e20;
+  --heading: #6a4224;
+  --wood: #8a5a35;
+  --wood-dark: #6a4224;
+  --on-wood: #fbf1e1;
+  --field: #fffaf0;
+  --field-edge: #8a5a35;
+  --button: #4f7a4a;
+  --on-button: #fff;
+  --error: #b0402b;
+  --quiet: #76604b;
+  --spine-green: #3f6a3a;
+  --spine-rust: #7a3f2e;
+  --spine-gold: #7a5a22;
+  --spine-title: #fff6e5;
+  --spine-author: #ffe3a8;
+  color-scheme: light;
 }
 
-/* C: light grey spines with dark words, like pale cloth covers */
-:root[data-charcoal='C'] {
-  --spine-green: #9a9a9a;
-  --spine-rust: #b0b0b0;
-  --spine-gold: #c6c6c6;
-  --spine-title: #1a1a1a;
-  --spine-author: #2a2a2a;
-}
-
-/* the switcher bar: not part of the design */
-.charcoal-switcher {
-  position: fixed;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  padding: 6px 10px;
-  background: #ff0;
-  color: #000;
-  border-radius: 999px;
-  box-shadow: 0 2px 8px #0008;
-  font: 13px system-ui;
-  z-index: 10;
-}
-.charcoal-switcher button {
-  background: #000;
-  color: #ff0;
-  padding: 2px 10px;
-  margin: 0;
+/* the Day / Night button, in the top corner, above the wooden band */
+.theme-toggle {
+  position: absolute;
+  top: 4px;
+  right: 16px;
+  padding: 2px 12px;
+  font-size: 14px;
 }
